@@ -1,0 +1,47 @@
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <img [src]="profileImage" alt="Profile Image" *ngIf="profileImage; else defaultAvatar">
+        <ng-template #defaultAvatar>
+          <svg width="128" height="128" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+          </svg>
+        </ng-template>
+      </div>
+      <h1 class="profile-name">{{ user?.firstName }} {{ user?.lastName }}</h1>
+      <p class="profile-role">{{ user?.role }}</p>
+    </div>
+
+    <div class="profile-info">
+      <h2>Personal Information</h2>
+      <dl>
+        <dt>Email</dt>
+        <dd>{{ user?.email }}</dd>
+        <dt>Identifier</dt>
+        <dd>{{ user?.identifiant }}</dd>
+        <dt *ngIf="user?.classe">Class</dt>
+        <dd *ngIf="user?.classe">{{ user?.classe }}</dd>
+        <dt *ngIf="user?.specialite">Specialty</dt>
+        <dd *ngIf="user?.specialite">{{ user?.specialite }}</dd>
+        <dt>Created At</dt>
+        <dd>{{ user?.createdAt | date }}</dd>
+      </dl>
+    </div>
+
+    <div class="profile-git" *ngIf="user?.gitUsername">
+      <h2>Git Information</h2>
+      <dl>
+        <dt>Git Username</dt>
+        <dd>{{ user?.gitUsername }}</dd>
+        <dt>Git Profile</dt>
+        <dd><a [href]="'https://github.com/' + user?.gitUsername" target="_blank">View on GitHub</a></dd>
+      </dl>
+    </div>
+
+   <!--<div class="profile-actions">
+      <button class="btn btn-primary" (click)="editProfile()">Edit Profile</button>
+      <button class="btn btn-secondary" (click)="goBack()">Back</button>
+    </div>--> 
+  </div>
+</div>

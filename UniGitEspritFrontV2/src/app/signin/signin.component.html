@@ -1,0 +1,116 @@
+<div class="custom-alert" *ngIf="showAlert">
+  {{ alertMessage }}
+</div>
+<div class="signin-container">
+  <!-- Background Elements -->
+  <div class="background-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
+
+  <!-- Sign In Card -->
+  <div class="signin-card animate-in">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <div class="logo">
+        <img src="../../assets/espritlogo.png" alt="ESPR Logo">
+      </div>
+      <h1 class="welcome-title">Welcome Back</h1>
+      <p class="welcome-subtitle">Sign in to your ESPRIT account</p>
+    </div>
+
+    <!-- Sign In Form -->
+    <form #signinForm="ngForm" (ngSubmit)="onSubmit(signinForm)" class="signin-form">
+      <div class="form-group">
+        <label for="identifiant" class="form-label">
+          <i class="fas fa-user"></i>
+          Identifiant
+        </label>
+        <input
+          type="text"
+          id="identifiant"
+          name="identifiant"
+          class="form-input"
+          placeholder="Enter your Identifiant (e.g., 123ABC4578)"
+          [(ngModel)]="identifiant"
+          #identifiantInput="ngModel"
+          required
+          (input)="validateIdentifiant(identifiantInput)"
+        >
+        <div class="input-error" *ngIf="identifiantError" id="identifiantError">{{ identifiantError }}</div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">
+          <i class="fas fa-lock"></i>
+          Password
+        </label>
+        <div class="password-input-container">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-input"
+            placeholder="Enter your password"
+            [(ngModel)]="password"
+            #passwordInput="ngModel"
+            required
+            (input)="validatePassword(passwordInput)"
+          >
+          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()" #passwordToggle>
+            <i [class]="passwordVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <div class="input-error" *ngIf="passwordError" id="passwordError">{{ passwordError }}</div>
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-container">
+          <input type="checkbox" id="rememberMe" name="rememberMe" [(ngModel)]="rememberMe">
+          <span class="checkmark"></span>
+          Remember me
+        </label>
+        <a href="#" class="forgot-password" (click)="forgotPassword($event)">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="signin-btn" [class.loading]="isLoading" #signinBtn>
+        <span class="btn-text">Sign In</span>
+        <div class="btn-loader" *ngIf="isLoading" id="btnLoader">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+      </button>
+    </form>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-section animate-in">
+    <div class="feature-item" style="margin-top: 100px;">
+      <div class="feature-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Secure Access</h3>
+        <p>Your data is protected with enterprise-grade security</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Team Collaboration</h3>
+        <p>Work seamlessly with your team members</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="feature-content">
+        <h3>Progress Tracking</h3>
+        <p>Monitor your project progress in real-time</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,226 @@
+<main class="form-main">
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H11V21H5V3H13V9H21ZM14 13V15H16V18H18V15H20V13H18V11H16V13H14Z"/>
+        </svg>
+        Ajouter un Utilisateur
+      </h1>
+      <p class="form-subtitle">Créer un nouveau compte utilisateur avec tous les détails nécessaires</p>
+    </div>
+
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="add-group-form">
+      <!-- Nom -->
+      <div class="form-group">
+        <label for="nom" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
+          </svg>
+          Nom
+        </label>
+        <input
+          type="text"
+          id="nom"
+          formControlName="nom"
+          class="form-input"
+          placeholder="Entrez le nom"
+        >
+        <div *ngIf="userForm.get('nom')?.invalid && userForm.get('nom')?.touched" class="error-message">
+          Le nom est requis.
+        </div>
+      </div>
+
+      <!-- Prénom -->
+      <div class="form-group">
+        <label for="prenom" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
+          </svg>
+          Prénom
+        </label>
+        <input
+          type="text"
+          id="prenom"
+          formControlName="prenom"
+          class="form-input"
+          placeholder="Entrez le prénom"
+        >
+        <div *ngIf="userForm.get('prenom')?.invalid && userForm.get('prenom')?.touched" class="error-message">
+          Le prénom est requis.
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
+          </svg>
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          class="form-input"
+          placeholder="exemple@email.com"
+        >
+        <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="error-message">
+          <span *ngIf="userForm.get('email')?.errors?.['required']">L'email est requis.</span>
+          <span *ngIf="userForm.get('email')?.errors?.['email']">Format d'email invalide.</span>
+        </div>
+      </div>
+
+      <!-- Rôle -->
+      <div class="form-group">
+        <label for="role" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
+          </svg>
+          Rôle
+        </label>
+        <select
+          id="role"
+          formControlName="role"
+          class="form-select"
+          (change)="onRoleChange()"
+        >
+          <option value="">Sélectionner un rôle</option>
+          <option value="admin">Administrateur</option>
+          <option value="student">Étudiant</option>
+          <option value="professeur">Professeur</option>
+        </select>
+        <div *ngIf="userForm.get('role')?.invalid && userForm.get('role')?.touched" class="error-message">
+          Le rôle est requis.
+        </div>
+      </div>
+
+      <!-- Champs spécifiques aux étudiants -->
+      <div *ngIf="userForm.get('role')?.value === 'student'">
+        <!-- Classe -->
+        <div class="form-group">
+          <label for="classe" class="form-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 11V17H23V9L12 3Z"/>
+            </svg>
+            Classe
+          </label>
+          <input
+            type="text"
+            id="classe"
+            formControlName="classe"
+            class="form-input"
+            placeholder="Ex: 3ème année"
+          >
+          <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" class="error-message">
+            La classe est requise pour les étudiants.
+          </div>
+        </div>
+
+        <!-- Spécialité -->
+        <div class="form-group">
+          <label for="specialite" class="form-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9L12 15L21 11V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+            </svg>
+            Spécialité
+          </label>
+          <select
+            id="specialite"
+            formControlName="specialite"
+            class="form-select"
+          >
+            <option value="">Sélectionner une spécialité</option>
+            <option value="informatique">Informatique</option>
+            <option value="genie-civil">Génie Civil</option>
+            <option value="electronique">Électronique</option>
+            <option value="mecanique">Mécanique</option>
+            <option value="gestion">Gestion</option>
+          </select>
+          <div *ngIf="userForm.get('specialite')?.invalid && userForm.get('specialite')?.touched" class="error-message">
+            La spécialité est requise pour les étudiants.
+          </div>
+        </div>
+      </div>
+
+      <!-- Identifiant -->
+      <div class="form-group">
+        <label for="identifiant" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
+          </svg>
+          Identifiant
+        </label>
+        <input
+          type="text"
+          id="identifiant"
+          formControlName="identifiant"
+          class="form-input"
+          placeholder="123ABC4567"
+          maxlength="10"
+          (input)="formatIdentifiant($event)"
+        >
+        <div class="input-helper">Format: 3 chiffres + 3 lettres majuscules + 4 chiffres (ex: 123ABC4567)</div>
+        <div *ngIf="userForm.get('identifiant')?.invalid && userForm.get('identifiant')?.touched" class="error-message">
+          <span *ngIf="userForm.get('identifiant')?.errors?.['required']">L'identifiant est requis.</span>
+          <span *ngIf="userForm.get('identifiant')?.errors?.['pattern']">Format invalide: 3 chiffres + 3 lettres + 4 chiffres.</span>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password" class="form-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 8H17V6C17 3.24 14.76 1 12 1S7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM9 6C9 4.34 10.34 3 12 3S15 4.34 15 6V8H9V6ZM18 20H6V10H18V20ZM12 17C13.1 17 14 16.1 14 15S13.1 13 12 13S10 13.9 10 15S10.9 17 12 17Z"/>
+          </svg>
+          Mot de passe
+        </label>
+        <div class="password-container">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="form-input"
+            placeholder="Entrez le mot de passe"
+          >
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePassword()"
+          >
+            <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5S21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12S9.24 7 12 7S17 9.24 17 12S14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12S10.34 15 12 15S15 13.66 15 12S13.66 9 12 9Z"/>
+            </svg>
+            <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 7C9.24 7 7 9.24 7 12C7 12.65 7.13 13.26 7.36 13.82L9.8 11.38C9.93 10.59 10.59 9.93 11.38 9.8L13.82 7.36C13.26 7.13 12.65 7 12 7ZM2 4.27L4.28 6.55L4.73 7C3.08 8.3 1.78 10 1 12C2.73 16.39 7 19.5 12 19.5C13.55 19.5 15.03 19.2 16.38 18.66L16.81 19.09L19.73 22L21 20.73L3.27 3L2 4.27ZM7.53 9.8L9.08 11.35C9.03 11.56 9 11.78 9 12C9 13.66 10.34 15 12 15C12.22 15 12.44 14.97 12.65 14.92L14.2 16.47C13.53 16.8 12.79 17 12 17C9.24 17 7 14.76 7 12C7 11.21 7.2 10.47 7.53 9.8ZM11.84 9.02L14.99 12.17L15.01 12.01C15.01 10.35 13.67 9.01 12.01 9.01L11.84 9.02Z"/>
+            </svg>
+          </button>
+        </div>
+        <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="error-message">
+          <span *ngIf="userForm.get('password')?.errors?.['required']">Le mot de passe est requis.</span>
+          <span *ngIf="userForm.get('password')?.errors?.['minlength']">Le mot de passe doit contenir au moins 6 caractères.</span>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+          </svg>
+          Retour
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid || isSubmitting">
+          <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+          </svg>
+          <svg *ngIf="isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="spin">
+            <path d="M12 4V2C6.48 2 2 6.48 2 12H4C4 7.58 7.58 4 12 4Z"/>
+          </svg>
+          {{ isSubmitting ? 'Ajout en cours...' : 'Ajouter Utilisateur' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
