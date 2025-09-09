@@ -1,0 +1,88 @@
+<div class="app-container" *ngIf="isLoaded">
+  <!-- Edit Sujet Content -->
+  <div class="content">
+    <div class="content-header">
+      <div class="page-info">
+        <div class="breadcrumb">
+          <a href="/sujets" class="breadcrumb-link">
+            <i class="fas fa-book"></i>
+            Sujets
+          </a>
+          <i class="fas fa-chevron-right breadcrumb-separator"></i>
+          <span class="breadcrumb-current">Edit Sujet</span>
+        </div>
+        <h1>Edit Sujet</h1>
+        <p class="subtitle">Update sujet details</p>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <form [formGroup]="sujetForm" (ngSubmit)="onSubmit()" class="add-class-form">
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+        <!-- Sujet Information Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="section-info">
+              <h3>Sujet Information</h3>
+              <p>General details of the sujet</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="titre" class="form-label">
+                <i class="fas fa-tag"></i>
+                Titre *
+              </label>
+              <input
+                type="text"
+                id="titre"
+                formControlName="titre"
+                class="form-input"
+                placeholder="Enter sujet title"
+                [class.error]="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched"
+              >
+              <div class="error-message" *ngIf="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched">
+                Titre is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="description" class="form-label">
+                <i class="fas fa-align-left"></i>
+                Description
+              </label>
+              <textarea
+                id="description"
+                formControlName="description"
+                class="form-textarea"
+                placeholder="Enter sujet description"
+                rows="5"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="goBack()">
+            <i class="fas fa-arrow-left"></i>
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="sujetForm.invalid">
+            <i class="fas fa-save"></i>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container"></div>
+</div>

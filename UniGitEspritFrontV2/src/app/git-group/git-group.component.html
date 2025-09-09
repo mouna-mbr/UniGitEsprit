@@ -1,0 +1,320 @@
+<div class="git-viewer-container">
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading && !repository">
+    <div class="loading-spinner"></div>
+    <p>Chargement du repository...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error && !repository">
+    <div class="error-card">
+      <i class="fas fa-exclamation-triangle"></i>
+      <h3>Erreur</h3>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="loadRepository()">
+        <i class="fas fa-redo"></i>
+        Réessayer
+      </button>
+    </div>
+  </div>
+
+  <!-- Repository Content -->
+  <div class="repository-content" *ngIf="repository">
+    <!-- Repository Header -->
+    <div class="repo-header">
+      <div class="repo-info">
+        <div class="repo-title">
+          <div class="owner-avatar">
+            <img [src]="repository.owner.avatarUrl" [alt]="repository.owner.login">
+          </div>
+          <div class="repo-details">
+            <h1 class="repo-name">
+              <span class="owner">{{ repository.owner.login }}</span>
+              <span class="separator">/</span>
+              <span class="name">{{ repository.name }}</span>
+            </h1>
+            <p class="repo-description" *ngIf="repository.description">
+              {{ repository.description }}
+            </p>
+          </div>
+        </div>
+
+        <div class="repo-stats">
+          <div class="stat-item">
+            <i class="fas fa-star"></i>
+            <span>{{ repository.stars }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-code-branch"></i>
+            <span>{{ repository.forks }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-circle" [style.color]="getLanguageColor(repository.language)"></i>
+            <span>{{ repository.language }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="repo-actions">
+        <button class="btn btn-outline" (click)="copyToClipboard(repository.url)">
+          <i class="fas fa-copy"></i>
+          Clone
+        </button>
+        <button class="btn btn-primary" (click)="window.open(repository.url, '_blank')">
+          <i class="fas fa-external-link-alt"></i>
+          Voir sur GitHub
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="repo-nav">
+      <div class="nav-tabs">
+        <button
+          class="nav-tab"
+          [class.active]="activeTab === 'code'"
+          (click)="switchTab('code')"
+        >
+          <i class="fas fa-code"></i>
+          Code
+        </button>
+        <button
+          class="nav-tab"
+          [class.active]="activeTab === 'commits'"
+          (click)="switchTab('commits')"
+        >
+          <i class="fas fa-history"></i>
+          Commits
+          <span class="tab-count">{{ commits.length }}</span>
+        </button>
+        <button
+          class="nav-tab"
+          [class.active]="activeTab === 'branches'"
+          (click)="switchTab('branches')"
+        >
+          <i class="fas fa-code-branch"></i>
+          Branches
+          <span class="tab-count">{{ branches.length }}</span>
+        </button>
+      </div>
+
+      <!-- Branch Selector -->
+      <div class="branch-selector" *ngIf="activeTab === 'code'">
+        <div class="dropdown">
+          <button class="dropdown-toggle">
+            <i class="fas fa-code-branch"></i>
+            {{ currentBranch }}
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="dropdown-menu">
+            <div class="dropdown-header">Branches</div>
+            <button
+              class="dropdown-item"
+              *ngFor="let branch of branches"
+              [class.active]="branch.name === currentBranch"
+              (click)="switchBranch(branch.name)"
+            >
+              <i class="fas fa-code-branch"></i>
+              {{ branch.name }}
+              <i class="fas fa-check" *ngIf="branch.name === currentBranch"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Tab Content -->
+    <div class="tab-content" *ngIf="activeTab === 'code'">
+      <!-- File Explorer -->
+      <div class="file-explorer" *ngIf="!currentFile">
+        <!-- Breadcrumb Navigation -->
+        <div class="breadcrumb-nav" *ngIf="pathBreadcrumbs.length > 0">
+          <button class="breadcrumb-item root" (click)="navigateToRoot()">
+            <i class="fas fa-home"></i>
+            {{ repository.name }}
+          </button>
+          <span class="breadcrumb-separator">/</span>
+          <ng-container *ngFor="let crumb of pathBreadcrumbs; let last = last">
+            <button
+              class="breadcrumb-item"
+              [class.active]="last"
+              (click)="navigateToPath(crumb.path)"
+            >
+              {{ crumb.name }}
+            </button>
+            <span class="breadcrumb-separator" *ngIf="!last">/</span>
+          </ng-container>
+        </div>
+
+        <!-- Files List -->
+        <div class="files-container">
+          <div class="files-header">
+            <div class="files-info">
+              <span class="files-count">{{ files.length }} items</span>
+            </div>
+          </div>
+
+          <div class="files-list">
+            <!-- Go back button for subdirectories -->
+            <div class="file-item back-button" *ngIf="currentPath" (click)="navigateToPath(getParentPath())">
+              <div class="file-icon">
+                <i class="fas fa-arrow-left"></i>
+              </div>
+              <div class="file-info">
+                <span class="file-name">..</span>
+              </div>
+            </div>
+
+            <!-- Files and directories -->
+            <div
+              class="file-item"
+              *ngFor="let file of files; trackBy: trackByFileName"
+              (click)="loadFileContent(file)"
+            >
+              <div class="file-icon">
+                <i [class]="getFileIcon(file)"></i>
+              </div>
+              <div class="file-info">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size" *ngIf="file.type === 'file'">
+                  {{ formatFileSize(file.size) }}
+                </span>
+              </div>
+              <div class="file-actions" *ngIf="file.type === 'file'">
+                <button class="file-action-btn" (click)="downloadFile(file); $event.stopPropagation()">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- README Display -->
+        <div class="readme-container" *ngIf="readmeContent && !currentPath">
+          <div class="readme-header">
+            <h3>
+              <i class="fab fa-markdown"></i>
+              README.md
+            </h3>
+          </div>
+          <div class="readme-content" [innerHTML]="renderMarkdown(readmeContent)"></div>
+        </div>
+      </div>
+
+      <!-- File Viewer -->
+      <div class="file-viewer" *ngIf="currentFile">
+        <div class="file-viewer-header">
+          <div class="file-path">
+            <button class="back-btn" (click)="closeFileViewer()">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="file-icon">
+              <i [class]="getFileIcon(currentFile)"></i>
+            </div>
+            <span class="file-name">{{ currentFile.name }}</span>
+            <span class="file-size">{{ formatFileSize(currentFile.size) }}</span>
+          </div>
+          <div class="file-actions">
+            <button class="btn btn-outline" (click)="copyToClipboard(fileContent)">
+              <i class="fas fa-copy"></i>
+              Copy
+            </button>
+            <button class="btn btn-outline" (click)="downloadFile(currentFile)">
+              <i class="fas fa-download"></i>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <div class="file-content-container">
+          <div class="loading-file" *ngIf="isLoadingFile">
+            <div class="loading-spinner"></div>
+            <p>Chargement du fichier...</p>
+          </div>
+
+          <div class="file-content" *ngIf="!isLoadingFile">
+            <pre><code [attr.data-language]="getFileLanguage(currentFile.name)">{{ fileContent }}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commits Tab Content -->
+    <div class="tab-content" *ngIf="activeTab === 'commits'">
+      <div class="commits-container">
+        <div class="commits-header">
+          <h3>
+            <i class="fas fa-history"></i>
+            Commits sur {{ currentBranch }}
+          </h3>
+        </div>
+
+        <div class="loading-commits" *ngIf="isLoadingCommits">
+          <div class="loading-spinner"></div>
+          <p>Chargement des commits...</p>
+        </div>
+
+        <div class="commits-list" *ngIf="!isLoadingCommits">
+          <div class="commit-item" *ngFor="let commit of commits; trackBy: trackByCommitSha">
+            <div class="commit-avatar">
+              <img [src]="commit.author.avatarUrl || getDefaultAvatar()" [alt]="commit.author.name">
+            </div>
+            <div class="commit-info">
+              <div class="commit-message">{{ commit.message }}</div>
+              <div class="commit-meta">
+                <span class="commit-author">{{ commit.author.name }}</span>
+                <span class="commit-date">{{ formatDate(commit.author.date) }}</span>
+              </div>
+            </div>
+            <div class="commit-actions">
+              <button class="commit-sha" (click)="copyToClipboard(commit.sha)">
+                {{ commit.sha.substring(0, 7) }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branches Tab Content -->
+    <div class="tab-content" *ngIf="activeTab === 'branches'">
+      <div class="branches-container">
+        <div class="branches-header">
+          <h3>
+            <i class="fas fa-code-branch"></i>
+            Branches
+          </h3>
+        </div>
+
+        <div class="branches-list">
+          <div class="branch-item" *ngFor="let branch of branches; trackBy: trackByBranchName">
+            <div class="branch-info">
+              <div class="branch-name">
+                <i class="fas fa-code-branch"></i>
+                {{ branch.name }}
+                <span class="default-badge" *ngIf="branch.name === repository.defaultBranch">default</span>
+                <span class="protected-badge" *ngIf="branch.protectedBranch">protected</span>
+              </div>
+              <div class="branch-commit">
+                <span class="commit-message">{{ branch.commit.message }}</span>
+                <span class="commit-author">par {{ branch.commit.author.name }}</span>
+                <span class="commit-date">{{ formatDate(branch.commit.author.date) }}</span>
+              </div>
+            </div>
+            <div class="branch-actions">
+              <button
+                class="btn btn-outline"
+                [class.btn-primary]="branch.name === currentBranch"
+                (click)="switchBranch(branch.name)"
+              >
+                <i class="fas fa-eye" *ngIf="branch.name !== currentBranch"></i>
+                <i class="fas fa-check" *ngIf="branch.name === currentBranch"></i>
+                {{ branch.name === currentBranch ? "Actuelle" : "Voir" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,26 +1,11 @@
-package com.esprit.microservice.unigitesprit.entities;
+package com.esprit.microservice.unigitesprit.dto;
 
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "sujets")
-public class Sujet {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class SujetResponseDTO {
     private Long id;
-
-    @Column(name = "titre", nullable = false)
     private String titre;
-
-    @Column(name = "favori")
     private boolean favori;
-
-    @Column(name = "description")
     private String description;
-
-    @ManyToOne
-    @JoinColumn(name = "propose_par", nullable = false)
-    private User proposePar;
+    private Long proposeParId;
 
     // Getters and Setters
     public Long getId() {
@@ -55,11 +40,11 @@ public class Sujet {
         this.description = description;
     }
 
-    public User getProposePar() {
-        return proposePar;
+    public Long getProposeParId() {
+        return proposeParId;
     }
 
-    public void setProposePar(User proposePar) {
-        this.proposePar = proposePar;
+    public void setProposeParId(Long proposeParId) {
+        this.proposeParId = proposeParId;
     }
 }

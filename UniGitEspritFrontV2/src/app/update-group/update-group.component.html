@@ -1,0 +1,176 @@
+<main class="form-main">
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">
+        <i class="fas fa-edit"></i>
+        Update Group
+      </h1>
+      <p class="form-subtitle">Update a student group with all necessary details</p>
+    </div>
+
+    <form #updateGroupForm="ngForm" (ngSubmit)="onSubmit(updateGroupForm)" class="add-group-form">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="text-danger">{{ errorMessage }}</div>
+
+      <!-- Group Name -->
+      <div class="form-group">
+        <label for="nom" class="form-label">
+          <i class="fas fa-users"></i>
+          Group Name
+        </label>
+        <input
+          type="text"
+          id="nom"
+          name="nom"
+          class="form-input"
+          placeholder="Enter group name (e.g., FemiStore)"
+          [(ngModel)]="groupData.nom"
+          required
+        >
+        <div class="input-helper">Choose a unique and descriptive name for your group</div>
+        <div *ngIf="updateGroupForm.controls['nom']?.invalid && updateGroupForm.controls['nom']?.touched" class="text-danger">
+          Group name is required.
+        </div>
+      </div>
+
+      <!-- Class -->
+      <div class="form-group">
+        <label for="classeId" class="form-label">
+          <i class="fas fa-graduation-cap"></i>
+          Class
+        </label>
+        <select
+          id="classeId"
+          name="classeId"
+          class="form-select"
+          [(ngModel)]="groupData.classeId"
+          required
+        >
+          <option value="">Select class</option>
+          <ng-container *ngIf="classList$ | async as classList">
+            <option *ngFor="let classItem of classList" [value]="classItem.id">
+              {{ classItem.nom }}
+            </option>
+          </ng-container>
+        </select>
+        <div *ngIf="updateGroupForm.controls['classeId']?.invalid && updateGroupForm.controls['classeId']?.touched" class="text-danger">
+          Class is required.
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label for="sujetId" class="form-label">
+          <i class="fas fa-cogs"></i>
+          Subject
+        </label>
+        <select
+          id="sujetId"
+          name="sujetId"
+          class="form-select"
+          [(ngModel)]="groupData.sujetId"
+          required
+        >
+          <option value="">Select Subject</option>
+          <ng-container *ngIf="sujets$ | async as sujets">
+            <option *ngFor="let sujet of sujets" [value]="sujet.id">
+              {{ sujet.titre }}
+            </option>
+          </ng-container>
+        </select>
+        <div *ngIf="updateGroupForm.controls['sujetId']?.invalid && updateGroupForm.controls['sujetId']?.touched" class="text-danger">
+          Subject is required.
+        </div>
+      </div>
+
+      <!-- Members -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-user-friends"></i>
+          Group Members
+        </label>
+        <div class="members-container">
+          <div class="members-list" id="membersList">
+            <div *ngFor="let member of groupData.members; let i = index" class="member-tag">
+              <span>{{ member.email }} ({{ member.gitRole }})</span>
+              <button type="button" class="remove-member" (click)="removeMember(i)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div class="add-member-section">
+            <input
+              type="email"
+              id="memberEmail"
+              class="form-input member-input"
+              placeholder="Enter member email address"
+              [(ngModel)]="newMember.email"
+              name="newMemberEmail"
+              required
+              (keyup.enter)="addMember()"
+            >
+            <select
+              id="memberGitRole"
+              class="form-input member-input"
+              [(ngModel)]="newMember.gitRole"
+              name="newMemberGitRole"
+              required
+            >
+              <option value="">Select Role</option>
+              <option value="DEVELOPER">Developer</option>
+              <option value="MAINTAINER">Maintainer</option>
+              <option value="GUEST">Guest</option>
+            </select>
+            <button type="button" class="btn-add-member" (click)="addMember()" [disabled]="!newMember.email || !newMember.gitRole">
+              <i class="fas fa-plus"></i>
+              Add Member
+            </button>
+          </div>
+        </div>
+        <div class="input-helper">Add student email addresses to include them in the group</div>
+        <div *ngIf="updateGroupForm.controls['members']?.invalid && updateGroupForm.controls['members']?.touched" class="text-danger">
+          At least one member is required.
+        </div>
+      </div>
+
+      <!-- Repository Name -->
+      <div class="form-group">
+        <label for="gitRepoName" class="form-label">
+          <i class="fas fa-code-branch"></i>
+          Repository Name
+        </label>
+        <div class="repository-container">
+          <input
+            type="text"
+            id="gitRepoName"
+            name="gitRepoName"
+            class="form-input repository-input"
+            placeholder="Enter repository name"
+            [(ngModel)]="groupData.gitRepoName"
+            required
+          >
+          <button type="button" class="btn-generate-repo" (click)="generateRepoName()">
+            <i class="fas fa-magic"></i>
+            Generate
+          </button>
+        </div>
+        <div class="input-helper">Repository name for version control and project management</div>
+        <div *ngIf="updateGroupForm.controls['gitRepoName']?.invalid && updateGroupForm.controls['gitRepoName']?.touched" class="text-danger">
+          Repository name is required.
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Back
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="updateGroupForm.invalid || !groupData.members.length">
+          <i class="fas fa-save"></i>
+          Update Group
+        </button>
+      </div>
+    </form>
+  </div>
+</main>

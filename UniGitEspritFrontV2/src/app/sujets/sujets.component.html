@@ -1,0 +1,125 @@
+<main class="groups-main">
+  <div class="action-bar">
+    <div class="page-title">
+      <h1>Sujets</h1>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
+        <div><p class="subtitle">Manage your sujets</p></div>
+        <div class="action-buttons">
+          <div class="filter-container">
+            <button class="btn btn-secondary" style="color: #dc2626;border-color: #dc2626;" (click)="onFilter()">
+              <i class="fas fa-filter" style="color: #dc2626;"></i>
+              {{ getCurrentFilterName() }}
+              <span class="filter-badge" *ngIf="currentFilter === 'favorites' && getFavoriteCount() > 0">
+                {{ getFavoriteCount() }}
+              </span>
+            </button>
+            <div class="filter-dropdown" [class.show]="isFilterMenuOpen">
+              <div class="filter-item" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
+                <i class="fas fa-list"></i>
+                <span>All Sujets</span>
+              </div>
+              <div class="filter-item" [class.active]="currentFilter === 'favorites'" (click)="setFilter('favorites')">
+                <i class="fas fa-heart"></i>
+                <span>Favorites</span>
+                <span class="count" *ngIf="getFavoriteCount() > 0">({{ getFavoriteCount() }})</span>
+              </div>
+              <div class="filter-item" [class.active]="currentFilter === 'recent'" (click)="setFilter('recent')">
+                <i class="fas fa-clock"></i>
+                <span>Recent</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="addSujet()">
+            <i class="fas fa-plus"></i>
+            Add Sujet
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-info" *ngIf="searchTerm || currentFilter !== 'all'">
+    <p>
+      <span class="results-count">{{ filteredSujets.length }}</span>
+      sujet(s) found
+      <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
+      <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
+    </p>
+    <button class="clear-filters" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
+      <i class="fas fa-times"></i>
+      Clear Filters
+    </button>
+  </div>
+
+  <div class="groups-grid">
+    <div class="class-card" *ngFor="let sujet of paginatedSujets" [ngClass]="{'favorite': sujet.favori}" [attr.data-sujet-id]="sujet.id">
+      <div class="card-header">
+        <div class="card-gradient"></div>
+        <div class="card-icon">
+          <i class="fas fa-book"></i>
+        </div>
+        <button class="favorite-btn" [class.active]="sujet.favori" (click)="toggleFavorite(sujet.id, $event)">
+          <i class="fas fa-heart"></i>
+        </button>
+        <div class="card-menu-container">
+          <button class="card-menu" (click)="toggleMenu(sujet.id, $event)">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <div class="dropdown-menu" [class.show]="isMenuOpen(sujet.id)">
+            <div class="menu-item" (click)="updateSujet(sujet.id, $event)">
+              <i class="fas fa-edit"></i>
+              <span>Update Sujet</span>
+            </div>
+            <div class="menu-item danger" (click)="deleteSujet(sujet.id, $event)">
+              <i class="fas fa-trash"></i>
+              <span>Delete Sujet</span>
+            </div>
+          </div>
+        </div>
+        <div class="favorite-badge" *ngIf="sujet.favori">
+          <i class="fas fa-heart"></i>
+        </div>
+      </div>
+      <div class="card-content">
+        <h3 class="class-name">{{ sujet.titre }}</h3>
+        <p class="class-level">{{ sujet.description }}</p>
+        <div class="class-stats">
+          <div class="stat">
+            <i class="fas fa-user"></i>
+            <span>Proposed by: {{ getUserName(sujet.proposeParId) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-consult" (click)="viewSujet(sujet.id)">
+          <span>View</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="paginatedSujets.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-book"></i>
+    </div>
+    <h3>No sujets found</h3>
+    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
+    <p *ngIf="currentFilter === 'favorites' && !searchTerm">You have no favorite sujets yet</p>
+    <button class="btn btn-primary" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
+      View all sujets
+    </button>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</main>
+
+<div id="notification-container"></div>

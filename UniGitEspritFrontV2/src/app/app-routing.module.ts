@@ -11,26 +11,55 @@ import { AddClasseComponent } from './add-classe/add-classe.component';
 import { EditClasseComponent } from './edit-classe/edit-classe.component';
 import { FavoriteClassesComponent } from './favorite-classes/favorite-classes.component';
 import { ClassDetailsComponent } from './class-details/class-details.component';
+import { AddSujetComponent } from './add-sujet/add-sujet.component';
+import { EditSujetComponent } from './edit-sujet/edit-sujet.component';
+import { SujetDetailsComponent } from './sujet-details/sujet-details.component';
+import { SujetsComponent } from './sujets/sujets.component';
+import { GroupesComponent } from './groupes/groupes.component';
+import { AddgroupeComponent } from './addgroupe/addgroupe.component';
+import { DetailsgroupeComponent } from './detailsgroupe/detailsgroupe.component';
+import { DetailssprintComponent } from './detailssprint/detailssprint.component';
+import { UpdateGroupComponent } from './update-group/update-group.component';
+import { GitGroupComponent } from './git-group/git-group.component';
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
   { path: 'gitauth', component: GitauthComponent }, // Standalone gitauth route without layout
+  { path: '', component: SigninComponent, pathMatch: 'full' }, // Default route
+
   {
     path: '', // Parent route for all other pages
     component: LayoutComponent,
     children: [
-      { path: '', component: AdminDashboardComponent, pathMatch: 'full' }, // Default route
+
       { path: 'adduser', component: AdminAdduserComponent }, // Corrected from 'addduser' to 'adduser'
       { path: 'profile', component: ProfileComponent },
+      { path: 'dashbord', component: AdminDashboardComponent }, // Default route
+
+      //class
       { path: 'classes', component: ClassesComponent },
       { path: 'add-classe', component: AddClasseComponent },
       {path:'edit-classe/:id', component: EditClasseComponent},
       {path:'favoritesClasses', component: FavoriteClassesComponent},
       {path:'classesDetails/:id', component: ClassDetailsComponent},
+      //sujet
+      { path: 'sujets', component: SujetsComponent },
+      { path: 'add-sujet', component: AddSujetComponent },
+      {path:'edit-sujet/:id', component: EditSujetComponent},
+      {path:'favoritesClasses', component: FavoriteClassesComponent},
+      {path:'sujetDetails/:id', component: SujetDetailsComponent},
+      //group
+      { path: 'groupes', component: GroupesComponent },
+      { path: 'addgroupe', component: AddgroupeComponent },
+      { path: 'groupdetails/:id', component: DetailsgroupeComponent },
+      { path: 'detailssprint/:id', component: DetailssprintComponent },
+      { path: 'update-group/:id', component: UpdateGroupComponent },
+      {path:'repository-viewer',component:GitGroupComponent}
+
 
     ]
   },
-  { path: '**', redirectTo: '/signin' } // Wildcard route to redirect invalid paths to signin
+  { path: '**', redirectTo: '/dashbord' } // Wildcard route to redirect invalid paths to signin
 ];
 
 @NgModule({

@@ -17,6 +17,10 @@ import { AddClasseComponent } from './add-classe/add-classe.component';
 import { EditClasseComponent } from './edit-classe/edit-classe.component';
 import { FavoriteClassesComponent } from './favorite-classes/favorite-classes.component';
 import { ClassDetailsComponent } from './class-details/class-details.component';
+import { AddSujetComponent } from './add-sujet/add-sujet.component';
+import { EditSujetComponent } from './edit-sujet/edit-sujet.component';
+import { SujetDetailsComponent } from './sujet-details/sujet-details.component';
+import { SujetsComponent } from './sujets/sujets.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +37,11 @@ import { ClassDetailsComponent } from './class-details/class-details.component';
     AddClasseComponent,
     EditClasseComponent,
     FavoriteClassesComponent,
-    ClassDetailsComponent
+    ClassDetailsComponent,
+    AddSujetComponent,
+    EditSujetComponent,
+    SujetDetailsComponent,
+    SujetsComponent
     // Removed AdminAdduserComponent
   ],
   imports: [

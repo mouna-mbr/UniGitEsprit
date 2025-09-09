@@ -1,0 +1,176 @@
+<main class="form-main">
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">
+        <i class="fas fa-plus-circle"></i>
+        Add New Group
+      </h1>
+      <p class="form-subtitle">Create a new student group with all necessary details</p>
+    </div>
+
+    <form [formGroup]="groupForm" (ngSubmit)="onSubmit()" class="add-group-form">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="text-danger">{{ errorMessage }}</div>
+
+      <!-- Group Name -->
+      <div class="form-group">
+        <label for="nom" class="form-label">
+          <i class="fas fa-users"></i>
+          Group Name
+        </label>
+        <input
+          type="text"
+          id="nom"
+          formControlName="nom"
+          class="form-input"
+          placeholder="Enter group name (e.g., FemiStore)"
+        >
+        <div class="input-helper">Choose a unique and descriptive name for your group</div>
+        <div *ngIf="groupForm.get('nom')?.invalid && groupForm.get('nom')?.touched" class="text-danger">
+          Group name is required.
+        </div>
+      </div>
+
+      <!-- Academic Year -->
+      <div class="form-group">
+        <label for="academicYear" class="form-label">
+          <i class="fas fa-calendar-alt"></i>
+          Academic Year
+        </label>
+        <select
+          id="academicYear"
+          formControlName="academicYear"
+          class="form-select"
+        >
+          <option value="">Select academic year</option>
+          <option value="2023/2024">2023/2024</option>
+          <option value="2024/2025">2024/2025</option>
+          <option value="2025/2026">2025/2026</option>
+        </select>
+        <div *ngIf="groupForm.get('academicYear')?.invalid && groupForm.get('academicYear')?.touched" class="text-danger">
+          Academic year is required.
+        </div>
+      </div>
+
+      <!-- Class -->
+      <div class="form-group">
+        <label for="classeId" class="form-label">
+          <i class="fas fa-graduation-cap"></i>
+          Class
+        </label>
+        <select
+          id="classeId"
+          formControlName="classeId"
+          class="form-select"
+        >
+          <option value="">Select class</option>
+          <ng-container *ngIf="classList$ | async as classList">
+            <option *ngFor="let classItem of classList" [value]="classItem.id">
+              {{ classItem.nom }}
+            </option>
+          </ng-container>
+        </select>
+        <div *ngIf="groupForm.get('classeId')?.invalid && groupForm.get('classeId')?.touched" class="text-danger">
+          Class is required.
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label for="sujetId" class="form-label">
+          <i class="fas fa-cogs"></i>
+          Subject
+        </label>
+        <select
+          id="sujetId"
+          formControlName="sujetId"
+          class="form-select"
+        >
+          <option value="">Select Subject</option>
+          <ng-container *ngIf="sujets$ | async as sujets">
+            <option *ngFor="let sujet of sujets" [value]="sujet.id">
+              {{ sujet.titre }}
+            </option>
+          </ng-container>
+        </select>
+        <div *ngIf="groupForm.get('sujetId')?.invalid && groupForm.get('sujetId')?.touched" class="text-danger">
+          Subject is required.
+        </div>
+      </div>
+
+      <!-- Members -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fas fa-user-friends"></i>
+          Group Members
+        </label>
+        <div class="members-container">
+          <div class="members-list" id="membersList">
+            <div *ngFor="let member of groupForm.get('memberEmails')?.value; let i = index" class="member-tag">
+              <span>{{ member }}</span>
+              <button type="button" class="remove-member" (click)="removeMember(i)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div class="add-member-section">
+            <input
+              type="email"
+              id="memberEmail"
+              class="form-input member-input"
+              placeholder="Enter member email address"
+              [(ngModel)]="newMemberEmail"
+              [ngModelOptions]="{standalone: true}"
+              (keyup.enter)="addMember()"
+            >
+            <button type="button" class="btn-add-member" (click)="addMember()">
+              <i class="fas fa-plus"></i>
+              Add Member
+            </button>
+          </div>
+        </div>
+        <div class="input-helper">Add student email addresses to include them in the group</div>
+        <div *ngIf="groupForm.get('memberEmails')?.invalid && groupForm.get('memberEmails')?.touched" class="text-danger">
+          At least one member email is required.
+        </div>
+      </div>
+
+      <!-- Repository Name -->
+      <div class="form-group">
+        <label for="gitRepoName" class="form-label">
+          <i class="fas fa-code-branch"></i>
+          Repository Name
+        </label>
+        <div class="repository-container">
+          <input
+            type="text"
+            id="gitRepoName"
+            formControlName="gitRepoName"
+            class="form-input repository-input"
+            placeholder="Enter repository name (e.g., ebankMobile)"
+          >
+          <button type="button" class="btn-generate-repo" (click)="generateRepoName()">
+            <i class="fas fa-magic"></i>
+            Generate
+          </button>
+        </div>
+        <div class="input-helper">The repository will be created at https://github.com/Benrebahines/[Repository Name]</div>
+        <div *ngIf="groupForm.get('gitRepoName')?.invalid && groupForm.get('gitRepoName')?.touched" class="text-danger">
+          Repository name is required.
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Back
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="groupForm.invalid || groupForm.get('memberEmails')?.value.length === 0">
+          <i class="fas fa-plus"></i>
+          Add Group
+        </button>
+      </div>
+    </form>
+  </div>
+</main>

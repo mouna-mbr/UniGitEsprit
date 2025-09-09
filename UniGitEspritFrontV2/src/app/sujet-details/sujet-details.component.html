@@ -1,0 +1,83 @@
+<!-- Sidebar (facultatif, peut être ajouté si nécessaire) -->
+
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- Content -->
+  <div class="content">
+    <div class="app-container" *ngIf="sujet">
+      <!-- Sujet Details Content -->
+      <div class="content-header">
+        <div class="page-info">
+          <div class="breadcrumb">
+            <a href="/sujets" class="breadcrumb-link">
+              <i class="fas fa-book"></i>
+              Sujets
+            </a>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <span class="breadcrumb-current">{{ sujet.titre }}</span>
+          </div>
+          <h1>{{ sujet.titre }}</h1>
+          <p class="subtitle">Details of the sujet</p>
+        </div>
+      </div>
+
+      <!-- Sujet Details Card -->
+      <div class="class-card" [ngClass]="{'favorite': sujet.favori}" [attr.data-sujet-id]="sujet.id">
+        <div class="card-header">
+          <div class="card-gradient"></div>
+          <div class="card-icon">
+            <i class="fas fa-book"></i>
+          </div>
+          <button class="favorite-btn" [class.active]="sujet.favori" (click)="toggleFavorite(sujet.id, $event)">
+            <i class="fas fa-heart"></i>
+          </button>
+          <div class="card-menu-container">
+            <button class="card-menu" (click)="toggleMenu(sujet.id, $event)">
+              <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu" [class.show]="isMenuOpen(sujet.id)">
+              <div class="menu-item" (click)="editSujet($event)">
+                <i class="fas fa-edit"></i>
+                <span>Edit Sujet</span>
+              </div>
+              <div class="menu-item danger" (click)="deleteSujet(sujet.id, $event)">
+                <i class="fas fa-trash"></i>
+                <span>Delete Sujet</span>
+              </div>
+            </div>
+          </div>
+          <div class="favorite-badge" *ngIf="sujet.favori">
+            <i class="fas fa-heart"></i>
+          </div>
+        </div>
+        <div class="card-content">
+          <h3 class="class-name">{{ sujet.titre }}</h3>
+          <p class="class-level">{{ sujet.description }}</p>
+          <div class="class-stats">
+            <div class="stat">
+              <i class="fas fa-user"></i>
+              <span>Proposed by: {{ getUserName(sujet.proposeParId) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-consult" style="background-color: brown;color: white;" (click)="goBack()">
+            <span>Apply</span>
+          </button>
+        </div>
+        <div class="card-footer">
+          <button class="btn-consult" (click)="goBack()">
+            <span>Back</span>
+            <i class="fas fa-arrow-left"></i>
+          </button>
+        </div>
+      
+      </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+  </div>
+</div>
