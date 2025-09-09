@@ -14,6 +14,9 @@ import { AdminAdduserComponent } from './admin-adduser/admin-adduser.component';
 import { ProfileComponent } from './profile/profile.component';
 import { ClassesComponent } from './classes/classes.component';
 import { AddClasseComponent } from './add-classe/add-classe.component';
+import { EditClasseComponent } from './edit-classe/edit-classe.component';
+import { FavoriteClassesComponent } from './favorite-classes/favorite-classes.component';
+import { ClassDetailsComponent } from './class-details/class-details.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +30,10 @@ import { AddClasseComponent } from './add-classe/add-classe.component';
     AdminAdduserComponent,
     ProfileComponent,
     ClassesComponent,
-    AddClasseComponent
+    AddClasseComponent,
+    EditClasseComponent,
+    FavoriteClassesComponent,
+    ClassDetailsComponent
     // Removed AdminAdduserComponent
   ],
   imports: [

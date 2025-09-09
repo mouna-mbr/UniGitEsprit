@@ -8,6 +8,9 @@ import { AdminAdduserComponent } from './admin-adduser/admin-adduser.component';
 import { ProfileComponent } from './profile/profile.component';
 import { ClassesComponent } from './classes/classes.component';
 import { AddClasseComponent } from './add-classe/add-classe.component';
+import { EditClasseComponent } from './edit-classe/edit-classe.component';
+import { FavoriteClassesComponent } from './favorite-classes/favorite-classes.component';
+import { ClassDetailsComponent } from './class-details/class-details.component';
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
@@ -21,6 +24,9 @@ const routes: Routes = [
       { path: 'profile', component: ProfileComponent },
       { path: 'classes', component: ClassesComponent },
       { path: 'add-classe', component: AddClasseComponent },
+      {path:'edit-classe/:id', component: EditClasseComponent},
+      {path:'favoritesClasses', component: FavoriteClassesComponent},
+      {path:'classesDetails/:id', component: ClassDetailsComponent},
 
     ]
   },

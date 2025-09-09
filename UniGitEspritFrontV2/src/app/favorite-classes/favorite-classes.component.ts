@@ -4,16 +4,16 @@ import { ClasseService } from '../services/classe.service';
 import { ClasseResponse } from '../models/classe.model';
 
 @Component({
-  selector: 'app-classes',
-  templateUrl: './classes.component.html',
-  styleUrls: ['./classes.component.css']
+  selector: 'app-favorite-classes',
+  templateUrl: './favorite-classes.component.html',
+  styleUrls: ['./favorite-classes.component.css']
 })
-export class ClassesComponent implements OnInit {
+export class FavoriteClassesComponent implements OnInit {
   classes: ClasseResponse[] = [];
   filteredClasses: ClasseResponse[] = [];
   paginatedClasses: ClasseResponse[] = [];
   searchTerm = '';
-  currentFilter: 'all' | 'favorites' | 'recent' = 'all';
+  currentFilter: 'all' | 'favorites' | 'recent' = 'favorites';
   isFilterMenuOpen = false;
   openMenus: Set<number> = new Set();
   currentPage = 1;
@@ -37,11 +37,9 @@ export class ClassesComponent implements OnInit {
   }
 
   applyFilter(): void {
-    let filtered = this.classes;
-    if (this.currentFilter === 'favorites') {
-      filtered = filtered.filter(classe => classe.favori);
-    } else if (this.currentFilter === 'recent') {
-      filtered = filtered.sort((a, b) => b.id - a.id).slice(0);
+    let filtered = this.classes.filter(classe => classe.favori); // Start with only favorites
+    if (this.currentFilter === 'recent') {
+      filtered = filtered.sort((a, b) => b.id - a.id);
     }
     if (this.searchTerm) {
       filtered = filtered.filter(classe =>
@@ -109,13 +107,9 @@ export class ClassesComponent implements OnInit {
     return this.openMenus.has(id);
   }
 
-  addClass(): void {
-    this.router.navigate(['/add-classe']);
-  }
-
   updateClass(id: number, event: Event): void {
     event.stopPropagation();
-    this.router.navigate([`/edit-classe/${id}`]);
+    this.router.navigate([`/classes/edit/${id}`]);
     this.openMenus.clear();
   }
 
@@ -135,7 +129,11 @@ export class ClassesComponent implements OnInit {
   }
 
   viewClass(id: number): void {
-    this.router.navigate([`/classesDetails/${id}`]);
+    this.router.navigate([`/classes/${id}`]);
+  }
+
+  viewAllClasses(): void {
+    this.router.navigate(['/classes']);
   }
 
   previousPage(): void {
