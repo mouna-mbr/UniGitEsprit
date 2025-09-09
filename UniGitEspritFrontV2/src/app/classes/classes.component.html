@@ -1,0 +1,129 @@
+<main class="groups-main">
+  <div class="action-bar">
+    <div class="page-title">
+      <h1>Classes</h1>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
+        <div><p class="subtitle">Manage your student classes</p></div>
+        <div class="action-buttons">
+          <div class="filter-container">
+            <button class="btn btn-secondary" style="color: #dc2626;border-color: #dc2626;" (click)="onFilter()">
+              <i class="fas fa-filter" style="color: #dc2626;"></i>
+              {{ getCurrentFilterName() }}
+              <span class="filter-badge" *ngIf="currentFilter === 'favorites' && getFavoriteCount() > 0">
+                {{ getFavoriteCount() }}
+              </span>
+            </button>
+            <div class="filter-dropdown" [class.show]="isFilterMenuOpen">
+              <div class="filter-item" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
+                <i class="fas fa-list"></i>
+                <span>All Classes</span>
+              </div>
+              <div class="filter-item" [class.active]="currentFilter === 'favorites'" (click)="setFilter('favorites')">
+                <i class="fas fa-heart"></i>
+                <span>Favorites</span>
+                <span class="count" *ngIf="getFavoriteCount() > 0">({{ getFavoriteCount() }})</span>
+              </div>
+              <div class="filter-item" [class.active]="currentFilter === 'recent'" (click)="setFilter('recent')">
+                <i class="fas fa-clock"></i>
+                <span>Recent</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="addClass()">
+            <i class="fas fa-plus"></i>
+            Add Class
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-info" *ngIf="searchTerm || currentFilter !== 'all'">
+    <p>
+      <span class="results-count">{{ filteredClasses.length }}</span>
+      class(es) found
+      <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
+      <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
+    </p>
+    <button class="clear-filters" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
+      <i class="fas fa-times"></i>
+      Clear Filters
+    </button>
+  </div>
+
+  <div class="groups-grid">
+    <div class="class-card" *ngFor="let classe of paginatedClasses" [ngClass]="{'favorite': classe.favori}" [attr.data-class-id]="classe.id">
+      <div class="card-header">
+        <div class="card-gradient"></div>
+        <div class="card-icon">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <button class="favorite-btn" [class.active]="classe.favori" (click)="toggleFavorite(classe.id, $event)">
+          <i class="fas fa-heart"></i>
+        </button>
+        <div class="card-menu-container">
+          <button class="card-menu" (click)="toggleMenu(classe.id, $event)">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <div class="dropdown-menu" [class.show]="isMenuOpen(classe.id)">
+            <div class="menu-item" (click)="updateClass(classe.id, $event)">
+              <i class="fas fa-edit"></i>
+              <span>Update Class</span>
+            </div>
+            <div class="menu-item danger" (click)="deleteClass(classe.id, $event)">
+              <i class="fas fa-trash"></i>
+              <span>Delete Class</span>
+            </div>
+          </div>
+        </div>
+        <div class="favorite-badge" *ngIf="classe.favori">
+          <i class="fas fa-heart"></i>
+        </div>
+      </div>
+      <div class="card-content">
+        <h3 class="class-name">{{ classe.nom }}</h3>
+        <p class="class-level">{{ classe.anneeUniversitaire }} - {{ classe.level }}</p>
+        <div class="class-stats">
+          <div class="stat">
+            <i class="fas fa-user-graduate"></i>
+            <span>{{ classe.etudiantIds?.length || 0 }} students</span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>{{ classe.enseignantIds?.length || 0 }} teachers</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-consult" (click)="viewClass(classe.id)">
+          <span>View</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="paginatedClasses.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-graduation-cap"></i>
+    </div>
+    <h3>No classes found</h3>
+    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
+    <p *ngIf="currentFilter === 'favorites' && !searchTerm">You have no favorite classes yet</p>
+    <button class="btn btn-primary" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
+      View all classes
+    </button>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</main>
+
+<div id="notification-container"></div>

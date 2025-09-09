@@ -1,0 +1,235 @@
+<div class="app-container" *ngIf="isUsersLoaded">
+  <!-- Add Class Content -->
+  <div class="content">
+    <div class="content-header">
+      <div class="page-info">
+        <div class="breadcrumb">
+          <a href="/classes" class="breadcrumb-link">
+            <i class="fas fa-graduation-cap"></i>
+            Classes
+          </a>
+          <i class="fas fa-chevron-right breadcrumb-separator"></i>
+          <span class="breadcrumb-current">Add a Class</span>
+        </div>
+        <h1>Add a New Class</h1>
+        <p class="subtitle">Create a new class and add students</p>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <form [formGroup]="classeForm" (ngSubmit)="onSubmit()" class="add-class-form">
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+        <!-- Class Information Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="section-info">
+              <h3>Class Information</h3>
+              <p>General details of the class</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nom" class="form-label">
+                <i class="fas fa-tag"></i>
+                Class Name *
+              </label>
+              <input
+                type="text"
+                id="nom"
+                formControlName="nom"
+                class="form-input"
+                placeholder="Ex: 4 AI 09"
+                [class.error]="classeForm.get('nom')?.invalid && classeForm.get('nom')?.touched"
+              >
+              <div class="error-message" *ngIf="classeForm.get('nom')?.invalid && classeForm.get('nom')?.touched">
+                The class name is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="anneeUniversitaire" class="form-label">
+                <i class="fas fa-calendar-alt"></i>
+                Academic Year *
+              </label>
+              <select
+                id="anneeUniversitaire"
+                formControlName="anneeUniversitaire"
+                class="form-select"
+                [class.error]="classeForm.get('anneeUniversitaire')?.invalid && classeForm.get('anneeUniversitaire')?.touched"
+              >
+                <option value="">Select academic year</option>
+                <option value="2023/2024">2023/2024</option>
+                <option value="2024/2025">2024/2025</option>
+                <option value="2025/2026">2025/2026</option>
+              </select>
+              <div class="error-message" *ngIf="classeForm.get('anneeUniversitaire')?.invalid && classeForm.get('anneeUniversitaire')?.touched">
+                The academic year is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="level" class="form-label">
+                <i class="fas fa-layer-group"></i>
+                Level *
+              </label>
+              <select
+                id="level"
+                formControlName="level"
+                class="form-select"
+                [class.error]="classeForm.get('level')?.invalid && classeForm.get('level')?.touched"
+              >
+                <option value="">Select level</option>
+                <option value="L1">L1</option>
+                <option value="L2">L2</option>
+                <option value="L3A">L3A</option>
+                <option value="L3B">L3B</option>
+                <option value="L4">L4</option>
+                <option value="L5">L5</option>
+                <option value="M1">M1</option>
+                <option value="M2">M2</option>
+              </select>
+              <div class="error-message" *ngIf="classeForm.get('level')?.invalid && classeForm.get('level')?.touched">
+                The level is required
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="optionFormation" class="form-label">
+                <i class="fas fa-book"></i>
+                Formation Option *
+              </label>
+              <input
+                type="text"
+                id="optionFormation"
+                formControlName="optionFormation"
+                class="form-input"
+                placeholder="Enter formation option (e.g., Computer Science)"
+                [class.error]="classeForm.get('optionFormation')?.invalid && classeForm.get('optionFormation')?.touched"
+              >
+              <div class="error-message" *ngIf="classeForm.get('optionFormation')?.invalid && classeForm.get('optionFormation')?.touched">
+                The formation option is required
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="section-info">
+              <h3>Class Students</h3>
+              <p>Add students to this class</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addStudent()">
+              <i class="fas fa-plus"></i>
+              Add a Student
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-user-friends"></i>
+              Students
+            </label>
+            <div class="members-container">
+              <div class="members-list">
+                <div *ngFor="let studentId of classeForm.get('etudiantIds')?.value; let i = index" class="member-tag" [class.newly-added]="isNewlyAdded(studentId)">
+                  <span>{{ getUserName(studentId) }} (ID: {{ studentId }})</span>
+                  <button type="button" class="remove-member" (click)="removeStudent(i)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="add-member-section">
+                <select
+                  [(ngModel)]="newStudentId"
+                  [ngModelOptions]="{standalone: true}"
+                  class="form-select member-input"
+                >
+                  <option value="">Select student</option>
+                  <option *ngFor="let user of users" [value]="user.id" [disabled]="user.role !== 'STUDENT'">{{ user.firstName }} {{ user.lastName }}</option>
+                </select>
+                <button type="button" class="btn-add-member" (click)="addStudent()">
+                  <i class="fas fa-plus"></i>
+                  Add Student
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teachers Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="section-info">
+              <h3>Class Teachers</h3>
+              <p>Assign teachers to this class</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addTeacher()">
+              <i class="fas fa-plus"></i>
+              Add a Teacher
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-chalkboard-teacher"></i>
+              Teachers
+            </label>
+            <div class="members-container">
+              <div class="members-list">
+                <div *ngFor="let teacherId of classeForm.get('enseignantIds')?.value; let i = index" class="member-tag" [class.newly-added]="isNewlyAdded(teacherId)">
+                  <span>{{ getUserName(teacherId) }} (ID: {{ teacherId }})</span>
+                  <button type="button" class="remove-member" (click)="removeTeacher(i)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="add-member-section">
+                <select
+                  [(ngModel)]="newTeacherId"
+                  [ngModelOptions]="{standalone: true}"
+                  class="form-select member-input"
+                >
+                  <option value="">Select teacher</option>
+                  <option *ngFor="let user of users" [value]="user.id" [disabled]="user.role !== 'PROFESSOR'">{{ user.firstName }} {{ user.lastName }}</option>
+                </select>
+                <button type="button" class="btn-add-member" (click)="addTeacher()">
+                  <i class="fas fa-plus"></i>
+                  Add Teacher
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="goBack()">
+            <i class="fas fa-arrow-left"></i>
+            Back
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="classeForm.invalid || classeForm.get('etudiantIds')?.value.length === 0">
+            <i class="fas fa-plus"></i>
+            Add Class
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container"></div>
+</div>

@@ -12,6 +12,8 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { LayoutComponent } from './layout/layout.component';
 import { AdminAdduserComponent } from './admin-adduser/admin-adduser.component';
 import { ProfileComponent } from './profile/profile.component';
+import { ClassesComponent } from './classes/classes.component';
+import { AddClasseComponent } from './add-classe/add-classe.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +25,9 @@ import { ProfileComponent } from './profile/profile.component';
     GitauthComponent,
     AdminDashboardComponent,
     AdminAdduserComponent,
-    ProfileComponent
+    ProfileComponent,
+    ClassesComponent,
+    AddClasseComponent
     // Removed AdminAdduserComponent
   ],
   imports: [

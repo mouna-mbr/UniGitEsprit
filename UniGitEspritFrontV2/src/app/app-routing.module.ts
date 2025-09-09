@@ -6,6 +6,8 @@ import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.compo
 import { LayoutComponent } from './layout/layout.component';
 import { AdminAdduserComponent } from './admin-adduser/admin-adduser.component';
 import { ProfileComponent } from './profile/profile.component';
+import { ClassesComponent } from './classes/classes.component';
+import { AddClasseComponent } from './add-classe/add-classe.component';
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
@@ -17,6 +19,8 @@ const routes: Routes = [
       { path: '', component: AdminDashboardComponent, pathMatch: 'full' }, // Default route
       { path: 'adduser', component: AdminAdduserComponent }, // Corrected from 'addduser' to 'adduser'
       { path: 'profile', component: ProfileComponent },
+      { path: 'classes', component: ClassesComponent },
+      { path: 'add-classe', component: AddClasseComponent },
 
     ]
   },
