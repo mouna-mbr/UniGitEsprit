@@ -21,7 +21,11 @@ import { AddSujetComponent } from './add-sujet/add-sujet.component';
 import { EditSujetComponent } from './edit-sujet/edit-sujet.component';
 import { SujetDetailsComponent } from './sujet-details/sujet-details.component';
 import { SujetsComponent } from './sujets/sujets.component';
-
+import { AddGroupComponent } from './add-group/add-group.component';
+import { GroupsComponent } from './groups/groups.component';
+import { EditGroupComponent } from './edit-group/edit-group.component';
+import { GroupDetailsComponent } from './group-details/group-details.component';
+import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -41,7 +45,14 @@ import { SujetsComponent } from './sujets/sujets.component';
     AddSujetComponent,
     EditSujetComponent,
     SujetDetailsComponent,
-    SujetsComponent
+    SujetsComponent,
+    GroupsComponent,
+    EditGroupComponent,
+    GroupDetailsComponent,
+    AddGroupComponent,
+    SprintDetailsComponent
+    
+
     // Removed AdminAdduserComponent
   ],
   imports: [

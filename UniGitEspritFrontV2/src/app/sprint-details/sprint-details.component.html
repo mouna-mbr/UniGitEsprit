@@ -1,0 +1,360 @@
+<!-- Sprint Management Content -->
+<main class="sprint-main">
+  <!-- Sprint Header -->
+  <div class="sprint-header">
+    <div class="sprint-info">
+      <h1 class="sprint-title">{{currentEtape.nom}}</h1>
+      <div class="sprint-deadline">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Deadline: {{currentEtape.deadline}}</span>
+      </div>
+    </div>
+    <div class="sprint-actions">
+      <button class="btn btn-secondary" (click)="viewMergeRequests()">
+        <i class="fas fa-code-branch"></i>
+        View Merge Requests
+      </button>
+      <button class="btn btn-primary" (click)="editSprint()">
+        <i class="fas fa-edit"></i>
+        Edit Sprint
+      </button>
+    </div>
+  </div>
+
+  <!-- Kanban Board -->
+  <div class="kanban-container">
+    <div class="kanban-board">
+      <!-- To Do Column -->
+      <div class="kanban-column todo-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'todo')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-list"></i>
+            To Do
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('todo')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="todo-tasks">
+          <div *ngFor="let task of todoTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'todo', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
+              </div>
+            </div>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.nom }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeId }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- In Progress Column -->
+      <div class="kanban-column progress-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'inprogress')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-spinner"></i>
+            In Progress
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('inprogress')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="progress-tasks">
+          <div *ngFor="let task of progressTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'inprogress', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
+              </div>
+            </div>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.description }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeId }}</span>
+              </div>
+            </div>
+            <div class="task-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width]="task.status + '%'"></div>
+              </div>
+              <span class="progress-text">{{ task.status }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Done Column -->
+      <div class="kanban-column done-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'done')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-check-circle"></i>
+            Done
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('done')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="done-tasks">
+          <div *ngFor="let task of doneTasks" class="task-card completed" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'done', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
+              </div>
+            </div>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.nom }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeId }}</span>
+              </div>
+            </div>
+            <div class="task-completed">
+              <i class="fas fa-check"></i>
+              <span>Completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validations Section -->
+  <div class="validations-section">
+    <div class="validations-container">
+      <div class="validations-header">
+        <h2 class="validations-title">
+          <i class="fas fa-check-double"></i>
+          Validations
+        </h2>
+        <button class="add-validation-btn" (click)="addValidation()">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div *ngFor="let validation of validations" class="validation-group">
+        <div class="validation-header">
+          <h3 class="validation-title">{{ validation.title }}</h3>
+          <span class="validation-date">Date: {{ validation.date }}</span>
+        </div>
+        <div class="validation-remarks">
+          <div *ngFor="let remark of validation.remarks" class="remark-card">
+            <div class="remark-label">Remark:</div>
+            <div class="remark-content">{{ remark }}</div>
+          </div>
+          <button class="add-remark-btn" (click)="addRemark(validation)">Add Remark</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sprint Analytics -->
+  <div class="sprint-analytics">
+    <!-- Team Performance Table -->
+    <div class="card performance-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-chart-bar"></i>
+          Team Performance
+        </h2>
+      </div>
+      <div class="performance-table">
+        <div class="table-header">
+          <div class="table-cell">Name</div>
+          <div class="table-cell">Commits</div>
+          <div class="table-cell">Last Commit</div>
+        </div>
+        <div class="table-row" *ngFor="let member of teamPerformance">
+          <div class="table-cell member-info">
+            <div class="member-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <span class="member-name">{{ member.name }}</span>
+          </div>
+          <div class="table-cell">
+            <span class="commit-count">{{ member.commits }}</span>
+          </div>
+          <div class="table-cell">
+            <span class="last-commit" [class.recent]="member.lastCommit === '2 hours ago'">{{ member.lastCommit }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint Progress & Notes -->
+    <div class="card notes-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-sticky-note"></i>
+          Sprint Progress & Notes
+        </h2>
+      </div>
+      <div class="sprint-progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Progress</span>
+          <span class="progress-value">2/10 UP</span>
+        </div>
+        <div class="progress-bar-large">
+          <div class="progress-fill-large" [style.width]="sprintProgress + '%'"></div>
+        </div>
+      </div>
+      
+      <div class="notes-section">
+        <div class="note-group">
+          <label class="note-label">Sprint Notes:</label>
+          <textarea class="note-textarea" [(ngModel)]="sprintNotes" placeholder="Add sprint notes here..." rows="4"></textarea>
+        </div>
+        
+        <div class="note-group">
+          <label class="note-label">Remarks:</label>
+          <textarea class="note-textarea" [(ngModel)]="remarks" placeholder="Add remarks here..." rows="4"></textarea>
+        </div>
+        
+        <button class="btn btn-primary save-notes-btn" (click)="saveNotes()">
+          <i class="fas fa-save"></i>
+          Save Notes
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Task Creation Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-plus-circle"></i>
+        Add a Task - {{ getStatusLabel(selectedColumn) }}
+      </h2>
+      <button class="modal-close" (click)="closeCreateModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="createTask()" #taskForm="ngForm">
+        <div class="form-group">
+          <label for="taskTitle">Task Title *</label>
+          <input
+            type="text"
+            id="taskTitle"
+            class="form-control"
+            [(ngModel)]="newTask.title"
+            name="taskTitle"
+            placeholder="Enter the task title"
+            required
+            maxlength="100"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="taskDescription">Description *</label>
+          <textarea
+            id="taskDescription"
+            class="form-control"
+            [(ngModel)]="newTask.description"
+            name="taskDescription"
+            placeholder="Describe the task in detail..."
+            required
+            rows="4"
+            maxlength="500"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="taskResponsable">Assigned to *</label>
+          <input
+            id="taskResponsable"
+            class="form-control"
+            [(ngModel)]="newTask.responsableId"
+            name="taskResponsable"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="taskStatus">Status</label>
+          <select
+            id="taskStatus"
+            class="form-control"
+            [(ngModel)]="newTask.status"
+            name="taskStatus"
+            required
+          >
+            <option value="TO_DO">To Do</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="DONE">Done</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!taskForm.valid || isCreating">
+            <i class="fas fa-save" *ngIf="!isCreating"></i>
+            <i class="fas fa-spinner fa-spin" *ngIf="isCreating"></i>
+            {{ isCreating ? 'Creating...' : 'Create Task' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-trash"></i>
+        Confirm Delete
+      </h2>
+      <button class="modal-close" (click)="closeDeleteModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete the task "{{ selectedTask?.nom }}" (ID: {{ selectedTask?.id }})?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

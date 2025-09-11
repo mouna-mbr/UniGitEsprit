@@ -1,0 +1,279 @@
+<!-- Group Detail Content -->
+<main class="group-detail-main">
+  <!-- Group Header -->
+  <div class="group-header">
+    <div class="group-info">
+      <h1 class="group-title">{{ currentGroup?.nom || 'Unnamed Group' }}</h1>
+      <p class="group-class">{{ currentClass?.nom || 'No Class' }}</p>
+    </div>
+    <div class="group-actions">
+      <button class="btn btn-secondary" (click)="editGroup()">
+        <i class="fas fa-edit"></i> Edit Group
+      </button>
+      <button class="btn btn-primary" (click)="showSettings()">
+        <i class="fas fa-cog"></i> Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid" *ngIf="!isLoading">
+    <!-- Project Pipeline - When there is a pipeline -->
+    <div class="card pipeline-card" *ngIf="hasPipeline && currentPipeline">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-project-diagram"></i>
+          {{ currentPipeline.nom }}
+        </h2>
+        <button class="btn-icon" (click)="openPipelineModal(); $event.stopPropagation()" title="Create a new pipeline">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div class="pipeline-container">
+        <div class="pipeline">
+          <ng-container *ngFor="let etape of etapesWithStatus; let i = index; let last = last">
+            <div 
+              class="sprint-node" 
+              [class.completed]="etape.status === 'completed'"
+              [class.active]="etape.status === 'active'"
+              [class.overdue]="isOverdue(etape.deadline) && etape.status !== 'completed'"
+              (click)="viewSprint(etape)"
+            >
+              <div class="node-circle">
+                <i class="fas" [ngClass]="{
+                  'fa-check': etape.status === 'completed',
+                  'fa-play': etape.status === 'active',
+                  'fa-clock': etape.status === 'pending',
+                  'fa-flag-checkered': etape.type === 'final',
+                  'fa-exclamation-triangle': isOverdue(etape.deadline) && etape.status !== 'completed'
+                }"></i>
+              </div>
+              <div class="node-label">{{ etape.nom }}</div>
+              <div class="node-status">{{ etape.status | titlecase }}</div>
+              <div class="node-deadline" *ngIf="etape.deadline">
+                <small>{{ formatDate(etape.deadline) }}</small>
+              </div>
+              <div class="node-days-remaining" *ngIf="etape.status !== 'completed' && etape.deadline">
+                <small [class.text-danger]="isOverdueText(etape.deadline)">
+                  {{ getDaysRemainingText(etape.deadline) }}
+                </small>
+              </div>
+            </div>
+            <div 
+              class="pipeline-line" 
+              [class.completed]="etape.status === 'completed'"
+              *ngIf="!last"
+            ></div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty Pipeline State - When there is NO pipeline -->
+    <div class="card pipeline-card empty-pipeline" *ngIf="!hasPipeline">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-project-diagram"></i>
+          Project Pipeline
+        </h2>
+        <button class="btn-icon" (click)="openPipelineModal(); $event.stopPropagation()" title="Create your first pipeline">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-project-diagram"></i>
+        </div>
+        <h3 class="empty-title">No Pipeline Created</h3>
+        <p class="empty-description">
+          Create your first project pipeline to track your team's steps and milestones
+        </p>
+        <button class="btn btn-primary btn-create-pipeline" (click)="openPipelineModal(); $event.stopPropagation()">
+          <i class="fas fa-plus"></i> Create Pipeline
+        </button>
+        <button class="btn btn-outline-secondary btn-create-pipeline-alt" (click)="openPipelineModal(); $event.stopPropagation()">
+          <i class="fas fa-rocket"></i> Start Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Members Section -->
+    <div class="card members-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-users"></i>
+          Team Members
+        </h2>
+        <button class="btn-icon" (click)="openAddMemberModal(); $event.stopPropagation()">
+          <i class="fas fa-user-plus"></i>
+        </button>
+      </div>
+      <div class="members-table">
+        <div class="table-header">
+          <div class="table-cell">Member</div>
+          <div class="table-cell">Role</div>
+          <div class="table-cell">Actions</div>
+        </div>
+        <div class="table-row" *ngFor="let member of members" (mouseenter)="hoverRow(member, $event)" (mouseleave)="unhoverRow(member, $event)">
+          <div class="table-cell member-info">
+            <div class="member-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="member-details">
+              <span class="member-name">{{ member.firstName }} {{ member.lastName }}</span>
+              <span class="member-email">{{ member.email }}</span>
+            </div>
+          </div>
+          <div class="table-cell">
+            <span class="role-badge developer">{{ member.role }}</span>
+          </div>
+          <div class="table-cell">
+            <button class="btn-action" (click)="editMember(member)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-action" (click)="removeMember(member)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Contributors -->
+    <div class="card contributors-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-trophy"></i>
+          Top Contributors
+        </h2>
+        <button class="btn-icon" (click)="refreshContributions(); $event.stopPropagation()">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+        </button>
+      </div>
+      <div class="contributors-podium">
+        <div class="contributor second-place" *ngFor="let contributor of contributors; let i = index" [ngClass]="'place-' + (i + 1)">
+          <div class="contributor-avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div class="contributor-name">{{ contributor.name }}</div>
+          <div class="contributor-rank">{{ contributor.rank }}</div>
+          <div class="contributor-stats">
+            <span class="commits">{{ contributor.commits }} commits</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repositories -->
+    <div class="card repositories-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-code-branch"></i>
+          Repositories
+        </h2>
+        <button class="btn-icon" (click)="addRepository(); $event.stopPropagation()">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div class="repositories-list">
+        <div class="repository-item" *ngFor="let repo of repositories">
+          <div class="repo-info">
+            <div class="repo-icon">
+              <i class="fab fa-github"></i>
+            </div>
+            <div class="repo-details">
+              <span class="repo-name">{{ repo.name }}</span>
+              <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Pipeline Modal -->
+<div class="modal-overlay" *ngIf="showPipelineModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-project-diagram"></i> Create New Pipeline
+      </h2>
+      <button class="modal-close" (click)="closePipelineModal(); $event.stopPropagation()">×</button>
+    </div>
+    <div class="modal-body">
+      <form #pipelineForm="ngForm" (ngSubmit)="createPipeline(); $event.preventDefault()" novalidate>
+        <div class="form-group">
+          <label for="pipelineName">Pipeline Name</label>
+          <input type="text" id="pipelineName" name="pipelineName" [(ngModel)]="newPipeline.nom" required class="form-control">
+        </div>
+        <div class="etapes-config">
+          <div class="etape-item" *ngFor="let etape of newPipeline.etapes; let i = index">
+            <div class="etape-header">
+              <h4>Step {{ i + 1 }}</h4>
+              <button type="button" class="btn-remove-etape" (click)="removeEtape(i)" *ngIf="newPipeline.etapes.length > 1">×</button>
+            </div>
+            <div class="etape-fields">
+              <div class="form-row">
+                <div class="form-col">
+                  <label for="etapeNom{{i}}">Step Name</label>
+                  <input type="text" id="etapeNom{{i}}" name="etapeNom{{i}}" [(ngModel)]="etape.nom" required class="form-control">
+                </div>
+                <div class="form-col">
+                  <label for="etapeDeadline{{i}}">Deadline</label>
+                  <input type="date" id="etapeDeadline{{i}}" name="etapeDeadline{{i}}" [(ngModel)]="etape.deadline" required class="form-control">
+                </div>
+              </div>
+              <div class="form-col-full">
+                <label for="etapeConsigne{{i}}">Instructions</label>
+                <textarea id="etapeConsigne{{i}}" name="etapeConsigne{{i}}" [(ngModel)]="etape.consigne" placeholder="Instructions" class="form-control"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-add-etape" (click)="addEtapeToPipeline()">
+          <i class="fas fa-plus"></i> Add Step
+        </button>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="!pipelineForm.valid">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal-overlay" *ngIf="showAddMemberModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        <i class="fas fa-user-plus"></i> Add Member
+      </h2>
+      <button class="modal-close" (click)="closeAddMemberModal(); $event.stopPropagation()">×</button>
+    </div>
+    <div class="modal-body">
+      <form #memberForm="ngForm" (ngSubmit)="addMemberToGroup(); $event.preventDefault()" novalidate>
+        <div class="form-group">
+          <label for="memberEmail">Email</label>
+          <input type="email" id="memberEmail" name="memberEmail" [(ngModel)]="newMember.email" required class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="memberRole">Role</label>
+          <select id="memberRole" name="memberRole" [(ngModel)]="newMember.role" required class="form-control">
+            <option value="STUDENT">Student</option>
+            <option value="PROFESSOR">Professor</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="!memberForm.valid">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

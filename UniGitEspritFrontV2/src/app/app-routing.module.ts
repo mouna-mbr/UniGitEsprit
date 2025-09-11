@@ -15,12 +15,17 @@ import { AddSujetComponent } from './add-sujet/add-sujet.component';
 import { EditSujetComponent } from './edit-sujet/edit-sujet.component';
 import { SujetDetailsComponent } from './sujet-details/sujet-details.component';
 import { SujetsComponent } from './sujets/sujets.component';
-import { GroupesComponent } from './groupes/groupes.component';
-import { AddgroupeComponent } from './addgroupe/addgroupe.component';
-import { DetailsgroupeComponent } from './detailsgroupe/detailsgroupe.component';
-import { DetailssprintComponent } from './detailssprint/detailssprint.component';
-import { UpdateGroupComponent } from './update-group/update-group.component';
-import { GitGroupComponent } from './git-group/git-group.component';
+import { GroupsComponent } from './groups/groups.component';
+import { AddGroupComponent } from './add-group/add-group.component';
+import { GroupDetailsComponent } from './group-details/group-details.component';
+import { EditGroupComponent } from './edit-group/edit-group.component';
+import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
+//import { GroupesComponent } from './groupes/groupes.component';
+//import { AddgroupeComponent } from './addgroupe/addgroupe.component';
+//import { DetailsgroupeComponent } from './detailsgroupe/detailsgroupe.component';
+//import { DetailssprintComponent } from './detailssprint/detailssprint.component';
+//import { UpdateGroupComponent } from './update-group/update-group.component';
+//import { GitGroupComponent } from './git-group/git-group.component';
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
@@ -49,12 +54,12 @@ const routes: Routes = [
       {path:'favoritesClasses', component: FavoriteClassesComponent},
       {path:'sujetDetails/:id', component: SujetDetailsComponent},
       //group
-      { path: 'groupes', component: GroupesComponent },
-      { path: 'addgroupe', component: AddgroupeComponent },
-      { path: 'groupdetails/:id', component: DetailsgroupeComponent },
-      { path: 'detailssprint/:id', component: DetailssprintComponent },
-      { path: 'update-group/:id', component: UpdateGroupComponent },
-      {path:'repository-viewer',component:GitGroupComponent}
+      { path: 'groupes', component: GroupsComponent },
+      { path: 'addgroupe', component: AddGroupComponent },
+      { path: 'groupdetails/:id', component: GroupDetailsComponent },
+      { path: 'detailssprint/:id', component: SprintDetailsComponent },
+      { path: 'update-group/:id', component: EditGroupComponent },
+     // {path:'repository-viewer',component:GitGroupComponent}
 
 
     ]

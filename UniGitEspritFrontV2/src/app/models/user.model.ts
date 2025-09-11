@@ -1,26 +1,24 @@
+export interface UserRole {
+  userId: number;
+  role: string;
+}
+
 export interface User {
   firstName: string;
   lastName: string;
   role: 'ADMIN' | 'STUDENT' | 'PROFESSOR';
   identifiant: string;
-  password: string;
   classe?: string;
   specialite?: string;
   email: string;
   gitUsername?: string;
   gitAccessToken?: string;
+  password?: string;
+  createdAt?: string; // Optional, to match UserResponse if needed
 }
 
-export interface UserResponse {
+export interface UserResponse extends User {
   id: number;
-  firstName: string;
-  lastName: string;
-  role: 'ADMIN' | 'STUDENT' | 'PROFESSOR';
-  identifiant: string;
-  classe?: string;
-  specialite?: string;
-  email: string;
-  gitUsername?: string;
-  gitAccessToken?: string;
+  // Inherits all from User, can add extra fields like createdAt
   createdAt: string;
 }

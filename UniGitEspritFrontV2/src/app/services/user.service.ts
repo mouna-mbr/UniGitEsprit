@@ -11,6 +11,11 @@ export class UserService {
   private apiUrl = 'http://localhost:8081/uniGitEsprit/api/users';
 
   constructor(private http: HttpClient) {}
+  getStudentsByEtapeId(etapeId: number): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`http://localhost:8081/uniGitEsprit/api/etapes/${etapeId}/students`).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   getAllUsers(): Observable<UserResponse[]> {
     return this.http.get<UserResponse[]>(this.apiUrl).pipe(
