@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,9 +43,9 @@ public class ValidationServiceImpl {
         }).collect(Collectors.toList());
     }
 
-    public List<String> getRemarksByValidation(Long etapeId) {
-        Validation validation = validationRepository.findById(etapeId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Etape does not exist"));
+    public List<String> getRemarksByValidation(Long validationId) {
+        Validation validation = validationRepository.findById(validationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation does not exist"));
         return validation.getRemarques().stream()
                 .filter(remarque -> remarque != null && !remarque.trim().isEmpty())
                 .collect(Collectors.toList());
@@ -117,5 +118,61 @@ public class ValidationServiceImpl {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation does not exist");
         }
         validationRepository.deleteById(validationId);
+    }
+
+    // New method: Add a remark to a validation
+    public ValidationDTO addRemarkToValidation(Long validationId, String remark) {
+        if (remark == null || remark.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Remark cannot be empty");
+        }
+        Validation validation = validationRepository.findById(validationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation does not exist"));
+        validation.getRemarques().add(remark);
+        validationRepository.save(validation);
+
+        return mapToDTO(validation);
+    }
+
+    // New method: Update a specific remark in a validation
+    public ValidationDTO updateRemarkInValidation(Long validationId, int remarkIndex, String updatedRemark) {
+        if (updatedRemark == null || updatedRemark.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Remark cannot be empty");
+        }
+        Validation validation = validationRepository.findById(validationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation does not exist"));
+        List<String> remarques = validation.getRemarques();
+        if (remarkIndex < 0 || remarkIndex >= remarques.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid remark index");
+        }
+        remarques.set(remarkIndex, updatedRemark);
+        validationRepository.save(validation);
+
+        return mapToDTO(validation);
+    }
+
+    // New method: Delete a specific remark from a validation
+    public ValidationDTO deleteRemarkFromValidation(Long validationId, int remarkIndex) {
+        Validation validation = validationRepository.findById(validationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation does not exist"));
+        List<String> remarques = validation.getRemarques();
+        if (remarkIndex < 0 || remarkIndex >= remarques.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid remark index");
+        }
+        remarques.remove(remarkIndex);
+        validationRepository.save(validation);
+
+        return mapToDTO(validation);
+    }
+
+    // Helper method to map Validation to ValidationDTO
+    private ValidationDTO mapToDTO(Validation validation) {
+        ValidationDTO dto = new ValidationDTO();
+        dto.setId(validation.getId());
+        dto.setDateValidation(validation.getDateValidation());
+        dto.setRemarques(validation.getRemarques());
+        dto.setEtapeId(validation.getEtape().getId());
+        dto.setEtudiantIds(validation.getEtudiants().stream().map(User::getId).collect(Collectors.toList()));
+        dto.setNote(validation.getNote());
+        return dto;
     }
 }

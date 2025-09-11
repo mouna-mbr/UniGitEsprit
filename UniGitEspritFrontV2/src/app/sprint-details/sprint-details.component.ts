@@ -4,6 +4,10 @@ import { EtapeService } from '../services/etape.service';
 import { CreateTaskRequest, Status, TacheDTO } from '../models/tache.model';
 import { TacheService } from '../services/tache.service';
 import { User } from '../models/user.model';
+import { ValidationService } from '../services/validation.service';
+import { ValidationDTO } from '../models/validation.model';
+import { UserService } from '../services/user.service';
+import { UserResponse } from '../models/user.model';
 
 @Component({
   selector: 'app-sprint-details',
@@ -18,7 +22,9 @@ export class SprintDetailsComponent implements OnInit {
   sprintNotes: string = '';
   remarks: string = '';
   isProcessing = false;
-  showTaskMenu = false; // Fixed typo from showTaskMenuu to showTaskMenu
+  showTaskMenu = false;
+  validations: ValidationDTO[] = [];
+  students: UserResponse[] = [];
 
   sprintProgress: number = 20;
   teamPerformance = [
@@ -36,24 +42,30 @@ export class SprintDetailsComponent implements OnInit {
   isCreating = false;
   selectedColumn: 'todo' | 'inprogress' | 'done' = 'todo';
   selectedTask: TacheDTO | null = null;
-  showDeleteModal = false; // New property for delete modal
+  showDeleteModal = false;
   newTask: CreateTaskRequest = {
     title: '',
     description: '',
     responsableId: 0,
     status: Status.TODO,
   };
-  validations = [
-    { title: 'Validation 1', date: '15/01/2025', remarks: ['Description of the professor\'s remark', 'Description of the professor\'s remark', 'Description of the professor\'s remark'] },
-    { title: 'Validation 2', date: '25/01/2025', remarks: ['Description of the professor\'s remark', 'Description of the professor\'s remark'] },
-    { title: 'Validation 3', date: '31/01/2025', remarks: ['Description of the professor\'s remark'] }
-  ];
+  showAddValidationModal = false;
+  newValidation: ValidationDTO = {
+    id: 0,
+    dateValidation: '',
+    remarques: ['New validation remark'],
+    etapeId: 0,
+    etudiantIds: [],
+    note: undefined
+  };
 
   constructor(
     private router: Router,
     private tacheService: TacheService,
     private route: ActivatedRoute,
-    private etapeService: EtapeService
+    private etapeService: EtapeService,
+    private validationService: ValidationService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
@@ -62,6 +74,8 @@ export class SprintDetailsComponent implements OnInit {
       next: (etape) => {
         this.currentEtape = etape;
         this.loadTasks();
+        this.loadValidations();
+        this.loadStudents();
         console.log('Etape loaded:', etape);
       },
       error: (error) => {
@@ -77,11 +91,10 @@ export class SprintDetailsComponent implements OnInit {
   }
 
   loadTasks(): void {
-    if (this.currentEtapeId == null) {
+    if (!this.currentEtapeId) {
       console.error('Etape ID is undefined');
       return;
     }
-
     this.tacheService.getTachesByEtapeId(this.currentEtapeId).subscribe({
       next: (tasks) => {
         this.tasks = tasks;
@@ -94,6 +107,32 @@ export class SprintDetailsComponent implements OnInit {
         this.todoTasks = [];
         this.progressTasks = [];
         this.doneTasks = [];
+      }
+    });
+  }
+
+  loadValidations(): void {
+    this.validationService.getValidationsByEtape(this.currentEtapeId).subscribe({
+      next: (validations) => {
+        this.validations = validations;
+        console.log('Validations loaded:', validations);
+      },
+      error: (error) => {
+        console.error('Error loading validations:', error);
+        this.validations = [];
+      }
+    });
+  }
+
+  loadStudents(): void {
+    this.userService.getStudentsByEtapeId(this.currentEtapeId).subscribe({
+      next: (students) => {
+        this.students = students;
+        console.log('Students loaded:', students);
+      },
+      error: (error) => {
+        console.error('Error loading students:', error);
+        this.students = [];
       }
     });
   }
@@ -134,7 +173,6 @@ export class SprintDetailsComponent implements OnInit {
 
   createTask() {
     if (this.isCreating) return;
-
     this.isCreating = true;
     const tacheDTO: TacheDTO = {
       id: 0,
@@ -144,7 +182,6 @@ export class SprintDetailsComponent implements OnInit {
       deadline: this.currentEtape.deadline || new Date().toISOString().split('T')[0],
       assigneeId: this.newTask.responsableId
     };
-
     this.tacheService.createTache(this.currentEtapeId, tacheDTO).subscribe({
       next: (createdTache) => {
         const assigneeMap: { [key: number]: string } = {
@@ -157,17 +194,10 @@ export class SprintDetailsComponent implements OnInit {
           ...createdTache,
           assignee: assigneeMap[createdTache.assigneeId] || 'Unknown'
         };
-
         switch (createdTache.status) {
-          case Status.TODO:
-            this.todoTasks.push(taskWithAssignee);
-            break;
-          case Status.IN_PROGRESS:
-            this.progressTasks.push(taskWithAssignee);
-            break;
-          case Status.DONE:
-            this.doneTasks.push(taskWithAssignee);
-            break;
+          case Status.TODO: this.todoTasks.push(taskWithAssignee); break;
+          case Status.IN_PROGRESS: this.progressTasks.push(taskWithAssignee); break;
+          case Status.DONE: this.doneTasks.push(taskWithAssignee); break;
         }
         this.tasks.push(taskWithAssignee);
         this.isCreating = false;
@@ -182,14 +212,10 @@ export class SprintDetailsComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     switch (status) {
-      case Status.TODO:
-        return 'À faire';
-      case Status.IN_PROGRESS:
-        return 'En cours';
-      case Status.DONE:
-        return 'Terminé';
-      default:
-        return status;
+      case Status.TODO: return 'À faire';
+      case Status.IN_PROGRESS: return 'En cours';
+      case Status.DONE: return 'Terminé';
+      default: return status;
     }
   }
 
@@ -203,33 +229,19 @@ export class SprintDetailsComponent implements OnInit {
   }
 
   categorizeTasks(): void {
-    const assigneeMap: { [key: number]: string } = {
-      1: 'mouna',
-      2: 'Sana',
-      3: 'ines',
-      4: 'rim'
-    };
-
+    const assigneeMap: { [key: number]: string } = this.students.reduce((map, student) => {
+      map[student.id] = `${student.firstName} ${student.lastName}`;
+      return map;
+    }, {} as { [key: number]: string });
     this.todoTasks = this.tasks
       .filter(task => task.status === Status.TODO)
-      .map(task => ({
-        ...task,
-        assignee: assigneeMap[task.assigneeId] || 'Unknown'
-      }));
-
+      .map(task => ({ ...task, assignee: assigneeMap[task.assigneeId] || 'Unassigned' }));
     this.progressTasks = this.tasks
       .filter(task => task.status === Status.IN_PROGRESS)
-      .map(task => ({
-        ...task,
-        assignee: assigneeMap[task.assigneeId] || 'Unknown'
-      }));
-
+      .map(task => ({ ...task, assignee: assigneeMap[task.assigneeId] || 'Unassigned' }));
     this.doneTasks = this.tasks
       .filter(task => task.status === Status.DONE)
-      .map(task => ({
-        ...task,
-        assignee: assigneeMap[task.assigneeId] || 'Unknown'
-      }));
+      .map(task => ({ ...task, assignee: assigneeMap[task.assigneeId] || 'Unassigned' }));
   }
 
   showNotification() {
@@ -238,7 +250,6 @@ export class SprintDetailsComponent implements OnInit {
 
   deleteTask(taskId: number) {
     this.isProcessing = true;
-    console.log('Deleting task ID:', taskId);
     this.tacheService.deleteTache(taskId).subscribe({
       next: () => {
         this.tasks = this.tasks.filter(t => t.id !== taskId);
@@ -290,7 +301,6 @@ export class SprintDetailsComponent implements OnInit {
     event.preventDefault();
     const container = event.currentTarget as HTMLElement;
     container.style.backgroundColor = '';
-
     if (this.draggedTask) {
       this.updateTaskStatus(this.draggedTask, column);
       this.moveTask(this.draggedTask, column);
@@ -300,20 +310,10 @@ export class SprintDetailsComponent implements OnInit {
   updateTaskStatus(task: any, column: 'todo' | 'inprogress' | 'done') {
     let statut: Status;
     switch (column) {
-      case 'todo':
-        task.progress = 0;
-        statut = Status.TODO;
-        break;
-      case 'inprogress':
-        task.progress = 60;
-        statut = Status.IN_PROGRESS;
-        break;
-      case 'done':
-        task.progress = 100;
-        statut = Status.DONE;
-        break;
-      default:
-        statut = Status.TODO;
+      case 'todo': task.progress = 0; statut = Status.TODO; break;
+      case 'inprogress': task.progress = 60; statut = Status.IN_PROGRESS; break;
+      case 'done': task.progress = 100; statut = Status.DONE; break;
+      default: statut = Status.TODO;
     }
     this.tacheService.updateStatus(task.id, statut).subscribe({
       next: () => console.log('Task status updated successfully'),
@@ -326,27 +326,59 @@ export class SprintDetailsComponent implements OnInit {
     this.todoTasks = this.todoTasks.filter(t => t !== task);
     this.progressTasks = this.progressTasks.filter(t => t !== task);
     this.doneTasks = this.doneTasks.filter(t => t !== task);
-
     if (column === 'todo') this.todoTasks.push(task);
     else if (column === 'inprogress') this.progressTasks.push(task);
     else if (column === 'done') this.doneTasks.push(task);
   }
 
   addValidation() {
-    const validationTitle = prompt('Enter validation title:');
-    if (validationTitle) {
-      const validationDate = prompt('Enter validation date (DD/MM/YYYY):');
-      if (validationDate) {
-        this.validations.push({ title: validationTitle, date: validationDate, remarks: ['New validation remark'] });
-      }
-    }
+    this.showAddValidationModal = true;
+    this.newValidation = {
+      id: 0,
+      dateValidation: '',
+      remarques: ['New validation remark'],
+      etapeId: this.currentEtapeId,
+      etudiantIds: [],
+      note: undefined
+    };
   }
 
-  addRemark(validation: any) {
-    const remark = prompt('Enter remark:');
-    if (remark) {
-      validation.remarks.push(remark);
+  closeAddValidationModal() {
+    this.showAddValidationModal = false;
+    this.newValidation = {
+      id: 0,
+      dateValidation: '',
+      remarques: ['New validation remark'],
+      etapeId: this.currentEtapeId,
+      etudiantIds: [],
+      note: undefined
+    };
+  }
+
+  submitAddValidation() {
+    console.log('Submitting validation:', this.newValidation);
+    if (!this.newValidation.dateValidation) {
+      alert('Please enter a valid date.');
+      return;
     }
+    const noteValue = this.newValidation.note ? parseFloat(this.newValidation.note as any) : undefined;
+    if (noteValue !== undefined && isNaN(noteValue)) {
+      alert('Please enter a valid number for the note.');
+      return;
+    }
+    this.newValidation.note = noteValue;
+    this.newValidation.etapeId = this.currentEtapeId;
+    this.validationService.createValidation(this.currentEtapeId, this.newValidation).subscribe({
+      next: (createdValidation) => {
+        this.validations.push(createdValidation);
+        this.closeAddValidationModal();
+        alert('Validation added successfully!');
+      },
+      error: (error) => {
+        console.error('Error adding validation:', error);
+        alert('Failed to add validation: ' + (error.error?.message || 'Please try again.'));
+      }
+    });
   }
 
   saveNotes() {
@@ -369,7 +401,7 @@ export class SprintDetailsComponent implements OnInit {
   openDeleteModal(task: TacheDTO) {
     this.selectedTask = task;
     this.showDeleteModal = true;
-    this.showTaskMenu = false; // Close the task menu when opening delete modal
+    this.showTaskMenu = false;
   }
 
   closeDeleteModal() {
@@ -386,9 +418,7 @@ export class SprintDetailsComponent implements OnInit {
   openTaskModal(mode: 'update' | 'create', column: 'todo' | 'inprogress' | 'done', task?: TacheDTO) {
     this.showCreateModal = true;
     this.selectedColumn = column;
-
     if (mode === 'update' && task) {
-      // Fill the form with the existing task data
       this.selectedTask = task;
       this.newTask = {
         title: task.nom,
@@ -397,8 +427,57 @@ export class SprintDetailsComponent implements OnInit {
         status: task.status,
       };
     } else {
-      // Creation mode (already handled)
       this.resetNewTask();
+    }
+  }
+
+  addRemark(validationId: number) {
+    const newRemark = prompt('Enter new remark:');
+    if (newRemark) {
+      this.validationService.addRemark(validationId, newRemark).subscribe({
+        next: (updatedValidation) => {
+          const index = this.validations.findIndex(v => v.id === validationId);
+          if (index !== -1) this.validations[index] = updatedValidation;
+          alert('Remark added successfully!');
+        },
+        error: (error) => {
+          console.error('Error adding remark:', error);
+          alert('Failed to add remark.');
+        }
+      });
+    }
+  }
+
+  updateRemark(validationId: number, remarkIndex: number) {
+    const updatedRemark = prompt('Enter updated remark:');
+    if (updatedRemark) {
+      this.validationService.updateRemark(validationId, remarkIndex, updatedRemark).subscribe({
+        next: (updatedValidation) => {
+          const index = this.validations.findIndex(v => v.id === validationId);
+          if (index !== -1) this.validations[index] = updatedValidation;
+          alert('Remark updated successfully!');
+        },
+        error: (error) => {
+          console.error('Error updating remark:', error);
+          alert('Failed to update remark.');
+        }
+      });
+    }
+  }
+
+  deleteRemark(validationId: number, remarkIndex: number) {
+    if (confirm('Are you sure you want to delete this remark?')) {
+      this.validationService.deleteRemark(validationId, remarkIndex).subscribe({
+        next: (updatedValidation) => {
+          const index = this.validations.findIndex(v => v.id === validationId);
+          if (index !== -1) this.validations[index] = updatedValidation;
+          alert('Remark deleted successfully!');
+        },
+        error: (error) => {
+          console.error('Error deleting remark:', error);
+          alert('Failed to delete remark.');
+        }
+      });
     }
   }
 }
