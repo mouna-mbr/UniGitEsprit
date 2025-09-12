@@ -8,6 +8,7 @@ public class EtapeDTO {
     private String consigne;
     private LocalDate deadline;
     private Long pipelineId;
+    private String gitRepoUrl; // Optional: Include Group's gitRepoUrl
 
     public Long getPipelineId() {
         return pipelineId;
@@ -20,11 +21,28 @@ public class EtapeDTO {
     public EtapeDTO() {
     }
 
+    public EtapeDTO(Long id, String nom, String consigne, LocalDate deadline, Long id1, String gitRepoUrl) {
+        this.id = id;
+        this.nom = nom;
+        this.consigne = consigne;
+        this.deadline = deadline;
+        this.pipelineId = id1;
+        this.gitRepoUrl = gitRepoUrl;
+    }
     public EtapeDTO(Long id, String nom, String consigne, LocalDate deadline, Long id1) {
         this.id = id;
         this.nom = nom;
         this.consigne = consigne;
         this.deadline = deadline;
+        this.pipelineId = id1;
+    }
+
+    public String getGitRepoUrl() {
+        return gitRepoUrl;
+    }
+
+    public void setGitRepoUrl(String gitRepoUrl) {
+        this.gitRepoUrl = gitRepoUrl;
     }
 
     // Getters and Setters

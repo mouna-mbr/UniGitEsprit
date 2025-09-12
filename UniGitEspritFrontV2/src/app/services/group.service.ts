@@ -34,4 +34,7 @@ export class GroupService {
   toggleFavorite(id: number): Observable<GroupResponse> {
     return this.http.post<GroupResponse>(`${this.apiUrl}/${id}/toggle-favorite`, {});
   }
+  getGroupByPipelineId(pipelineId: number): Observable<GroupResponse> {
+    return this.http.get<GroupResponse>(`${this.apiUrl}/by-pipeline/${pipelineId}`);
+  }
 }

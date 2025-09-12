@@ -171,30 +171,31 @@
     </div>
 
     <!-- Repositories -->
-    <div class="card repositories-card">
-      <div class="card-header">
-        <h2 class="card-title">
-          <i class="fas fa-code-branch"></i>
-          Repositories
-        </h2>
-        <button class="btn-icon" (click)="addRepository(); $event.stopPropagation()">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="repositories-list">
-        <div class="repository-item" *ngFor="let repo of repositories">
-          <div class="repo-info">
-            <div class="repo-icon">
-              <i class="fab fa-github"></i>
-            </div>
-            <div class="repo-details">
-              <span class="repo-name">{{ repo.name }}</span>
-              <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View</a>
-            </div>
-          </div>
+ <!-- src/app/group-details.component.html -->
+<!-- Repositories -->
+<div class="card repositories-card">
+  <div class="card-header">
+    <h2 class="card-title">
+      <i class="fas fa-code-branch"></i>
+      Repositories
+    </h2>
+
+  </div>
+  <div class="repositories-list">
+    <div class="repository-item" *ngFor="let repo of repositories">
+      <div class="repo-info">
+        <div class="repo-icon">
+          <i class="fab fa-github"></i>
+        </div>
+        <div class="repo-details">
+          <span class="repo-name">{{ repo.name }}</span>
+          <button class="btn btn-link" (click)="viewRepository()" *ngIf="repo.url">View in App</button>
+          <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View on GitHub</a>
         </div>
       </div>
     </div>
+  </div>
+</div>
   </div>
 </main>
 

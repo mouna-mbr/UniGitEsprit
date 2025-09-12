@@ -11,4 +11,6 @@ public interface GroupService {
     GroupResponseDTO updateGroup(Long id, GroupCreateDTO groupCreateDTO);
     void deleteGroup(Long id);
     GroupResponseDTO toggleFavorite(Long id);
-}
+     GroupResponseDTO getGroupByPipelineId(Long pipelineId) ;
+
+    }

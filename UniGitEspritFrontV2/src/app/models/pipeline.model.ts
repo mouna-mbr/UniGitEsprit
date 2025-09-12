@@ -1,9 +1,11 @@
 export interface EtapeDTO {
-    id?: number
-    nom: string
-    consigne: string
-    deadline: string // Format ISO string pour les dates
-  }
+  id?: number;
+  nom: string;
+  consigne: string;
+  deadline: string;
+  pipelineId?: number | null;
+  gitRepoUrl?: string;
+}
   
   export interface PipelineDTO {
     id?: number

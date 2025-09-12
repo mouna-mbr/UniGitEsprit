@@ -26,6 +26,7 @@ import { GroupsComponent } from './groups/groups.component';
 import { EditGroupComponent } from './edit-group/edit-group.component';
 import { GroupDetailsComponent } from './group-details/group-details.component';
 import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
+import { RepositoryViewerComponent } from './repository-viewer/repository-viewer.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -50,8 +51,8 @@ import {  SprintDetailsComponent } from './sprint-details/sprint-details.compone
     EditGroupComponent,
     GroupDetailsComponent,
     AddGroupComponent,
-    SprintDetailsComponent
-    
+    SprintDetailsComponent,
+    RepositoryViewerComponent    
 
     // Removed AdminAdduserComponent
   ],

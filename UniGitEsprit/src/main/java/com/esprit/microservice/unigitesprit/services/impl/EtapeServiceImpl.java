@@ -1,3 +1,4 @@
+// src/main/java/com/esprit/microservice/unigitesprit/services/impl/EtapeServiceImpl.java
 package com.esprit.microservice.unigitesprit.services.impl;
 
 import com.esprit.microservice.unigitesprit.dto.EtapeDTO;
@@ -47,7 +48,7 @@ public class EtapeServiceImpl {
                     dto.setLastName(user.getLastName());
                     dto.setRole(user.getRole());
                     dto.setIdentifiant(user.getIdentifiant());
-                    dto.setClasse(user.getClasse()); // Use String directly
+                    dto.setClasse(user.getClasse());
                     dto.setSpecialite(user.getSpecialite());
                     dto.setEmail(user.getEmail());
                     dto.setGitUsername(user.getGitUsername());
@@ -58,7 +59,6 @@ public class EtapeServiceImpl {
                 .collect(Collectors.toList());
     }
 
-    // Create or update an Etape
     public EtapeDTO saveEtape(EtapeDTO etapeDTO) {
         if (etapeDTO.getNom() == null || etapeDTO.getNom().trim().isEmpty()) {
             throw new IllegalArgumentException("Etape name cannot be null or empty");
@@ -82,14 +82,12 @@ public class EtapeServiceImpl {
         return toDTO(savedEtape);
     }
 
-    // Get Etape by ID
     public EtapeDTO getEtapeById(Long id) {
         Etape etape = etapeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Etape not found with ID: " + id));
         return toDTO(etape);
     }
 
-    // Get all Etapes by Pipeline ID
     public List<EtapeDTO> getEtapesByPipelineId(Long pipelineId) {
         return etapeRepository.findByPipelineId(pipelineId)
                 .stream()
@@ -97,7 +95,6 @@ public class EtapeServiceImpl {
                 .collect(Collectors.toList());
     }
 
-    // Delete Etape by ID
     public void deleteEtape(Long id) {
         if (!etapeRepository.existsById(id)) {
             throw new IllegalArgumentException("Etape not found with ID: " + id);
@@ -105,14 +102,18 @@ public class EtapeServiceImpl {
         etapeRepository.deleteById(id);
     }
 
-    // Convert Etape to EtapeDTO
     private EtapeDTO toDTO(Etape etape) {
+        String gitRepoUrl = null;
+        if (etape.getPipeline() != null && etape.getPipeline().getGroup() != null) {
+            gitRepoUrl = etape.getPipeline().getGroup().getGitRepoUrl();
+        }
         return new EtapeDTO(
                 etape.getId(),
                 etape.getNom(),
                 etape.getConsigne(),
                 etape.getDeadline(),
-                etape.getPipeline().getId()
+                etape.getPipeline() != null ? etape.getPipeline().getId() : null,
+                gitRepoUrl
         );
     }
 }

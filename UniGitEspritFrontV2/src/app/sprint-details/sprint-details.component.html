@@ -14,6 +14,10 @@
         <i class="fas fa-code-branch"></i>
         View Merge Requests
       </button>
+      <button class="btn btn-primary" (click)="viewRepository()">
+        <i class="fas fa-eye"></i>
+        View Repository
+      </button>
       <button class="btn btn-primary" (click)="editSprint()">
         <i class="fas fa-edit"></i>
         Edit Sprint
@@ -21,139 +25,150 @@
     </div>
   </div>
 
+  <!-- Repository Info (New Section) -->
+  <div class="repository-info" *ngIf="repository">
+    <h2>Repository Details</h2>
+    <p><strong>Name:</strong> {{ repository.name }}</p>
+    <p><strong>Full Name:</strong> {{ repository.fullName }}</p>
+    <p><strong>URL:</strong> <a href="{{ repository.url }}" target="_blank">{{ repository.url }}</a></p>
+    <p><strong>Default Branch:</strong> {{ repository.defaultBranch }}</p>
+    <p><strong>Stars:</strong> {{ repository.stars }}</p>
+    <p><strong>Forks:</strong> {{ repository.forks }}</p>
+    <p><strong>Created At:</strong> {{ repository.createdAt | date:'yyyy-MM-dd' }}</p>
+    <p><strong>Updated At:</strong> {{ repository.updatedAt | date:'yyyy-MM-dd' }}</p>
+  </div>
+  <div *ngIf="!repository" class="repository-error">
+    <p>No repository data available.</p>
+  </div>
+
   <!-- Kanban Board -->
-  <!-- ... (previous HTML remains unchanged until the Kanban Board) ... -->
-
-<!-- Kanban Board -->
-<div class="kanban-container">
-  <div class="kanban-board">
-    <!-- To Do Column -->
-    <div class="kanban-column todo-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'todo')">
-      <div class="column-header">
-        <h3 class="column-title">
-          <i class="fas fa-list"></i>
-          To Do
-        </h3>
-        <button class="add-task-btn" (click)="openCreateModal('todo')">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="tasks-container" id="todo-tasks">
-        <div *ngFor="let task of todoTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
-          <div class="task-header">
-            <span class="task-id">{{ task.id }}</span>
-            <div class="dropdown">
-              <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
-              <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
-                <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'todo', task)">Update</button> -->
-                <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+  <div class="kanban-container">
+    <div class="kanban-board">
+      <!-- To Do Column -->
+      <div class="kanban-column todo-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'todo')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-list"></i>
+            To Do
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('todo')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="todo-tasks">
+          <div *ngFor="let task of todoTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'todo', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="task-content">
-            <h4 class="task-title">{{ task.nom }}</h4>
-            <div class="task-assignee">
-              <div class="assignee-avatar">
-                <i class="fas fa-user"></i>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.nom }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
               </div>
-              <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- In Progress Column -->
-    <div class="kanban-column progress-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'inprogress')">
-      <div class="column-header">
-        <h3 class="column-title">
-          <i class="fas fa-spinner"></i>
-          In Progress
-        </h3>
-        <button class="add-task-btn" (click)="openCreateModal('inprogress')">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="tasks-container" id="progress-tasks">
-        <div *ngFor="let task of progressTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
-          <div class="task-header">
-            <span class="task-id">{{ task.id }}</span>
-            <div class="dropdown">
-              <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
-              <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
-                <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'inprogress', task)">Update</button> -->
-                <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+      <!-- In Progress Column -->
+      <div class="kanban-column progress-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'inprogress')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-spinner"></i>
+            In Progress
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('inprogress')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="progress-tasks">
+          <div *ngFor="let task of progressTasks" class="task-card" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'inprogress', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="task-content">
-            <h4 class="task-title">{{ task.description }}</h4>
-            <div class="task-assignee">
-              <div class="assignee-avatar">
-                <i class="fas fa-user"></i>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.description }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
               </div>
-              <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
             </div>
-          </div>
-          <div class="task-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" [style.width]="task.status + '%'"></div>
+            <div class="task-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width]="task.status + '%'"></div>
+              </div>
+              <span class="progress-text">{{ task.status }}%</span>
             </div>
-            <span class="progress-text">{{ task.status }}%</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Done Column -->
-    <div class="kanban-column done-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'done')">
-      <div class="column-header">
-        <h3 class="column-title">
-          <i class="fas fa-check-circle"></i>
-          Done
-        </h3>
-        <button class="add-task-btn" (click)="openCreateModal('done')">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="tasks-container" id="done-tasks">
-        <div *ngFor="let task of doneTasks" class="task-card completed" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
-          <div class="task-header">
-            <span class="task-id">{{ task.id }}</span>
-            <div class="dropdown">
-              <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
-              <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
-                <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'done', task)">Update</button> -->
-                <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+      <!-- Done Column -->
+      <div class="kanban-column done-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'done')">
+        <div class="column-header">
+          <h3 class="column-title">
+            <i class="fas fa-check-circle"></i>
+            Done
+          </h3>
+          <button class="add-task-btn" (click)="openCreateModal('done')">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="tasks-container" id="done-tasks">
+          <div *ngFor="let task of doneTasks" class="task-card completed" [draggable]="true" (dragstart)="onDragStart(task)" (dragend)="onDragEnd()">
+            <div class="task-header">
+              <span class="task-id">{{ task.id }}</span>
+              <div class="dropdown">
+                <button class="task-menu" (click)="toggleTaskMenu(task, $event)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-content" *ngIf="selectedTask?.id === task.id && showTaskMenu">
+                  <!-- <button class="dropdown-item" (click)="openTaskModal('update', 'done', task)">Update</button> -->
+                  <button class="dropdown-item" (click)="openDeleteModal(task)">Delete</button>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="task-content">
-            <h4 class="task-title">{{ task.nom }}</h4>
-            <div class="task-assignee">
-              <div class="assignee-avatar">
-                <i class="fas fa-user"></i>
+            <div class="task-content">
+              <h4 class="task-title">{{ task.nom }}</h4>
+              <div class="task-assignee">
+                <div class="assignee-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
               </div>
-              <span class="assignee-name">Assigned to: {{ task.assigneeName || 'Unassigned' }}</span>
             </div>
-          </div>
-          <div class="task-completed">
-            <i class="fas fa-check"></i>
-            <span>Completed</span>
+            <div class="task-completed">
+              <i class="fas fa-check"></i>
+              <span>Completed</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- ... (rest of the HTML remains unchanged) ... -->
 
   <div class="validations-section">
     <div class="validations-container">
@@ -214,42 +229,6 @@
             <span class="last-commit" [class.recent]="member.lastCommit === '2 hours ago'">{{ member.lastCommit }}</span>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Sprint Progress & Notes -->
-    <div class="card notes-card">
-      <div class="card-header">
-        <h2 class="card-title">
-          <i class="fas fa-sticky-note"></i>
-          Sprint Progress & Notes
-        </h2>
-      </div>
-      <div class="sprint-progress-section">
-        <div class="progress-header">
-          <span class="progress-label">Progress</span>
-          <span class="progress-value">2/10 UP</span>
-        </div>
-        <div class="progress-bar-large">
-          <div class="progress-fill-large" [style.width]="sprintProgress + '%'"></div>
-        </div>
-      </div>
-      
-      <div class="notes-section">
-        <div class="note-group">
-          <label class="note-label">Sprint Notes:</label>
-          <textarea class="note-textarea" [(ngModel)]="sprintNotes" placeholder="Add sprint notes here..." rows="4"></textarea>
-        </div>
-        
-        <div class="note-group">
-          <label class="note-label">Remarks:</label>
-          <textarea class="note-textarea" [(ngModel)]="remarks" placeholder="Add remarks here..." rows="4"></textarea>
-        </div>
-        
-        <button class="btn btn-primary save-notes-btn" (click)="saveNotes()">
-          <i class="fas fa-save"></i>
-          Save Notes
-        </button>
       </div>
     </div>
   </div>

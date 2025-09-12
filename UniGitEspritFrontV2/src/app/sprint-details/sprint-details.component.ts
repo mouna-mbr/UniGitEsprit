@@ -8,6 +8,10 @@ import { ValidationService } from '../services/validation.service';
 import { ValidationDTO } from '../models/validation.model';
 import { UserService } from '../services/user.service';
 import { UserResponse } from '../models/user.model';
+import { AuthService } from '../services/auth.service'; // Import AuthService
+import { GitRepositoryService } from '../services/git-repository.service'; // Import GitRepositoryService
+import { GitRepositoryDTO } from '../models/git-repository.model'; // Import GitRepositoryDTO
+import { GroupService } from '../services/group.service';
 
 @Component({
   selector: 'app-sprint-details',
@@ -25,7 +29,7 @@ export class SprintDetailsComponent implements OnInit {
   showTaskMenu = false;
   validations: ValidationDTO[] = [];
   students: UserResponse[] = [];
-
+  repository: GitRepositoryDTO | null = null; // Change to allow null and initialize
   sprintProgress: number = 20;
   teamPerformance = [
     { name: 'ines', commits: 1, lastCommit: '7 days ago' },
@@ -63,9 +67,12 @@ export class SprintDetailsComponent implements OnInit {
     private router: Router,
     private tacheService: TacheService,
     private route: ActivatedRoute,
+    private groupService: GroupService,
     private etapeService: EtapeService,
     private validationService: ValidationService,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService, // Inject AuthService
+    private gitRepositoryService: GitRepositoryService // Inject GitRepositoryService
   ) {}
 
   ngOnInit(): void {
@@ -76,6 +83,7 @@ export class SprintDetailsComponent implements OnInit {
         this.loadTasks();
         this.loadValidations();
         this.loadStudents();
+        this.loadRepository(); // Load repository details
         console.log('Etape loaded:', etape);
       },
       error: (error) => {
@@ -137,6 +145,24 @@ export class SprintDetailsComponent implements OnInit {
     });
   }
 
+  loadRepository(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && this.currentEtape?.repoUrl) {
+      this.gitRepositoryService.getRepository(this.currentEtape.repoUrl).subscribe({
+        next: (repo) => {
+          this.repository = repo;
+          console.log('Repository loaded:', repo);
+        },
+        error: (error) => {
+          console.error('Error loading repository:', error);
+          this.repository = null; // Handle error case
+        }
+      });
+    } else {
+      console.warn('No user or repo URL available');
+    }
+  }
+
   closeCreateModal() {
     this.showCreateModal = false;
     this.resetNewTask();
@@ -184,15 +210,13 @@ export class SprintDetailsComponent implements OnInit {
     };
     this.tacheService.createTache(this.currentEtapeId, tacheDTO).subscribe({
       next: (createdTache) => {
-        const assigneeMap: { [key: number]: string } = {
-          1: 'mouna',
-          2: 'Sana',
-          3: 'ines',
-          4: 'rim'
-        };
+        const assigneeMap: { [key: number]: string } = this.students.reduce((map, student) => {
+          map[student.id] = `${student.firstName} ${student.lastName}`;
+          return map;
+        }, {} as { [key: number]: string });
         const taskWithAssignee = {
           ...createdTache,
-          assignee: assigneeMap[createdTache.assigneeId] || 'Unknown'
+          assignee: assigneeMap[createdTache.assigneeId] || 'Unassigned'
         };
         switch (createdTache.status) {
           case Status.TODO: this.todoTasks.push(taskWithAssignee); break;
@@ -267,11 +291,33 @@ export class SprintDetailsComponent implements OnInit {
   }
 
   viewMergeRequests() {
-    alert('View Merge Requests functionality would be implemented here');
+    this.navigate('/repository-viewer');
   }
 
   viewRepository() {
-    alert('View Repository functionality would be implemented here');
+    console.log('currentEtape:', this.currentEtape);
+    console.log('gitRepoUrl:', this.currentEtape?.gitRepoUrl);
+    console.log('pipelineId:', this.currentEtape?.pipelineId);
+    if (this.currentEtape?.gitRepoUrl) {
+      this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: this.currentEtape.gitRepoUrl } });
+    } else if (this.currentEtape?.pipelineId) {
+      this.groupService.getGroupByPipelineId(this.currentEtape.pipelineId).subscribe({
+        next: (group) => {
+          console.log('Fetched group:', group);
+          if (group.gitRepoUrl) {
+            this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: group.gitRepoUrl } });
+          } else {
+            alert('No repository URL available for this group.');
+          }
+        },
+        error: (err) => {
+          console.error('Error fetching group:', err);
+          alert('Failed to fetch group repository URL.');
+        }
+      });
+    } else {
+      alert('No pipeline associated with this sprint. Please ensure the sprint is linked to a pipeline and group.');
+    }
   }
 
   editSprint() {

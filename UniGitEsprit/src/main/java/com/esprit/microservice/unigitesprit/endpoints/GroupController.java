@@ -26,6 +26,11 @@ public class GroupController {
             return ResponseEntity.badRequest().body(null); // Return 400 with null body or custom error
         }
     }
+    @GetMapping("/by-pipeline/{pipelineId}")
+    public ResponseEntity<GroupResponseDTO> getGroupByPipelineId(@PathVariable Long pipelineId) {
+        GroupResponseDTO group = groupService.getGroupByPipelineId(pipelineId);
+        return ResponseEntity.ok(group);
+    }
 
     @GetMapping
     public ResponseEntity<List<GroupResponseDTO>> getAllGroups() {

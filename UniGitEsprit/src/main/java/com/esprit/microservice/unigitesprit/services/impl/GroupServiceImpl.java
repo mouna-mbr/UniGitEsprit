@@ -4,16 +4,8 @@ import com.esprit.microservice.unigitesprit.dto.GroupCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.GroupResponseDTO;
 import com.esprit.microservice.unigitesprit.dto.UserRoleDTO;
 import com.esprit.microservice.unigitesprit.dto.UserRoleResponseDTO;
-import com.esprit.microservice.unigitesprit.entities.Group;
-import com.esprit.microservice.unigitesprit.entities.UserGroup;
-import com.esprit.microservice.unigitesprit.entities.Classe;
-import com.esprit.microservice.unigitesprit.entities.Sujet;
-import com.esprit.microservice.unigitesprit.entities.User;
-import com.esprit.microservice.unigitesprit.repository.GroupRepository;
-import com.esprit.microservice.unigitesprit.repository.ClasseRepository;
-import com.esprit.microservice.unigitesprit.repository.SujetRepository;
-import com.esprit.microservice.unigitesprit.repository.UserRepository;
-import com.esprit.microservice.unigitesprit.repository.UserGroupRepository;
+import com.esprit.microservice.unigitesprit.entities.*;
+import com.esprit.microservice.unigitesprit.repository.*;
 import com.esprit.microservice.unigitesprit.services.interfaces.GroupService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
@@ -46,6 +38,22 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private Validator validator;
+    @Autowired
+    private PipelineRepository pipelineRepository;
+    public GroupResponseDTO getGroupByPipelineId(Long pipelineId) {
+        Pipeline pipeline = pipelineRepository.findById(pipelineId)
+                .orElseThrow(() -> new IllegalArgumentException("Pipeline not found with ID: " + pipelineId));
+        Group group = pipeline.getGroup();
+        if (group == null) {
+            throw new IllegalArgumentException("No group associated with this pipeline");
+        }
+        GroupResponseDTO dto = new GroupResponseDTO();
+        dto.setId(group.getId());
+        dto.setNom(group.getNom());
+        dto.setGitRepoUrl(group.getGitRepoUrl());
+        dto.setGitRepoName(group.getGitRepoName());
+        return dto;
+    }
 
     @Override
     public GroupResponseDTO addGroup(GroupCreateDTO groupCreateDTO) {

@@ -303,12 +303,15 @@ export class GroupDetailsComponent implements OnInit {
     alert('Add repository functionality to be implemented');
   }
 
-  viewRepository() {
-    console.log('View Repository clicked');
-    if (this.currentGroup?.gitRepoUrl) {
-      window.open(this.currentGroup.gitRepoUrl, '_blank');
-    }
+// src/app/group-details.component.ts
+viewRepository() {
+  console.log('View Repository clicked');
+  if (this.currentGroup?.gitRepoUrl) {
+    this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: this.currentGroup.gitRepoUrl } });
+  } else {
+    alert('No repository URL available for this group.');
   }
+}
 
   hoverRow(member: UserResponse, event: MouseEvent) {
     const row = event.currentTarget as HTMLElement;
