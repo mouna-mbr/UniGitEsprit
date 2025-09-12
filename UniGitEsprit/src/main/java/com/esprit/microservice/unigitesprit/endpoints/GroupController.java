@@ -2,6 +2,7 @@ package com.esprit.microservice.unigitesprit.endpoints;
 
 import com.esprit.microservice.unigitesprit.dto.GroupCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.GroupResponseDTO;
+import com.esprit.microservice.unigitesprit.dto.UserRoleResponseDTO;
 import com.esprit.microservice.unigitesprit.services.interfaces.GroupService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,4 +66,29 @@ public class GroupController {
     public ResponseEntity<GroupResponseDTO> toggleFavorite(@PathVariable Long id) {
         return ResponseEntity.ok(groupService.toggleFavorite(id));
     }
+    // Ajouter un membre
+    @PostMapping("/{groupId}/members")
+    public ResponseEntity<GroupResponseDTO> addMemberToGroup(
+            @PathVariable Long groupId,
+            @RequestBody UserRoleResponseDTO request) {
+        return ResponseEntity.ok(groupService.addMemberToGroup(groupId, request));
+    }
+
+    // Supprimer un membre
+    @DeleteMapping("/{groupId}/members/{userId}")
+    public ResponseEntity<GroupResponseDTO> removeMemberFromGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(groupService.removeMemberFromGroup(groupId, userId));
+    }
+
+    // Mettre à jour le rôle
+    @PutMapping("/{groupId}/members/{userId}")
+    public ResponseEntity<GroupResponseDTO> updateMemberRole(
+            @PathVariable Long groupId,
+            @PathVariable Long userId,
+            @RequestBody String role) {
+        return ResponseEntity.ok(groupService.updateMemberRole(groupId, userId, role));
+    }
+
 }

@@ -233,4 +233,54 @@ public class GroupServiceImpl implements GroupService {
 
         return dto;
     }
-}
+
+        @Override
+        public GroupResponseDTO addMemberToGroup(Long groupId, UserRoleResponseDTO request) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+            // Ici tu dois avoir une entité intermédiaire GroupUser (group_id, user_id, role)
+          UserGroup   groupUser = new UserGroup();
+            groupUser.setGroup(group);
+            groupUser.setUser(user);
+            groupUser.setRole(request.getRole());
+
+            group.getUsers().add(groupUser);
+            groupRepository.save(group);
+
+            return mapToGroupResponseDTO(group);
+        }
+
+        @Override
+        public GroupResponseDTO removeMemberFromGroup(Long groupId, Long userId) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+            group.getUsers().removeIf(gu -> gu.getUser().getId().equals(userId));
+            groupRepository.save(group);
+
+            return mapToGroupResponseDTO(group);
+        }
+
+        @Override
+        public GroupResponseDTO updateMemberRole(Long groupId, Long userId, String role) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+            group.getUsers().forEach(gu -> {
+                if (gu.getUser().getId().equals(userId)) {
+                    gu.setRole(role);
+                }
+            });
+
+            groupRepository.save(group);
+            return mapToGroupResponseDTO(group);
+        }
+
+    }
+
+
+
