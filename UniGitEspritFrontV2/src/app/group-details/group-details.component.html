@@ -124,7 +124,6 @@
           <div class="table-cell member-info">
             <div class="member-avatar">
               <i class="fas fa-user"></i>
-              <img *ngIf="member.gitUsername" [src]="getSafeUrl('https://github.com/' + member.gitUsername + '.png')" [alt]="member.firstName + ' ' + member.lastName" (error)="getDefaultAvatar($event)">
             </div>
             <div class="member-details">
               <span class="member-name">{{ member.firstName }} {{ member.lastName }}</span>

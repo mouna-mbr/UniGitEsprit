@@ -54,6 +54,11 @@ export class UserService {
       catchError(this.handleError)
     );
   }
+getUserById(id: number): Observable<UserResponse> {
+  return this.http.get<UserResponse>(`${this.apiUrl}/${id}`).pipe(
+    catchError(this.handleError)
+  );
+}
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An error occurred';

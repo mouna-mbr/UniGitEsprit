@@ -16,6 +16,7 @@ import { formatDate } from '@angular/common';
 import { GitRepositoryService } from '../services/git-repository.service';
 import { GitCommitDTO, GitCommitRequest } from '../models/git-repository.model';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { UserService } from '../services/user.service'; // <-- ajouté
 
 @Component({
   selector: 'app-group-details',
@@ -40,6 +41,9 @@ export class GroupDetailsComponent implements OnInit {
   newPipeline: PipelineDTO = { nom: '', groupId: 0, etapes: [{ nom: '', consigne: '', deadline: '' }] };
   currentUser: UserResponse | null = null;
 
+  // cache de tous les users (pour éviter de rappeler sans cesse getAllUsers)
+  private allUsers: UserResponse[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -51,7 +55,8 @@ export class GroupDetailsComponent implements OnInit {
     private gitService: GitRepositoryService,
     private renderer: Renderer2,
     private fb: FormBuilder,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private userService: UserService // <-- injecté
   ) {}
 
   ngOnInit(): void {
@@ -74,9 +79,10 @@ export class GroupDetailsComponent implements OnInit {
         this.currentGroup = group;
         this.repositories = [{ name: group.gitRepoName || 'No Repository', url: group.gitRepoUrl || '' }];
         this.loadClass();
-        this.loadMembers();
+        // d'abord charger tous les users (cache) puis mapper les membres
+        this.loadAllUsersAndMembers();
         this.loadPipeline();
-        this.loadContributors();
+        this.loadContributors(); // contributors dépendront de members; ok car loadContributors est appelé à la fin mais note: loadContributors utilise members - on rappellera si besoin
         this.isLoading = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -96,25 +102,55 @@ export class GroupDetailsComponent implements OnInit {
     }
   }
 
-  loadMembers() {
-    if (this.currentGroup) {
-      this.members = this.currentGroup.users.map(userRole => ({
-        id: userRole.userId,
-        firstName: '', // Placeholder, fetch from backend if needed
-        lastName: '',  // Placeholder, fetch from backend if needed
-        role: userRole.role as 'STUDENT' | 'ADMIN' | 'PROFESSOR',
-        identifiant: '',
-        classe: '',
-        specialite: '',
-        email: '',     // Fetch from backend if available
-        gitUsername: '', // Fetch from backend if available
-        gitAccessToken: '',
-        password: '',
-        createdAt: ''
-      }));
-      // Optional: Fetch full user details if your backend supports it
-      // Example: this.authService.getUsersByIds(this.currentGroup.users.map(u => u.userId)).subscribe(users => this.members = users);
+  /**
+   * Charge tous les users depuis l'API (getAllUsers), met en cache this.allUsers,
+   * puis remplit this.members en reliant currentGroup.users (qui contient userId,role)
+   * aux users complets.
+   */
+  loadAllUsersAndMembers() {
+    this.userService.getAllUsers().subscribe({
+      next: (allUsers) => {
+        this.allUsers = allUsers || [];
+        this.mapMembersFromGroup();
+        // Recharger les contributeurs maintenant que members est rempli
+        this.loadContributors();
+      },
+      error: (err) => {
+        console.error('Error loading users:', err);
+        // même si échec, essayer de mapper avec ce qu'on a (vide)
+        this.allUsers = [];
+        this.mapMembersFromGroup();
+      }
+    });
+  }
+
+  /**
+   * Map currentGroup.users -> this.members en cherchant dans this.allUsers
+   */
+  mapMembersFromGroup() {
+    if (!this.currentGroup) {
+      this.members = [];
+      return;
     }
+
+    this.members = this.currentGroup.users.map(userRole => {
+      const user = this.allUsers.find(u => u.id === userRole.userId);
+      // Remonter un objet complet compatible UserResponse même si certains champs manquent
+      return {
+        id: userRole.userId,
+        firstName: user ? user.firstName : '',
+        lastName: user ? user.lastName : '',
+        role: (userRole.role as 'STUDENT' | 'ADMIN' | 'PROFESSOR') || (user ? user.role : 'STUDENT'),
+        identifiant: user ? (user as any).identifiant : '',
+        classe: user ? (user as any).classe : '',
+        specialite: user ? (user as any).specialite : '',
+        email: user ? user.email : '',
+        gitUsername: user ? user.gitUsername || '' : '',
+        gitAccessToken: user ? user.gitAccessToken || '' : '',
+        password: user ? user.password || '' : '',
+        createdAt: user ? user.createdAt || '' : ''
+      } as UserResponse;
+    });
   }
 
   loadPipeline() {
@@ -150,31 +186,30 @@ export class GroupDetailsComponent implements OnInit {
       next: (commits: GitCommitDTO[]) => {
         const commitCountByAuthor: { [key: string]: number } = {};
         commits.forEach(commit => {
-          const authorName = commit.author.name.toLowerCase(); // Normalize for case-insensitive matching
+          const authorName = commit.author.name.toLowerCase(); // normalize
           commitCountByAuthor[authorName] = (commitCountByAuthor[authorName] || 0) + 1;
         });
-  
-        // Convert object to array of [authorName, count] pairs and map to contributors
+
         this.contributors = Object.entries(commitCountByAuthor)
           .map(([authorName, count]): { name: string; gitUsername: string; commits: number; rank: string } => {
-            const member = this.members.find(m => 
-              m.gitUsername?.toLowerCase() === authorName || 
-              `${m.firstName.toLowerCase()} ${m.lastName.toLowerCase()}` === authorName
+            const member = this.members.find(m =>
+              (m.gitUsername && m.gitUsername.toLowerCase() === authorName) ||
+              (`${m.firstName.toLowerCase()} ${m.lastName.toLowerCase()}` === authorName)
             );
             return {
               name: member ? `${member.firstName} ${member.lastName}` : authorName,
-              gitUsername: member?.gitUsername || authorName.split(' ')[0], // Fallback to first part of author name
+              gitUsername: member?.gitUsername || authorName.split(' ')[0],
               commits: count,
-              rank: '' // Placeholder, will be set after sorting
+              rank: ''
             };
           })
           .sort((a, b) => b.commits - a.commits)
-          .slice(0, 3) // Top 3 contributors
+          .slice(0, 3)
           .map((contributor, index) => ({
             ...contributor,
             rank: this.getRankText(index + 1)
           }));
-  
+
         this.isRefreshing = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -311,30 +346,100 @@ export class GroupDetailsComponent implements OnInit {
     this.showAddMemberModal = false;
   }
 
+  /**
+   * Ajoute un membre côté front :
+   * - si l'email existe dans allUsers -> on ajoute ce user au groupe (currentGroup.users + members)
+   * - sinon on crée le user via userService.addUser(...) puis on l'ajoute
+   *
+   * NOTE : Comme tu n'as pas d'API pour ajouter un membre au groupe, on met à jour uniquement côté front.
+   * Si tu veux persist, il faudra ajouter un endpoint backend pour mettre à jour le groupe.
+   */
   addMemberToGroup() {
     console.log('Add Member to Group clicked with:', this.newMember);
     if (!this.newMember.email || !this.isValidEmail(this.newMember.email) || !this.newMember.role) {
       alert('Please enter a valid email and select a role.');
       return;
     }
+
     this.isLoading = true;
-    this.members.push({ ...this.newMember, id: this.members.length + 1 });
-    this.closeAddMemberModal();
-    this.isLoading = false;
+
+    // cherche si l'utilisateur existe déjà
+    const existing = this.allUsers.find(u => u.email?.toLowerCase() === this.newMember.email.toLowerCase());
+    if (existing) {
+      // évite les doublons
+      const alreadyInGroup = this.currentGroup?.users.some(u => u.userId === existing.id);
+      if (alreadyInGroup) {
+        alert('User is already a member of the group.');
+        this.isLoading = false;
+        return;
+      }
+
+      // ajouter dans currentGroup.users (pour cohérence) et dans members (affichage)
+      this.currentGroup?.users.push({ userId: existing.id, role: this.newMember.role } as any);
+      this.members.push({ ...existing, role: this.newMember.role });
+      this.closeAddMemberModal();
+      this.isLoading = false;
+      return;
+    }
+
+    // si n'existe pas -> créer via API users (tu as addUser)
+    const userToCreate = {
+      firstName: this.newMember.firstName,
+      lastName: this.newMember.lastName,
+      role: this.newMember.role,
+      identifiant: this.newMember.identifiant || '',
+      classe: this.newMember.classe || '',
+      specialite: this.newMember.specialite || '',
+      email: this.newMember.email,
+      gitUsername: this.newMember.gitUsername || '',
+      gitAccessToken: this.newMember.gitAccessToken || '',
+      password: this.newMember.password || ''
+    };
+
+    this.userService.addUser(userToCreate as any).subscribe({
+      next: (createdUser) => {
+        // mettre à jour cache et groupe côté front
+        this.allUsers.push(createdUser);
+        this.currentGroup?.users.push({ userId: createdUser.id, role: createdUser.role } as any);
+        this.members.push({ ...createdUser, role: this.newMember.role });
+        this.closeAddMemberModal();
+        this.isLoading = false;
+        alert('Member created and added to group (client-side).');
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error creating user:', err);
+        this.isLoading = false;
+        alert('Failed to create user.');
+      }
+    });
   }
 
   editMember(member: UserResponse) {
     console.log('Edit Member clicked for:', member);
+    // Ici tu peux ouvrir un modal d'édition ; comme tu n'as pas d'endpoint updateMember pour le groupe,
+    // on peut soit modifier localement, soit envoyer update via userService si tu veux modifier le user lui-même.
     alert(`Edit member: ${member.firstName} ${member.lastName}`);
   }
 
   removeMember(member: UserResponse) {
     console.log('Remove Member clicked for:', member);
-    if (confirm(`Are you sure you want to remove ${member.firstName} ${member.lastName}?`)) {
-      this.isLoading = true;
-      this.members = this.members.filter(m => m.id !== member.id);
-      this.isLoading = false;
+    if (!confirm(`Are you sure you want to remove ${member.firstName} ${member.lastName}?`)) {
+      return;
     }
+
+    this.isLoading = true;
+
+    // Supprimer de members (affichage)
+    this.members = this.members.filter(m => m.id !== member.id);
+
+    // Supprimer de currentGroup.users (cohérence locale)
+    if (this.currentGroup) {
+      this.currentGroup.users = this.currentGroup.users.filter(u => u.userId !== member.id);
+    }
+
+    // Note: pas de persistance back-end ici (pas d'endpoint). Si tu ajoutes un endpoint pour supprimer membre du groupe,
+    // il faudra appeler groupService.removeMember(...)
+    this.isLoading = false;
   }
 
   refreshContributions() {
