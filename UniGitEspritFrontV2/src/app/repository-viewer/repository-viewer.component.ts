@@ -51,6 +51,7 @@ export class RepositoryViewerComponent implements OnInit {
     } else {
       this.error = 'No repository URL provided';
     }
+    console.log('Repository URL:', repoUrl);
   }
 
   loadRepository(repoUrl: string): void {
@@ -65,7 +66,7 @@ export class RepositoryViewerComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = err.message;
+        this.error = err.message || 'Erreur lors du chargement du repository';
         this.isLoading = false;
       }
     });
@@ -96,7 +97,7 @@ export class RepositoryViewerComponent implements OnInit {
         }
       },
       error: (err) => {
-        this.error = err.message;
+        this.error = err.message || 'Erreur lors du chargement des branches';
       }
     });
   }
@@ -115,7 +116,7 @@ export class RepositoryViewerComponent implements OnInit {
         this.isLoadingCommits = false;
       },
       error: (err) => {
-        this.error = err.message;
+        this.error = err.message || 'Erreur lors du chargement des commits';
         this.isLoadingCommits = false;
       }
     });
@@ -134,12 +135,12 @@ export class RepositoryViewerComponent implements OnInit {
         this.updateBreadcrumbs(path);
       },
       error: (err) => {
-        this.error = err.message;
+        this.error = err.message || 'Erreur lors du chargement des fichiers';
       }
     });
   }
 
-  loadFileContent(file: GitFileDTO, isReadme: boolean = false): void {
+  async loadFileContent(file: GitFileDTO, isReadme: boolean = false): Promise<void> {
     if (file.type === 'dir') {
       this.currentPath = file.path;
       this.loadFiles(this.repository!.url, this.currentBranch, this.currentPath);
@@ -151,17 +152,17 @@ export class RepositoryViewerComponent implements OnInit {
         branch: this.currentBranch
       };
       this.gitService.getFileContent(request).subscribe({
-        next: (content) => {
+        next: async (content) => {
           this.fileContent = content.content;
           if (isReadme) {
-            this.readmeContent = content.content;
+            this.readmeContent = await this.renderMarkdown(content.content);
           } else {
             this.currentFile = file;
           }
           this.isLoadingFile = false;
         },
         error: (err) => {
-          this.error = err.message;
+          this.error = err.message || 'Erreur lors du chargement du contenu du fichier';
           this.isLoadingFile = false;
         }
       });
@@ -169,6 +170,7 @@ export class RepositoryViewerComponent implements OnInit {
   }
 
   switchTab(tab: 'code' | 'commits' | 'branches'): void {
+    console.log('Switching to tab:', tab);
     this.activeTab = tab;
     if (tab === 'commits' && !this.commits.length && this.repository) {
       this.loadCommits(this.repository.url);
@@ -289,16 +291,15 @@ export class RepositoryViewerComponent implements OnInit {
     return 'https://github.com/identicons/default.png';
   }
 
-// src/app/repository-viewer.component.ts
-async renderMarkdown(content: string): Promise<string> {
-  try {
-    const result = await marked.parse(content);
-    return result;
-  } catch (err) {
-    console.error('Error rendering Markdown:', err);
-    return content; // Fallback to raw content
+  async renderMarkdown(content: string): Promise<string> {
+    try {
+      const result = await marked.parse(content);
+      return result;
+    } catch (err) {
+      console.error('Error rendering Markdown:', err);
+      return content; // Fallback to raw content
+    }
   }
-}
 
   trackByFileName(_index: number, file: GitFileDTO): string {
     return file.path;

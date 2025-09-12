@@ -62,13 +62,13 @@ public class GitService {
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
                 return parseBranches(jsonNode);
+            } else {
+                throw new RuntimeException("GitHub API returned status: " + response.getStatusCode());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la récupération des branches", e);
+            throw new RuntimeException("Erreur lors de la récupération des branches: " + e.getMessage(), e);
         }
-        return new ArrayList<>();
     }
-
     public List<GitCommitDTO> getCommits(String repoUrl, User user, String branch, int page, int perPage) {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/commits?sha=" + branch + "&page=" + page + "&per_page=" + perPage;
@@ -138,10 +138,14 @@ public class GitService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/vnd.github.v3+json");
 
-        if (user.getGitAccessToken() != null && !user.getGitAccessToken().isEmpty()) {
-            String auth = user.getGitUsername() + ":" + user.getGitAccessToken();
-            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
-            headers.set("Authorization", "Basic " + encodedAuth);
+        if (user != null && user.getGitAccessToken() != null && !user.getGitAccessToken().isEmpty()) {
+            // Pour GitHub, on utilise généralement le token seul avec le préfixe "token"
+            headers.set("Authorization", "token " + user.getGitAccessToken());
+
+            // Alternative: Basic auth avec username:token
+            // String auth = user.getGitUsername() + ":" + user.getGitAccessToken();
+            // String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+            // headers.set("Authorization", "Basic " + encodedAuth);
         }
 
         return headers;
@@ -188,27 +192,73 @@ public class GitService {
 
     private List<GitBranchDTO> parseBranches(JsonNode jsonNode) {
         List<GitBranchDTO> branches = new ArrayList<>();
-        for (JsonNode branchNode : jsonNode) {
-            GitBranchDTO branchDTO = new GitBranchDTO();
-            branchDTO.setName(branchNode.get("name").asText());
 
-            JsonNode commitNode = branchNode.get("commit");
-            GitBranchCommitDTO commitDTO = new GitBranchCommitDTO();
-            commitDTO.setSha(commitNode.get("sha").asText());
-            commitDTO.setMessage(commitNode.get("commit").get("message").asText());
+        if (jsonNode.isArray()) {
+            for (JsonNode branchNode : jsonNode) {
+                GitBranchDTO branchDTO = new GitBranchDTO();
 
-            JsonNode authorNode = commitNode.get("commit").get("author");
-            GitAuthorDTO authorDTO = new GitAuthorDTO();
-            authorDTO.setName(authorNode.get("name").asText());
-            authorDTO.setEmail(authorNode.get("email").asText());
-            authorDTO.setAvatarUrl(commitNode.get("author").get("avatar_url").asText());
-            authorDTO.setDate(LocalDateTime.parse(authorNode.get("date").asText(), DateTimeFormatter.ISO_DATE_TIME));
+                // Vérifier l'existence des champs avant de les lire
+                if (branchNode.has("name")) {
+                    branchDTO.setName(branchNode.get("name").asText());
+                } else {
+                    continue; // Skip si pas de nom
+                }
 
-            commitDTO.setAuthor(authorDTO);
-            branchDTO.setCommit(commitDTO);
-            branchDTO.setProtectedBranch(branchNode.get("protected").asBoolean());
+                if (branchNode.has("protected")) {
+                    branchDTO.setProtectedBranch(branchNode.get("protected").asBoolean());
+                } else {
+                    branchDTO.setProtectedBranch(false); // Valeur par défaut
+                }
 
-            branches.add(branchDTO);
+                // Parse commit information avec vérifications
+                if (branchNode.has("commit")) {
+                    JsonNode commitNode = branchNode.get("commit");
+                    GitBranchCommitDTO commitDTO = new GitBranchCommitDTO();
+
+                    if (commitNode.has("sha")) {
+                        commitDTO.setSha(commitNode.get("sha").asText());
+                    }
+
+                    if (commitNode.has("commit") && commitNode.get("commit").has("message")) {
+                        commitDTO.setMessage(commitNode.get("commit").get("message").asText());
+                    }
+
+                    // Parse author information avec vérifications
+                    if (commitNode.has("commit") && commitNode.get("commit").has("author")) {
+                        JsonNode authorNode = commitNode.get("commit").get("author");
+                        GitAuthorDTO authorDTO = new GitAuthorDTO();
+
+                        if (authorNode.has("name")) {
+                            authorDTO.setName(authorNode.get("name").asText());
+                        }
+
+                        if (authorNode.has("email")) {
+                            authorDTO.setEmail(authorNode.get("email").asText());
+                        }
+
+                        if (authorNode.has("date")) {
+                            try {
+                                authorDTO.setDate(LocalDateTime.parse(
+                                        authorNode.get("date").asText(),
+                                        DateTimeFormatter.ISO_DATE_TIME
+                                ));
+                            } catch (Exception e) {
+                                authorDTO.setDate(LocalDateTime.now());
+                            }
+                        }
+
+                        if (commitNode.has("author") && commitNode.get("author").has("avatar_url")) {
+                            authorDTO.setAvatarUrl(commitNode.get("author").get("avatar_url").asText());
+                        }
+
+                        commitDTO.setAuthor(authorDTO);
+                    }
+
+                    branchDTO.setCommit(commitDTO);
+                }
+
+                branches.add(branchDTO);
+            }
         }
         return branches;
     }
@@ -286,13 +336,30 @@ public class GitService {
 
     private GitFileContentDTO parseFileContent(JsonNode jsonNode) {
         GitFileContentDTO fileContentDTO = new GitFileContentDTO();
-        fileContentDTO.setContent(jsonNode.get("content").asText());
-        fileContentDTO.setEncoding(jsonNode.get("encoding").asText());
 
-        String content = jsonNode.get("content").asText();
-        fileContentDTO.setContent(new String(Base64.getDecoder().decode(content)));
-        fileContentDTO.setEncoding(jsonNode.get("encoding").asText());
+        if (jsonNode.has("encoding")) {
+            String encoding = jsonNode.get("encoding").asText();
+            fileContentDTO.setEncoding(encoding);
+
+            if (jsonNode.has("content")) {
+                String content = jsonNode.get("content").asText();
+
+                if ("base64".equals(encoding)) {
+                    try {
+                        // Nettoyer le contenu Base64 (enlever les retours à la ligne)
+                        String cleanContent = content.replaceAll("\\s+", "");
+                        fileContentDTO.setContent(new String(Base64.getDecoder().decode(cleanContent)));
+                    } catch (IllegalArgumentException e) {
+                        // Si le décodage échoue, retourner le contenu brut
+                        fileContentDTO.setContent(content);
+                        fileContentDTO.setEncoding("raw");
+                    }
+                } else {
+                    // Pour les autres encodages, retourner le contenu tel quel
+                    fileContentDTO.setContent(content);
+                }
+            }
+        }
 
         return fileContentDTO;
-    }
-}
+    }}

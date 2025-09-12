@@ -20,13 +20,13 @@
   </div>
 
   <!-- Repository Content -->
-  <div class="repository-content" *ngIf="repository">
+  <div class="repository-content" *ngIf="repository; else errorTemplate">
     <!-- Repository Header -->
     <div class="repo-header">
       <div class="repo-info">
         <div class="repo-title">
           <div class="owner-avatar">
-            <img [src]="repository.owner.avatarUrl" [alt]="repository.owner.login">
+            <img [src]="repository.owner.avatarUrl" [alt]="repository.owner.login" (error)="getDefaultAvatar()">
           </div>
           <div class="repo-details">
             <h1 class="repo-name">
@@ -198,7 +198,7 @@
               README.md
             </h3>
           </div>
-          <div class="readme-content" [innerHTML]="renderMarkdown(readmeContent)"></div>
+          <div class="readme-content" [innerHTML]="readmeContent"></div>
         </div>
       </div>
 
@@ -318,4 +318,10 @@
       </div>
     </div>
   </div>
+  <ng-template #errorTemplate>
+    <div class="error-container">
+      <p>{{ error }}</p>
+      <button (click)="retryLoadRepository()">Réessayer</button>
+    </div>
+  </ng-template>
 </div>

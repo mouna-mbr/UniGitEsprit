@@ -24,22 +24,25 @@ public class GitController {
             return null;
         }
 
-        // Extraire les credentials encodés en Base64
-        String base64Credentials = authHeader.substring("Basic ".length()).trim();
-        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        try {
+            String base64Credentials = authHeader.substring("Basic ".length()).trim();
+            String credentials = new String(Base64.getDecoder().decode(base64Credentials));
 
-        // Format attendu : username:accessToken
-        String[] parts = credentials.split(":", 2);
-        if (parts.length != 2) {
+            // Format attendu : username:accessToken
+            String[] parts = credentials.split(":", 2);
+            if (parts.length != 2) {
+                return null;
+            }
+
+            User user = new User();
+            user.setGitUsername(parts[0]);
+            user.setGitAccessToken(parts[1]);
+            return user;
+
+        } catch (Exception e) {
             return null;
         }
-
-        User user = new User();
-        user.setGitUsername(parts[0]);
-        user.setGitAccessToken(parts[1]);
-        return user;
     }
-
     @GetMapping("/repository")
     public ResponseEntity<GitRepositoryDTO> getRepositoryInfo(
             @RequestParam String repoUrl,
@@ -55,17 +58,26 @@ public class GitController {
     }
 
     @GetMapping("/branches")
-    public ResponseEntity<List<GitBranchDTO>> getBranches(
+    public ResponseEntity<?> getBranches(
             @RequestParam String repoUrl,
             @RequestHeader("Authorization") String authHeader) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
+        try {
+            User currentUser = extractUserFromAuthHeader(authHeader);
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
 
-        List<GitBranchDTO> branches = gitService.getBranches(repoUrl, currentUser);
-        return ResponseEntity.ok(branches);
+            if (repoUrl == null || repoUrl.isEmpty()) {
+                return ResponseEntity.badRequest().body("Repository URL is required");
+            }
+
+            List<GitBranchDTO> branches = gitService.getBranches(repoUrl, currentUser);
+            return ResponseEntity.ok(branches);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching branches: " + e.getMessage());
+        }
     }
 
     @GetMapping("/commits")
