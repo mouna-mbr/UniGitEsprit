@@ -147,8 +147,8 @@ export class SprintDetailsComponent implements OnInit {
 
   loadRepository(): void {
     const currentUser = this.authService.getCurrentUser();
-    if (currentUser && this.currentEtape?.repoUrl) {
-      this.gitRepositoryService.getRepository(this.currentEtape.repoUrl).subscribe({
+    if (currentUser && this.currentEtape?.gitRepoUrl) {
+      this.gitRepositoryService.getRepository(this.currentEtape.gitRepoUrl).subscribe({
         next: (repo) => {
           this.repository = repo;
           console.log('Repository loaded:', repo);
@@ -290,9 +290,7 @@ export class SprintDetailsComponent implements OnInit {
     });
   }
 
-  viewMergeRequests() {
-    this.navigate('/repository-viewer');
-  }
+ 
 
   viewRepository() {
     console.log('currentEtape:', this.currentEtape);

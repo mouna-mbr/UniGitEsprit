@@ -10,12 +10,12 @@
       </div>
     </div>
     <div class="sprint-actions">
-      <button class="btn btn-secondary" (click)="viewMergeRequests()">
+   <!--   <button class="btn btn-secondary" (click)="viewMergeRequests()">
         <i class="fas fa-code-branch"></i>
         View Merge Requests
-      </button>
-      <button class="btn btn-primary" (click)="viewRepository()">
-        <i class="fas fa-eye"></i>
+      </button>-->
+      <button class="btn btn-secondary" (click)="viewRepository()">
+        <i class="fas fa-code-branch"></i>
         View Repository
       </button>
       <button class="btn btn-primary" (click)="editSprint()">
@@ -25,21 +25,7 @@
     </div>
   </div>
 
-  <!-- Repository Info (New Section) -->
-  <div class="repository-info" *ngIf="repository">
-    <h2>Repository Details</h2>
-    <p><strong>Name:</strong> {{ repository.name }}</p>
-    <p><strong>Full Name:</strong> {{ repository.fullName }}</p>
-    <p><strong>URL:</strong> <a href="{{ repository.url }}" target="_blank">{{ repository.url }}</a></p>
-    <p><strong>Default Branch:</strong> {{ repository.defaultBranch }}</p>
-    <p><strong>Stars:</strong> {{ repository.stars }}</p>
-    <p><strong>Forks:</strong> {{ repository.forks }}</p>
-    <p><strong>Created At:</strong> {{ repository.createdAt | date:'yyyy-MM-dd' }}</p>
-    <p><strong>Updated At:</strong> {{ repository.updatedAt | date:'yyyy-MM-dd' }}</p>
-  </div>
-  <div *ngIf="!repository" class="repository-error">
-    <p>No repository data available.</p>
-  </div>
+  
 
   <!-- Kanban Board -->
   <div class="kanban-container">
@@ -231,6 +217,19 @@
         </div>
       </div>
     </div>
+    <!-- Repository Info (New Section) -->
+  <div class="repository-info" *ngIf="repository">
+    <h2>Repository Details</h2>
+    <p><strong>Name:</strong> {{ repository.name }}</p>
+    <p><strong>Full Name:</strong> {{ repository.fullName }}</p>
+    <p><strong>URL:</strong> <a href="{{ repository.url }}" target="_blank">{{ repository.url }}</a></p>
+    <p><strong>Default Branch:</strong> {{ repository.defaultBranch }}</p>
+    <p><strong>Created At:</strong> {{ repository.createdAt | date:'yyyy-MM-dd' }}</p>
+    <p><strong>Updated At:</strong> {{ repository.updatedAt | date:'yyyy-MM-dd' }}</p>
+  </div>
+  <div *ngIf="!repository" class="repository-error">
+    <p>No repository data available.</p>
+  </div>
   </div>
 </main>
 
