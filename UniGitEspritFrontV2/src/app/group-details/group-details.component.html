@@ -124,6 +124,7 @@
           <div class="table-cell member-info">
             <div class="member-avatar">
               <i class="fas fa-user"></i>
+              <img *ngIf="member.gitUsername" [src]="getSafeUrl('https://github.com/' + member.gitUsername + '.png')" [alt]="member.firstName + ' ' + member.lastName" (error)="getDefaultAvatar($event)">
             </div>
             <div class="member-details">
               <span class="member-name">{{ member.firstName }} {{ member.lastName }}</span>
@@ -146,56 +147,74 @@
     </div>
 
     <!-- Top Contributors -->
-    <div class="card contributors-card">
-      <div class="card-header">
-        <h2 class="card-title">
-          <i class="fas fa-trophy"></i>
-          Top Contributors
-        </h2>
-        <button class="btn-icon" (click)="refreshContributions(); $event.stopPropagation()">
-          <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
-        </button>
-      </div>
-      <div class="contributors-podium">
-        <div class="contributor second-place" *ngFor="let contributor of contributors; let i = index" [ngClass]="'place-' + (i + 1)">
-          <div class="contributor-avatar">
-            <i class="fas fa-user"></i>
-          </div>
-          <div class="contributor-name">{{ contributor.name }}</div>
-          <div class="contributor-rank">{{ contributor.rank }}</div>
-          <div class="contributor-stats">
-            <span class="commits">{{ contributor.commits }} commits</span>
-          </div>
-        </div>
-      </div>
-    </div>
+ <!-- ... (previous HTML remains the same until Top Contributors) ... -->
 
-    <!-- Repositories -->
- <!-- src/app/group-details.component.html -->
-<!-- Repositories -->
-<div class="card repositories-card">
+<!-- Top Contributors -->
+<div class="card contributors-card">
   <div class="card-header">
     <h2 class="card-title">
-      <i class="fas fa-code-branch"></i>
-      Repositories
+      <i class="fas fa-trophy"></i>
+      Top Contributors
     </h2>
-
+    <button class="btn-icon" (click)="refreshContributions(); $event.stopPropagation()">
+      <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+    </button>
   </div>
-  <div class="repositories-list">
-    <div class="repository-item" *ngFor="let repo of repositories">
-      <div class="repo-info">
-        <div class="repo-icon">
-          <i class="fab fa-github"></i>
-        </div>
-        <div class="repo-details">
-          <span class="repo-name">{{ repo.name }}</span>
-          <button class="btn btn-link" (click)="viewRepository()" *ngIf="repo.url">View in App</button>
-          <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View on GitHub</a>
-        </div>
+
+  <div class="contributors-podium" *ngIf="contributors.length; else noContributors">
+    <div class="contributor"
+         *ngFor="let contributor of contributors; let i = index"
+         [ngClass]="{
+           'first-place': i === 0,
+           'second-place': i === 1,
+           'third-place': i === 2
+         }">
+      <div class="contributor-avatar">
+        <img class="avatar"
+             [src]="getSafeUrl('https://github.com/' + contributor.gitUsername + '.png')"
+             [alt]="contributor.name"
+             (error)="getDefaultAvatar($event)">
+      </div>
+      <div class="contributor-name">{{ contributor.name }}</div>
+      <div class="contributor-stats">
+        <span class="commits">{{ contributor.commits }} commits</span>
       </div>
     </div>
   </div>
+
+  <ng-template #noContributors>
+    <div class="empty-state">
+      <p>No contributors data available.</p>
+    </div>
+  </ng-template>
 </div>
+
+
+<!-- ... (rest of the HTML remains the same) ... -->
+
+    <!-- Repositories -->
+    <div class="card repositories-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <i class="fas fa-code-branch"></i>
+          Repositories
+        </h2>
+      </div>
+      <div class="repositories-list">
+        <div class="repository-item" *ngFor="let repo of repositories">
+          <div class="repo-info">
+            <div class="repo-icon">
+              <i class="fab fa-github"></i>
+            </div>
+            <div class="repo-details">
+              <span class="repo-name">{{ repo.name }}</span>
+              <button class="btn btn-link" (click)="viewRepository()" *ngIf="repo.url">View in App</button>
+              <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View on GitHub</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 

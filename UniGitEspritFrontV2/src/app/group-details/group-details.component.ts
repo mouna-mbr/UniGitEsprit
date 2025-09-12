@@ -5,7 +5,7 @@ import { ClasseService } from '../services/classe.service';
 import { SujetService } from '../services/sujet.service';
 import { AuthService } from '../services/auth.service';
 import { PipelineService } from '../services/pipeline.service';
-import { GroupResponse, UserRole } from '../models/group.model';
+import { GroupResponse, UserRoleResponse } from '../models/group.model';
 import { ClasseResponse } from '../models/classe.model';
 import { SujetResponse } from '../models/sujet.model';
 import { UserResponse } from '../models/user.model';
@@ -13,6 +13,9 @@ import { FormBuilder, FormGroup, NgForm } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EtapeDTO, EtapeStatus, PipelineDTO } from '../models/pipeline.model';
 import { formatDate } from '@angular/common';
+import { GitRepositoryService } from '../services/git-repository.service';
+import { GitCommitDTO, GitCommitRequest } from '../models/git-repository.model';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-group-details',
@@ -31,7 +34,7 @@ export class GroupDetailsComponent implements OnInit {
   currentPipeline: PipelineDTO | null = null;
   etapesWithStatus: EtapeStatus[] = [];
   members: UserResponse[] = [];
-  contributors: { name: string; rank: string; commits: number }[] = [];
+  contributors: { name: string; rank: string; commits: number; gitUsername: string }[] = [];
   repositories: { name: string; url: string }[] = [];
   newMember: UserResponse = { id: 0, firstName: '', lastName: '', role: 'STUDENT', identifiant: '', classe: '', specialite: '', email: '', gitUsername: '', gitAccessToken: '', password: '', createdAt: '' };
   newPipeline: PipelineDTO = { nom: '', groupId: 0, etapes: [{ nom: '', consigne: '', deadline: '' }] };
@@ -45,8 +48,10 @@ export class GroupDetailsComponent implements OnInit {
     private sujetService: SujetService,
     private authService: AuthService,
     private pipelineService: PipelineService,
+    private gitService: GitRepositoryService,
     private renderer: Renderer2,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -95,18 +100,20 @@ export class GroupDetailsComponent implements OnInit {
     if (this.currentGroup) {
       this.members = this.currentGroup.users.map(userRole => ({
         id: userRole.userId,
-        firstName: '', // Fetch actual user details if needed from backend
-        lastName: '',
-        role: userRole.role as 'STUDENT' | 'ADMIN' | 'PROFESSOR', // Type assertion
+        firstName: '', // Placeholder, fetch from backend if needed
+        lastName: '',  // Placeholder, fetch from backend if needed
+        role: userRole.role as 'STUDENT' | 'ADMIN' | 'PROFESSOR',
         identifiant: '',
         classe: '',
         specialite: '',
-        email: '',
-        gitUsername: '',
+        email: '',     // Fetch from backend if available
+        gitUsername: '', // Fetch from backend if available
         gitAccessToken: '',
         password: '',
         createdAt: ''
       }));
+      // Optional: Fetch full user details if your backend supports it
+      // Example: this.authService.getUsersByIds(this.currentGroup.users.map(u => u.userId)).subscribe(users => this.members = users);
     }
   }
 
@@ -128,20 +135,62 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   loadContributors() {
-    this.contributors = [
-      { name: 'Sana', rank: '1st', commits: 67 },
-      { name: 'Ines', rank: '2nd', commits: 45 },
-      { name: 'Mouna', rank: '3rd', commits: 32 },
-    ];
+    if (!this.currentGroup?.gitRepoUrl) {
+      this.contributors = [];
+      return;
+    }
+    this.isRefreshing = true;
+    const request: GitCommitRequest = {
+      repoUrl: this.currentGroup.gitRepoUrl,
+      branch: 'main',
+      page: 1,
+      perPage: 100
+    };
+    this.gitService.getCommits(request).subscribe({
+      next: (commits: GitCommitDTO[]) => {
+        const commitCountByAuthor: { [key: string]: number } = {};
+        commits.forEach(commit => {
+          const authorName = commit.author.name.toLowerCase(); // Normalize for case-insensitive matching
+          commitCountByAuthor[authorName] = (commitCountByAuthor[authorName] || 0) + 1;
+        });
+  
+        // Convert object to array of [authorName, count] pairs and map to contributors
+        this.contributors = Object.entries(commitCountByAuthor)
+          .map(([authorName, count]): { name: string; gitUsername: string; commits: number; rank: string } => {
+            const member = this.members.find(m => 
+              m.gitUsername?.toLowerCase() === authorName || 
+              `${m.firstName.toLowerCase()} ${m.lastName.toLowerCase()}` === authorName
+            );
+            return {
+              name: member ? `${member.firstName} ${member.lastName}` : authorName,
+              gitUsername: member?.gitUsername || authorName.split(' ')[0], // Fallback to first part of author name
+              commits: count,
+              rank: '' // Placeholder, will be set after sorting
+            };
+          })
+          .sort((a, b) => b.commits - a.commits)
+          .slice(0, 3) // Top 3 contributors
+          .map((contributor, index) => ({
+            ...contributor,
+            rank: this.getRankText(index + 1)
+          }));
+  
+        this.isRefreshing = false;
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading contributors:', err);
+        this.contributors = [];
+        this.isRefreshing = false;
+      }
+    });
   }
 
   processEtapes() {
-    console.log('Processing etapes with currentPipeline:', this.currentPipeline);
     if (!this.currentPipeline || !this.currentPipeline.etapes?.length) {
       this.etapesWithStatus = [];
       return;
     }
-    const pipeline = this.currentPipeline!;
+    const pipeline = this.currentPipeline;
     this.etapesWithStatus = pipeline.etapes.map((etape, index) => {
       const today = new Date();
       const deadline = etape.deadline ? new Date(etape.deadline) : new Date();
@@ -269,7 +318,6 @@ export class GroupDetailsComponent implements OnInit {
       return;
     }
     this.isLoading = true;
-    // Placeholder - Integrate with backend API for member addition
     this.members.push({ ...this.newMember, id: this.members.length + 1 });
     this.closeAddMemberModal();
     this.isLoading = false;
@@ -292,10 +340,7 @@ export class GroupDetailsComponent implements OnInit {
   refreshContributions() {
     console.log('Refresh Contributions clicked');
     this.isRefreshing = true;
-    setTimeout(() => {
-      this.isRefreshing = false;
-      this.loadContributors();
-    }, 2000);
+    this.loadContributors();
   }
 
   addRepository() {
@@ -303,15 +348,14 @@ export class GroupDetailsComponent implements OnInit {
     alert('Add repository functionality to be implemented');
   }
 
-// src/app/group-details.component.ts
-viewRepository() {
-  console.log('View Repository clicked');
-  if (this.currentGroup?.gitRepoUrl) {
-    this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: this.currentGroup.gitRepoUrl } });
-  } else {
-    alert('No repository URL available for this group.');
+  viewRepository() {
+    console.log('View Repository clicked');
+    if (this.currentGroup?.gitRepoUrl) {
+      this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: this.currentGroup.gitRepoUrl } });
+    } else {
+      alert('No repository URL available for this group.');
+    }
   }
-}
 
   hoverRow(member: UserResponse, event: MouseEvent) {
     const row = event.currentTarget as HTMLElement;
@@ -326,5 +370,21 @@ viewRepository() {
   isValidEmail(email: string): boolean {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailPattern.test(email);
+  }
+
+  getRankText(position: number): string {
+    const suffixes = ['th', 'st', 'nd', 'rd'];
+    const relevantDigits = position % 100;
+    const suffix = (relevantDigits - 20) % 10 > 3 ? suffixes[0] : suffixes[(relevantDigits - 20) % 10 + 1];
+    return position + suffix;
+  }
+
+  getDefaultAvatar(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://github.com/identicons/default.png';
+  }
+
+  getSafeUrl(url: string): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(url);
   }
 }
