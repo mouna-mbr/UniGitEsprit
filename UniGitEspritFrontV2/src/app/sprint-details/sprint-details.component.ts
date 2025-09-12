@@ -3,15 +3,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EtapeService } from '../services/etape.service';
 import { CreateTaskRequest, Status, TacheDTO } from '../models/tache.model';
 import { TacheService } from '../services/tache.service';
-import { User } from '../models/user.model';
 import { ValidationService } from '../services/validation.service';
 import { ValidationDTO } from '../models/validation.model';
 import { UserService } from '../services/user.service';
 import { UserResponse } from '../models/user.model';
-import { AuthService } from '../services/auth.service'; // Import AuthService
-import { GitRepositoryService } from '../services/git-repository.service'; // Import GitRepositoryService
-import { GitRepositoryDTO } from '../models/git-repository.model'; // Import GitRepositoryDTO
+import { AuthService } from '../services/auth.service';
+import { GitRepositoryService } from '../services/git-repository.service';
+import { GitRepositoryDTO, GitCommitRequest, GitCommitDTO } from '../models/git-repository.model';
 import { GroupService } from '../services/group.service';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { EtapeDTO } from '../models/pipeline.model';
 
 @Component({
   selector: 'app-sprint-details',
@@ -20,28 +21,22 @@ import { GroupService } from '../services/group.service';
 })
 export class SprintDetailsComponent implements OnInit {
   currentRoute: string = 'groups';
-  currentEtape!: any;
-  currentEtapeId!: number;
-  draggedTask: any = null;
+  currentEtape: EtapeDTO | null = null;
+  currentEtapeId: number = 0;
+  draggedTask: TacheDTO | null = null;
   sprintNotes: string = '';
   remarks: string = '';
   isProcessing = false;
   showTaskMenu = false;
   validations: ValidationDTO[] = [];
   students: UserResponse[] = [];
-  repository: GitRepositoryDTO | null = null; // Change to allow null and initialize
+  repository: GitRepositoryDTO | null = null;
   sprintProgress: number = 20;
-  teamPerformance = [
-    { name: 'ines', commits: 1, lastCommit: '7 days ago' },
-    { name: 'mouna', commits: 7, lastCommit: '2 hours ago' },
-    { name: 'rim', commits: 15, lastCommit: '8 days ago' },
-    { name: 'sana', commits: 20, lastCommit: '3 days ago' }
-  ];
+  teamPerformance: { name: string; commits: number; lastCommit: string }[] = [];
   tasks: TacheDTO[] = [];
   todoTasks: TacheDTO[] = [];
   progressTasks: TacheDTO[] = [];
   doneTasks: TacheDTO[] = [];
-  users?: User;
   showCreateModal = false;
   isCreating = false;
   selectedColumn: 'todo' | 'inprogress' | 'done' = 'todo';
@@ -71,19 +66,19 @@ export class SprintDetailsComponent implements OnInit {
     private etapeService: EtapeService,
     private validationService: ValidationService,
     private userService: UserService,
-    private authService: AuthService, // Inject AuthService
-    private gitRepositoryService: GitRepositoryService // Inject GitRepositoryService
+    private authService: AuthService,
+    private gitRepositoryService: GitRepositoryService
   ) {}
 
   ngOnInit(): void {
     this.currentEtapeId = +this.route.snapshot.paramMap.get('id')!;
     this.etapeService.getEtapeById(this.currentEtapeId).subscribe({
-      next: (etape) => {
+      next: (etape: EtapeDTO) => {
         this.currentEtape = etape;
         this.loadTasks();
         this.loadValidations();
         this.loadStudents();
-        this.loadRepository(); // Load repository details
+        this.loadRepository();
         console.log('Etape loaded:', etape);
       },
       error: (error) => {
@@ -115,6 +110,61 @@ export class SprintDetailsComponent implements OnInit {
         this.todoTasks = [];
         this.progressTasks = [];
         this.doneTasks = [];
+      }
+    });
+  }
+
+  loadTeamPerformance(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser || !this.currentEtape?.gitRepoUrl) {
+      console.warn('No user or repo URL available for team performance');
+      this.teamPerformance = [];
+      return;
+    }
+  
+    const commitRequest: GitCommitRequest = {
+      repoUrl: this.currentEtape.gitRepoUrl,
+      branch: this.repository?.defaultBranch || 'main',
+      page: 1,
+      perPage: 100
+    };
+  
+    this.gitRepositoryService.getCommits(commitRequest).subscribe({
+      next: (commits: GitCommitDTO[]) => {
+        const commitCounts = commits.reduce((acc, commit) => {
+          const author = commit.author?.name || 'Unknown';
+          
+          // Convertir la date string en objet Date
+          const commitDate = commit.author?.date 
+            ? new Date(commit.author.date) 
+            : new Date();
+          
+          const date = commitDate.toISOString();
+          
+          if (!acc[author]) {
+            acc[author] = { commits: 0, lastCommitDate: date };
+          }
+          acc[author].commits += 1;
+          
+          // Comparer les dates correctement
+          if (commitDate > new Date(acc[author].lastCommitDate)) {
+            acc[author].lastCommitDate = date;
+          }
+          
+          return acc;
+        }, {} as { [key: string]: { commits: number; lastCommitDate: string } });
+  
+        this.teamPerformance = Object.entries(commitCounts).map(([name, data]) => ({
+          name,
+          commits: data.commits,
+          lastCommit: formatDistanceToNow(parseISO(data.lastCommitDate), { addSuffix: true })
+        }));
+  
+        console.log('Team performance loaded:', this.teamPerformance);
+      },
+      error: (error) => {
+        console.error('Error loading commits:', error);
+        this.teamPerformance = [];
       }
     });
   }
@@ -152,10 +202,11 @@ export class SprintDetailsComponent implements OnInit {
         next: (repo) => {
           this.repository = repo;
           console.log('Repository loaded:', repo);
+          this.loadTeamPerformance(); // Reload team performance with updated defaultBranch
         },
         error: (error) => {
           console.error('Error loading repository:', error);
-          this.repository = null; // Handle error case
+          this.repository = null;
         }
       });
     } else {
@@ -205,7 +256,7 @@ export class SprintDetailsComponent implements OnInit {
       nom: this.newTask.title,
       description: this.newTask.description,
       status: this.newTask.status,
-      deadline: this.currentEtape.deadline || new Date().toISOString().split('T')[0],
+      deadline: this.currentEtape?.deadline || new Date().toISOString().split('T')[0],
       assigneeId: this.newTask.responsableId
     };
     this.tacheService.createTache(this.currentEtapeId, tacheDTO).subscribe({
@@ -290,8 +341,6 @@ export class SprintDetailsComponent implements OnInit {
     });
   }
 
- 
-
   viewRepository() {
     console.log('currentEtape:', this.currentEtape);
     console.log('gitRepoUrl:', this.currentEtape?.gitRepoUrl);
@@ -322,7 +371,7 @@ export class SprintDetailsComponent implements OnInit {
     alert('Edit Sprint functionality would be implemented here');
   }
 
-  onDragStart(task: any) {
+  onDragStart(task: TacheDTO) {
     this.draggedTask = task;
   }
 
@@ -351,7 +400,7 @@ export class SprintDetailsComponent implements OnInit {
     }
   }
 
-  updateTaskStatus(task: any, column: 'todo' | 'inprogress' | 'done') {
+  updateTaskStatus(task: TacheDTO, column: 'todo' | 'inprogress' | 'done') {
     let statut: Status;
     switch (column) {
       case 'todo': task.progress = 0; statut = Status.TODO; break;
@@ -366,7 +415,7 @@ export class SprintDetailsComponent implements OnInit {
     console.log(`Task ${task.id} moved to ${column}`);
   }
 
-  moveTask(task: any, column: string) {
+  moveTask(task: TacheDTO, column: string) {
     this.todoTasks = this.todoTasks.filter(t => t !== task);
     this.progressTasks = this.progressTasks.filter(t => t !== task);
     this.doneTasks = this.doneTasks.filter(t => t !== task);

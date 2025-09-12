@@ -3,10 +3,10 @@
   <!-- Sprint Header -->
   <div class="sprint-header">
     <div class="sprint-info">
-      <h1 class="sprint-title">{{currentEtape.nom}}</h1>
+      <h1 class="sprint-title">{{currentEtape?.nom}}</h1>
       <div class="sprint-deadline">
         <i class="fas fa-calendar-alt"></i>
-        <span>Deadline: {{currentEtape.deadline}}</span>
+        <span>Deadline: {{currentEtape?.deadline}}</span>
       </div>
     </div>
     <div class="sprint-actions">
@@ -219,7 +219,11 @@
     </div>
     <!-- Repository Info (New Section) -->
   <div class="repository-info" *ngIf="repository">
-    <h2>Repository Details</h2>
+    <div class="card-header">
+      <h2 class="card-title">
+        Repository Details
+      </h2>
+    </div>
     <p><strong>Name:</strong> {{ repository.name }}</p>
     <p><strong>Full Name:</strong> {{ repository.fullName }}</p>
     <p><strong>URL:</strong> <a href="{{ repository.url }}" target="_blank">{{ repository.url }}</a></p>
