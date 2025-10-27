@@ -58,23 +58,28 @@ export class SigninComponent implements AfterViewInit {
 
   onSubmit(form: NgForm) {
     console.log('Form submitted:', form.valid, { identifiantError: this.identifiantError, passwordError: this.passwordError });
-    
+  
     if (form.valid && !this.identifiantError && !this.passwordError) {
       this.isLoading = true;
       this.showAlert = false;
-
-      this.userService.login(this.identifiant, this.password).subscribe({
-        next: (user) => {
-          console.log('Login successful, user:', user);
+  
+      this.authService.login(this.identifiant, this.password).subscribe({
+        next: (response) => {
+          console.log('Login successful:', response);
           this.isLoading = false;
-          this.authService.setCurrentUser(user);
           this.showAlert = true;
           this.alertMessage = 'Sign in successful!';
           this.startAlertBlink();
-
-          // Redirect based on role and Git fields
-          console.log('Attempting navigation for role:', user.role);
-          if (user.role === 'ADMIN') {
+  
+          // Save token & user in localStorage
+          this.authService.setCurrentUser(response.user);
+          localStorage.setItem('auth-token', response.token);
+  
+          const user = response.user;
+          console.log('User roles:', user.role);
+  
+          // ✅ Redirection based on user roles and Git fields
+          if (user.role && user.role.includes('ADMIN')) {
             console.log('Navigating to /adduser');
             this.router.navigate(['/adduser']).then(success => {
               console.log('Navigation to /adduser success:', success);
@@ -90,20 +95,20 @@ export class SigninComponent implements AfterViewInit {
               console.log('Navigation to /profile success:', success);
             });
           }
-
+  
+          // Hide alert after 3s
           setTimeout(() => {
             this.stopAlertBlink();
             this.showAlert = false;
-            console.log('User:', user);
-            console.log('User role:', user.role);
           }, 3000);
         },
         error: (error) => {
           console.error('Login error:', error);
           this.isLoading = false;
           this.showAlert = true;
-          this.alertMessage = error.message || 'Invalid identifiant or password';
+          this.alertMessage = error.error?.message || 'Invalid identifiant or password';
           this.startAlertBlink();
+  
           setTimeout(() => {
             this.stopAlertBlink();
             this.showAlert = false;
@@ -111,9 +116,11 @@ export class SigninComponent implements AfterViewInit {
         }
       });
     } else {
+      // 🔴 Invalid form
       console.log('Form invalid or errors:', { identifiant: this.identifiant, password: this.password });
       if (!this.identifiant) this.identifiantError = 'Identifiant is required';
       if (!this.password) this.passwordError = 'Password is required';
+  
       this.showAlert = true;
       this.alertMessage = 'Please fix the errors in the form!';
       this.startAlertBlink();
@@ -123,6 +130,7 @@ export class SigninComponent implements AfterViewInit {
       }, 3000);
     }
   }
+  
 
   startAlertBlink() {
     let opacity = 1;

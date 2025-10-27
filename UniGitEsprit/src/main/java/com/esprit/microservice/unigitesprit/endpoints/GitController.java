@@ -4,7 +4,10 @@ import com.esprit.microservice.unigitesprit.dto.*;
 import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.services.impl.GitService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
@@ -45,34 +48,26 @@ public class GitController {
     }
     @GetMapping("/repository")
     public ResponseEntity<GitRepositoryDTO> getRepositoryInfo(
-            @RequestParam String repoUrl,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam String repoUrl
+          ) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        GitRepositoryDTO repoInfo = gitService.getRepositoryInfo(repoUrl, currentUser);
+        GitRepositoryDTO repoInfo = gitService.getRepositoryInfo(repoUrl);
         return ResponseEntity.ok(repoInfo);
     }
 
     @GetMapping("/branches")
     public ResponseEntity<?> getBranches(
-            @RequestParam String repoUrl,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam String repoUrl
+           ) {
 
         try {
-            User currentUser = extractUserFromAuthHeader(authHeader);
-            if (currentUser == null) {
-                return ResponseEntity.status(401).body("Authentication required");
-            }
+
 
             if (repoUrl == null || repoUrl.isEmpty()) {
                 return ResponseEntity.badRequest().body("Repository URL is required");
             }
 
-            List<GitBranchDTO> branches = gitService.getBranches(repoUrl, currentUser);
+            List<GitBranchDTO> branches = gitService.getBranches(repoUrl);
             return ResponseEntity.ok(branches);
 
         } catch (Exception e) {
@@ -85,15 +80,11 @@ public class GitController {
             @RequestParam String repoUrl,
             @RequestParam(required = false) String branch,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "30") int perPage,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam(defaultValue = "30") int perPage
+            ) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
-        List<GitCommitDTO> commits = gitService.getCommits(repoUrl, currentUser, branch, page, perPage);
+        List<GitCommitDTO> commits = gitService.getCommits(repoUrl, branch, page, perPage);
         return ResponseEntity.ok(commits);
     }
 
@@ -101,15 +92,11 @@ public class GitController {
     public ResponseEntity<List<GitFileDTO>> getFiles(
             @RequestParam String repoUrl,
             @RequestParam(required = false) String branch,
-            @RequestParam(required = false) String path,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam(required = false) String path
+           ) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
-        List<GitFileDTO> files = gitService.getFiles(repoUrl, currentUser, branch, path);
+        List<GitFileDTO> files = gitService.getFiles(repoUrl, branch, path);
         return ResponseEntity.ok(files);
     }
 
@@ -117,59 +104,40 @@ public class GitController {
     public ResponseEntity<GitFileContentDTO> getFileContent(
             @RequestParam String repoUrl,
             @RequestParam String path,
-            @RequestParam(required = false) String branch,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestParam(required = false) String branch) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
-        GitFileContentDTO fileContent = gitService.getFileContent(repoUrl, currentUser, path, branch);
+        GitFileContentDTO fileContent = gitService.getFileContent(repoUrl,  path, branch);
         return ResponseEntity.ok(fileContent);
     }
 
     @PostMapping("/repository-info")
     public ResponseEntity<GitRepositoryDTO> getRepositoryInfoWithRequest(
-            @RequestBody GitRepositoryRequestDto request,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody GitRepositoryRequestDto request) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
-        GitRepositoryDTO repoInfo = gitService.getRepositoryInfo(request.getRepoUrl(), currentUser);
+        GitRepositoryDTO repoInfo = gitService.getRepositoryInfo(request.getRepoUrl());
         return ResponseEntity.ok(repoInfo);
     }
 
     @PostMapping("/file-content")
     public ResponseEntity<GitFileContentDTO> getFileContentWithRequest(
-            @RequestBody GitFileContentRequestDto request,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody GitFileContentRequestDto request) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
         GitFileContentDTO fileContent = gitService.getFileContent(
-                request.getRepoUrl(), currentUser, request.getPath(), request.getBranch());
+                request.getRepoUrl(),  request.getPath(), request.getBranch());
         return ResponseEntity.ok(fileContent);
     }
 
     @PostMapping("/commits")
     public ResponseEntity<List<GitCommitDTO>> getCommitsWithRequest(
-            @RequestBody GitCommitRequestDto request,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestBody GitCommitRequestDto request
+           ) {
 
-        User currentUser = extractUserFromAuthHeader(authHeader);
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
 
         List<GitCommitDTO> commits = gitService.getCommits(
-                request.getRepoUrl(), currentUser, request.getBranch(),
+                request.getRepoUrl(),  request.getBranch(),
                 request.getPage(), request.getPerPage());
         return ResponseEntity.ok(commits);
     }

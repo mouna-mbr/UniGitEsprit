@@ -1,187 +1,86 @@
-      <!-- Dashboard Content -->
-      <main class="dashboard-main">
-        <div class="dashboard-grid">
-            <!-- Performance Card -->
-            <div class="card performance-card">
-                <div class="card-header">
-                    <span class="card-title">PERFORMANCE</span>
-                    <i class="fas fa-chart-bar card-icon"></i>
-                </div>
-                <div class="performance-value">49.65%</div>
-                <div class="performance-trend">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>3.48% since last month</span>
-                </div>
-            </div>
+<!-- Dashboard Content -->
+<div class="dashboard-container">
 
-            <!-- Fixed Issues Card -->
-            <div class="card issues-card">
-                <div class="card-header">
-                    <div class="issue-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                </div>
-                <div class="card-content">
-                    <div class="issue-label">Fixed Issues</div>
-                    <div class="issue-count">75</div>
-                    <div class="issue-source">Tracked from Github</div>
-                </div>
-            </div>
-
-            <!-- Commits Chart -->
-            <div class="card commits-card">
-                <div class="card-header">
-                    <span class="card-title">Commits</span>
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <div class="commits-value">80</div>
-                <div class="chart-container">
-                    <svg class="line-chart" viewBox="0 0 300 100">
-                        <polyline points="0,80 50,70 100,60 150,50 200,40 250,30 300,20" 
-                                 fill="none" stroke="#4ade80" stroke-width="3"/>
-                        <circle cx="300" cy="20" r="4" fill="#4ade80"/>
-                    </svg>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #4ade80;"></span>
-                        <span>4AI TEAM 7</span>
-                        <span>43%</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #22c55e;"></span>
-                        <span>4 TWIN TEAMS</span>
-                        <span>36%</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #16a34a;"></span>
-                        <span>5AI</span>
-                        <span>12%</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #15803d;"></span>
-                        <span>4 SAE TEAMS</span>
-                        <span>9%</span>
-                    </div>
-                </div>
-                <div class="last-updated">Just Updated</div>
-            </div>
-
-            <!-- Projects Progress -->
-            <div class="card projects-card">
-                <div class="card-header">
-                    <span class="card-title">Favourites Projects Progress track</span>
-                </div>
-                <div class="projects-list">
-                    <div class="project-item">
-                        <div class="project-icon angular">A</div>
-                        <div class="project-info">
-                            <span class="project-name">4 AI team 5</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 70%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-item">
-                        <div class="project-icon angular-red">A</div>
-                        <div class="project-info">
-                            <span class="project-name">3 A team 25</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 85%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-item">
-                        <div class="project-icon sketch">S</div>
-                        <div class="project-info">
-                            <span class="project-name">4 TWIN team 7</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-item">
-                        <div class="project-icon react">R</div>
-                        <div class="project-info">
-                            <span class="project-name">4 DS team 9</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 45%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-item">
-                        <div class="project-icon vue">V</div>
-                        <div class="project-info">
-                            <span class="project-name">3 A team 50</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 30%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bar Chart -->
-            <div class="card bar-chart-card">
-                <div class="card-header">
-                    <span class="card-title">Commits Par Filiere</span>
-                </div>
-                <div class="chart-title">4 ème année</div>
-                <div class="bar-chart-container">
-                    <div class="bar-chart">
-                        <div class="bar" style="height: 60%;"></div>
-                        <div class="bar" style="height: 70%;"></div>
-                        <div class="bar" style="height: 80%;"></div>
-                        <div class="bar" style="height: 65%;"></div>
-                        <div class="bar" style="height: 90%;"></div>
-                        <div class="bar" style="height: 75%;"></div>
-                        <div class="bar" style="height: 85%;"></div>
-                        <div class="bar" style="height: 95%;"></div>
-                        <div class="bar" style="height: 100%;"></div>
-                    </div>
-                </div>
-                <div class="chart-footer">
-                    <i class="fas fa-calendar"></i>
-                    <span>Last 7 Days</span>
-                </div>
-            </div>
-
-            <!-- Pie Chart -->
-            <div class="card pie-chart-card">
-                <div class="card-header">
-                    <span class="card-title">4 AI team 7</span>
-                </div>
-                <div class="chart-subtitle">Member Performance</div>
-                <div class="pie-chart-container">
-                    <div class="pie-chart">
-                        <svg viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="#ef4444" stroke-dasharray="46 54" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
-                            <circle cx="50" cy="50" r="40" fill="#06b6d4" stroke-dasharray="35 65" stroke-dashoffset="-46" transform="rotate(-90 50 50)"/>
-                            <circle cx="50" cy="50" r="40" fill="#f59e0b" stroke-dasharray="19 81" stroke-dashoffset="-81" transform="rotate(-90 50 50)"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="pie-legend">
-                    <div class="legend-item">
-                        <span class="legend-dot red"></span>
-                        <span>Red</span>
-                        <span>46%</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot blue"></span>
-                        <span>mouna</span>
-                        <span>35%</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot yellow"></span>
-                        <span>Omar</span>
-                        <span>19%</span>
-                    </div>
-                </div>
-                <div class="chart-footer">
-                    <i class="fas fa-clock"></i>
-                    <span>Campaign sent 2 days ago</span>
-                </div>
-            </div>
+    <!-- ================== ADMIN DASHBOARD ================== -->
+    <div class="dashboard admin-dashboard">
+      <h2>Admin Dashboard</h2>
+  
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi">Total BDP: {{this.totalDemandeBdp}}</div>
+        <div class="kpi">Total Parrainage: {{this.totalDemandeParrainage}}</div>
+      </div>
+  
+      <!-- Graphiques -->
+      <div class="charts">
+        <div class="chart-card">
+          <h3>BDP par Spécialité</h3>
+          <canvas *ngIf="bdpBySpecialiteChart"
+                  baseChart
+                  [data]="bdpBySpecialiteChart"
+                  [type]="'bar'">
+          </canvas>
         </div>
-    </main>
+  
+        <div class="chart-card">
+          <h3>BDP par Statut</h3>
+          <canvas *ngIf="bdpByStatusChart"
+                  baseChart
+                  [data]="bdpByStatusChart"
+                  [type]="'doughnut'">
+          </canvas>
+        </div>
+  
+        <div class="chart-card">
+          <h3>Parrainage par Statut</h3>
+          <canvas *ngIf="parrainageByStatusChart"
+                  baseChart
+                  [data]="parrainageByStatusChart"
+                  [type]="'doughnut'">
+          </canvas>
+        </div>
+  
+        <div class="chart-card">
+          <h3>Parrainage par Sujet</h3>
+          <canvas *ngIf="parrainageBySujetChart"
+                  baseChart
+                  [data]="parrainageBySujetChart"
+                  [type]="'bar'">
+          </canvas>
+        </div>
+      </div>
+    </div>
+  
+     <!-- ================== PROF DASHBOARD ================== -->
+  <div class="dashboard prof-dashboard">
+    <h2>Prof Dashboard</h2>
+
+    <div class="charts">
+      <div class="chart-card">
+        <h3>Sujets par Groupes</h3>
+        <canvas baseChart 
+                [data]="sujetsByGroupsChart" 
+                [type]="'bar'">
+        </canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Top 3 Groupes par Note</h3>
+        <canvas baseChart 
+                [data]="topGroupsByNoteChart" 
+                [type]="'bar'">
+        </canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Tâches par Statut</h3>
+        <canvas baseChart 
+                [data]="tachesByStatusChart" 
+                [type]="'doughnut'">
+        </canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+  

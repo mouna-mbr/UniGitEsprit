@@ -98,10 +98,19 @@ export class AddGroupComponent implements OnInit {
         }
         this.groupsService.addGroup(formValue).subscribe({
           next: () => {
-            this.router.navigate(['/groups']);
+
+            this.router.navigate(['/groupes']);
           },
           error: (error) => {
             this.errorMessage = error.message;
+            if (error.status === 401) {
+              this.errorMessage = 'User not authenticated';
+            }else if (error.status === 409) {
+              this.errorMessage = 'Group name already exists';
+            }
+            else if (error.status === 500) {
+              this.errorMessage = 'Failed to create group. Please try again.';
+            }
           }
         });
       } else {

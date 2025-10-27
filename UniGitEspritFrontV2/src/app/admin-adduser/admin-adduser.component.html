@@ -1,4 +1,103 @@
-    <!-- Toggle Button -->
+<div class="p-6">
+  <h2 class="text-2xl">User Management</h2>
+  <button class="btn btn-primary" (click)="showUserForm()">
+    <i class="fas fa-plus d-flex align-items-center gap-2"></i>
+    {{buttonText}}
+  </button>
+  <div *ngIf="showaddUserForm === false">
+  <table>
+    <thead class="table-header">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Creation Date</th>
+        <th>Class</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="table-row" *ngFor="let user of users">
+        <td>{{ user.lastName }} {{ user.firstName }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+        <div *ngFor="let role of user.role">{{ user.role }}</div>
+        </td>
+        <td>{{ user.createdAt }}</td>
+        <td>{{ user.classe }}</td>
+        <td>
+          <button class="btn-edit" (click)="openEditModal(user)">Edit</button>
+          <button class="btn-delete" (click)="deleteUser(user)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Editt -->
+  <div class="modal-bg" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>{{ selectedUser ? 'Edit User' : 'Add User' }}</h2>
+  
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+        <!-- Last Name -->
+        <div class="form-group">
+          <label for="nom">Last Name</label>
+          <input id="nom" type="text" formControlName="nom" />
+        </div>
+  
+        <!-- First Name -->
+        <div class="form-group">
+          <label for="prenom">First Name</label>
+          <input id="prenom" type="text" formControlName="prenom" />
+        </div>
+  
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" />
+        </div>
+  
+        <!-- Roles -->
+        <div class="form-group">
+          <label>Roles</label>
+  
+          <!-- Chips for selected roles -->
+          <div class="chips-container">
+            <span class="chip" *ngFor="let role of userRoles">
+              {{ role }}
+              <span class="remove" (click)="removeRole(role)">×</span>
+            </span>
+          </div>
+  
+          <!-- Dropdown for available roles -->
+          <select (change)="addRole($event)">
+            <option value="">-- Select a role --</option>
+            <option *ngFor="let role of availableRoles" [value]="role" [disabled]="userRoles.includes(role)">
+              {{ role }}
+            </option>
+          </select>
+        </div>
+  
+        <!-- Identifier -->
+        <div class="form-group">
+          <label for="identifiant">Identifier</label>
+          <input id="identifiant" type="text" formControlName="identifiant" maxlength="10" />
+        </div>
+
+  
+        <button type="submit" class="btn-save" >
+          {{ selectedUser ? 'Save Changes' : 'Add User' }}
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  
+  
+</div>
+</div>
+<div *ngIf="showaddUserForm === true">
+  <!-- Toggle Button -->
     <div class="form-actions toggle-mode">
       <button type="button" class="btn btn-primary" (click)="toggleMode()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -132,13 +231,8 @@
               class="form-select"
               (change)="onClassChange()"
             >
-              <option value="">Select a class</option>
-              <option value="1st year">1st year</option>
-              <option value="2nd year">2nd year</option>
-              <option value="3A">3A</option>
-              <option value="3B">3B</option>
-              <option value="4th year">4th year</option>
-              <option value="5th year">5th year</option>
+            <option *ngFor="let opt of classOptions" [value]="opt">{{ opt.nom }}</option>
+
             </select>
             <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" class="error-message">
               Class is required for students.
@@ -146,39 +240,7 @@
           </div>
 
           <!-- Specialty -->
-          <div class="form-group" *ngIf="showSpecialtyField">
-            <label for="specialite" class="form-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3L1 9L12 15L21 11V17H23V9L12 3ZM5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
-              </svg>
-              Specialty
-            </label>
-            <select
-              id="specialite"
-              formControlName="specialite"
-              class="form-select"
-            >
-              <option value="">Select a specialty</option>
-              <ng-container *ngIf="isComputerScienceFourthYearOrHigher">
-                <option value="TWIN">TWIN</option>
-                <option value="ARTIC">ARTIC</option>
-                <option value="DS">Data Science</option>
-                <option value="BI">Business Intelligence</option>
-                <option value="GL">Software Engineering</option>
-                <option value="IOT">Internet of Things</option>
-              </ng-container>
-              <ng-container *ngIf="!isComputerScienceFourthYearOrHigher">
-                <option value="informatique">Computer Science</option>
-                <option value="genie-civil">Civil Engineering</option>
-                <option value="electronique">Electronics</option>
-                <option value="mecanique">Mechanical Engineering</option>
-                <option value="gestion">Management</option>
-              </ng-container>
-            </select>
-            <div *ngIf="userForm.get('specialite')?.invalid && userForm.get('specialite')?.touched" class="error-message">
-              Specialty is required for this class.
-            </div>
-          </div>
+          
         </div>
 
         <!-- Identifier -->
@@ -369,3 +431,4 @@
     </div>
   </div>
 </main>
+</div>

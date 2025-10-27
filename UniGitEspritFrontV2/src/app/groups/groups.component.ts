@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { GroupService } from '../services/group.service';
 import { GroupResponse } from '../models/group.model';
 import { UserService } from '../services/user.service';
+import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-groups',
@@ -13,25 +15,82 @@ export class GroupsComponent implements OnInit {
   groups: GroupResponse[] = [];
   filteredGroups: GroupResponse[] = [];
   paginatedGroups: GroupResponse[] = [];
-  searchTerm = '';
   currentFilter: 'all' | 'favorites' | 'recent' = 'all';
   isFilterMenuOpen = false;
   openMenus: Set<number> = new Set();
   currentPage = 1;
   pageSize = 6;
   totalPages = 1;
-
+  private searchSubject = new Subject<string>();
+  searchTerm = '';
+  results: GroupResponse[] = [];
+  isAdmin :boolean | undefined = false;
+  isProfessor :boolean | undefined = false;
+  searching = false;
+  errorMessage = '';
   constructor(
     private groupService: GroupService,
     private router: Router,
+    private authService: AuthService,
     private userService: UserService
   ) {}
 
   ngOnInit(): void {
     this.loadGroups();
+    this.searchSubject.pipe(
+      debounceTime(300),          // wait 300ms after user stops typing
+      distinctUntilChanged(),     // avoid duplicate queries
+      switchMap(query => this.groupService.searchGroups(query))
+    ).subscribe({
+      next: (data) => this.groups = data,
+      error: (err) => console.error('Search failed', err)
+    });
+    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
+    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSEUR');
+  }
+  onSearch(): void {
+    if (!this.searchTerm.trim()) {
+      this.results = [];
+      return;
+    }
+    this.searching = true;
+    this.groupService.searchGroups(this.searchTerm).subscribe({
+      next: (res) => {
+        this.groups = res;
+        this.paginatedGroups = res;
+        this.results = res;
+        this.searching = false;
+      },
+      error: (err) => {
+        console.error('Search error:', err);
+        this.errorMessage = 'An error occurred while searching.';
+        this.searching = false;
+      }
+    });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.results = [];
+    this.loadGroups();
+  }
   loadGroups(): void {
+    const currentUser = this.authService.getCurrentUser();
+
+    if (currentUser !== null && currentUser.role.includes('STUDENT')) {
+      this.groupService.getGroupsByUser(currentUser.identifiant).subscribe({
+        next: (groups) => {
+          this.groups = groups;
+          this.applyFilter();
+          console.log('Groups fetched:', groups);
+        },
+        error: (err) => {
+          console.error('Error fetching groups:', err);
+          this.errorMessage = 'Error loading groups';
+        },
+      });
+    }else{
+
     this.groupService.getAllGroups().subscribe({
       next: (groups) => {
         this.groups = groups;
@@ -40,7 +99,7 @@ export class GroupsComponent implements OnInit {
       error: (error) => {
         console.error('Error loading groups', error);
       }
-    });
+    });}
   }
 
   applyFilter(): void {

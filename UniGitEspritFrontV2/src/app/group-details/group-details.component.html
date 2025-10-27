@@ -3,15 +3,15 @@
   <!-- Group Header -->
   <div class="group-header">
     <div class="group-info">
-      <h1 class="group-title">{{ currentGroup?.nom || 'Unnamed Group' }}</h1>
+      <h1 class="group-title">{{ currentGroup.nom || 'Unnamed Group' }}</h1>
       <p class="group-class">{{ currentClass?.nom || 'No Class' }}</p>
     </div>
-    <div class="group-actions">
+    <div class="group-actions" *ngIf="isProfessor || isAdmin">
       <button class="btn btn-secondary" (click)="editGroup()">
         <i class="fas fa-edit"></i> Edit Group
       </button>
       <button class="btn btn-primary" (click)="showSettings()">
-        <i class="fas fa-cog"></i> Settings
+        <i class="fas fa fa-trophy"></i> Proposer pour Bdp
       </button>
     </div>
   </div>
@@ -31,8 +31,8 @@
           <i class="fas fa-project-diagram"></i>
           {{ currentPipeline.nom }}
         </h2>
-        <button class="btn-icon" (click)="openPipelineModal(); $event.stopPropagation()" title="Create a new pipeline">
-          <i class="fas fa-plus"></i>
+        <button class="btn-icon" *ngIf="isProfessor || isAdmin" (click)="openPipelineModal(); $event.stopPropagation()" title="Edit Pipeline">
+          <i class="fas fa-solid fa-pen"></i>
         </button>
       </div>
       <div class="pipeline-container">
@@ -77,7 +77,7 @@
           <i class="fas fa-project-diagram"></i>
           Project Pipeline
         </h2>
-        <button class="btn-icon" (click)="openPipelineModal(); $event.stopPropagation()">
+        <button class="btn-icon" *ngIf="isProfessor || isAdmin" (click)="openPipelineModal(); $event.stopPropagation()">
           <i class="fas fa-plus"></i>
         </button>
       </div>
@@ -85,10 +85,10 @@
         <div class="empty-icon"><i class="fas fa-project-diagram"></i></div>
         <h3 class="empty-title">No Pipeline Created</h3>
         <p class="empty-description">Create your first project pipeline to track your team's steps and milestones</p>
-        <button class="btn btn-primary btn-create-pipeline" (click)="openPipelineModal(); $event.stopPropagation()">
+        <button class="btn btn-primary btn-create-pipeline" *ngIf="isProfessor || isAdmin" (click)="openPipelineModal(); $event.stopPropagation()">
           <i class="fas fa-plus"></i> Create Pipeline
         </button>
-        <button class="btn btn-outline-secondary btn-create-pipeline-alt" (click)="openPipelineModal(); $event.stopPropagation()">
+        <button class="btn btn-outline-secondary btn-create-pipeline-alt" *ngIf="!isProfessor && !isAdmin" (click)="openPipelineModal(); $event.stopPropagation()">
           <i class="fas fa-rocket"></i> Start Now
         </button>
       </div>
@@ -98,7 +98,7 @@
     <div class="card members-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-users"></i> Team Members</h2>
-        <button class="btn-icon" (click)="openAddMemberModal(); $event.stopPropagation()">
+        <button class="btn-icon" *ngIf="isProfessor || isAdmin" (click)="openAddMemberModal(); $event.stopPropagation()">
           <i class="fas fa-user-plus"></i>
         </button>
       </div>
@@ -120,10 +120,10 @@
             <span class="role-badge developer">{{ member.role }}</span>
           </div>
           <div class="table-cell">
-            <button class="btn-action" (click)="openEditMemberModal(member)">
+            <button class="btn-action" *ngIf="isProfessor || isAdmin" (click)="openEditMemberModal(member)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-action" (click)="removeMember(member)">
+            <button class="btn-action" *ngIf="isProfessor || isAdmin" (click)="removeMember(member)">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -175,8 +175,16 @@
             <div class="repo-icon"><i class="fab fa-github"></i></div>
             <div class="repo-details">
               <span class="repo-name">{{ repo.name }}</span>
-              <button class="btn btn-link" (click)="viewRepository()" *ngIf="repo.url">View in App</button>
-              <a class="repo-link" [href]="repo.url" target="_blank" *ngIf="repo.url">View on GitHub</a>
+              <button class="btn btn-primary" (click)="viewRepository()" *ngIf="repo.url">Consulter</button>
+              <!-- <a 
+              *ngIf="repo?.url"
+              class="text-red"
+              [href]="repo.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View on GitHub
+            </a>               -->
             </div>
           </div>
         </div>

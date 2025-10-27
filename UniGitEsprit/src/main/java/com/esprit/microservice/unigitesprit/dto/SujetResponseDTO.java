@@ -1,13 +1,37 @@
 package com.esprit.microservice.unigitesprit.dto;
 
+import com.esprit.microservice.unigitesprit.enumeration.TechnoLogies;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Set;
+
 public class SujetResponseDTO {
     private Long id;
     private String titre;
     private boolean favori;
     private String description;
     private Long proposeParId;
-
+    @JsonProperty("technologies")
+    private Set<TechnoLogies> technologies;
+    public Set<GroupResponseDTO> groups;
     // Getters and Setters
+
+    public Set<TechnoLogies> getTechnologies() {
+        return technologies;
+    }
+
+    public Set<GroupResponseDTO> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<GroupResponseDTO> groups) {
+        this.groups = groups;
+    }
+
+    public void setTechnologies(Set<TechnoLogies> technologies) {
+        this.technologies = technologies;
+    }
+
     public Long getId() {
         return id;
     }

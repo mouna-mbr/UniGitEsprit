@@ -17,7 +17,9 @@ export class SujetService {
       catchError(this.handleError)
     );
   }
-
+  searchDemands(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/search?query=${query}`);
+  }
   getAllSujets(): Observable<SujetResponse[]> {
     return this.http.get<SujetResponse[]>(this.apiUrl).pipe(
       catchError(this.handleError)

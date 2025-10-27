@@ -1,0 +1,63 @@
+<div class="p-4">
+  <h2 class="text-xl font-bold mb-4">Merge Requests Assigned to Me</h2>
+
+  <!-- Filter by state -->
+  <div class="flex gap-2 mb-4">
+    <button (click)="onStateChange('opened')" 
+            [class.bg-blue-600]="selectedState === 'opened'"
+            class="px-4 py-2 rounded-lg border">
+      Open
+    </button>
+    <button (click)="onStateChange('merged')" 
+            [class.bg-green-600]="selectedState === 'merged'"
+            class="px-4 py-2 rounded-lg border">
+      Merged
+    </button>
+    <button (click)="onStateChange('closed')" 
+            [class.bg-red-600]="selectedState === 'closed'"
+            class="px-4 py-2 rounded-lg border">
+      Closed
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="text-gray-400">Loading...</div>
+
+  <div *ngFor="let mr of mergeRequests" class="border rounded-xl shadow-md p-4 mb-3 bg-white">
+    <div class="flex justify-between items-center">
+      <div class="flex gap-3 items-center">
+        <img [src]="mr.author.avatar_url" class="w-10 h-10 rounded-full" alt="avatar">
+        <div>
+          <h3 class="text-lg font-semibold">{{ mr.title }}</h3>
+          <p class="text-sm text-gray-500">
+            !{{ mr.iid }} by {{ mr.author.name }} • 
+            <span [ngClass]="{
+              'text-green-600 font-bold': mr.state === 'merged',
+              'text-blue-600 font-bold': mr.state === 'opened',
+              'text-red-600 font-bold': mr.state === 'closed'
+            }">
+              {{ mr.state | uppercase }}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <a [href]="mr.web_url" target="_blank"
+           class="px-3 py-1 rounded-lg border hover:bg-gray-100">
+          View
+        </a>
+        <button *ngIf="selectedState === 'opened'" 
+                (click)="approve(mr)" 
+                class="px-3 py-1 rounded-lg border bg-yellow-100 hover:bg-yellow-200">
+          Approve
+        </button>
+        <button *ngIf="selectedState === 'opened'" 
+                (click)="merge(mr)" 
+                class="px-3 py-1 rounded-lg border bg-green-100 hover:bg-green-200">
+          Merge
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

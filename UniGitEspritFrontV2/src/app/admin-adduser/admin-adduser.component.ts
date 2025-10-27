@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
 import { User } from '../models/user.model';
+import { ClasseService } from '../services/classe.service';
+import { ClasseResponse } from '../models/classe.model';
 
 @Component({
   selector: 'app-admin-adduser',
@@ -9,7 +11,10 @@ import { User } from '../models/user.model';
   styleUrls: ['./admin-adduser.component.css'],
 })
 export class AdminAdduserComponent implements OnInit {
+  buttonText = 'Add User';
   userForm!: FormGroup;
+  showaddUserForm = false;
+  selectedUser: User | null = null;
   showPassword = false;
   isSubmitting = false;
   showSpecialtyField = false;
@@ -19,20 +24,45 @@ export class AdminAdduserComponent implements OnInit {
   selectedFile: File | null = null;
   isCsvMode: boolean = false;
   csvData: any[] = [];
-
-  classOptions: string[] = [
-    '1st year',
-    '2nd year',
-    '3A',
-    '3B',
-    '4th year',
-    '5th year'
+  availableRoles = [
+    'ADMIN',
+    'STUDENT',
+    'PROFESSOR',
+    'REFERENT_ESPRIT',
+    'REFERENT_ENTREPRISE',
+    'COORDINATEUR_PI'
   ];
+  userRoles: string[] = []; // initially empty or prefilled with user roles
 
-  constructor(private fb: FormBuilder, private userService: UserService) {}
+toggleRole(role: string, event: Event) {
+  const isChecked = (event.target as HTMLInputElement).checked;
+
+  if (isChecked) {
+    if (!this.userRoles.includes(role)) {
+      this.userRoles.push(role);
+    }
+  } else {
+    this.userRoles = this.userRoles.filter(r => r !== role);
+  }
+}
+  classOptions: ClasseResponse[]  = [];
+
+  constructor(private fb: FormBuilder,private classService: ClasseService, private userService: UserService) {}
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadUsers();
+    this.loadClasses();
+
+  }
+loadClasses(): void {
+    this.classService.getAllClasses().subscribe({
+      next: (classes) => {
+        this.classOptions = classes;
+        console.log(this.classOptions);
+      },
+      error: (error) => console.error('error', error.message)
+    });
   }
 
   initializeForm(): void {
@@ -40,7 +70,7 @@ export class AdminAdduserComponent implements OnInit {
       nom: ['', [Validators.required]],
       prenom: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      role: ['', [Validators.required]],
+      role: [[''], [Validators.required]],
       classe: [''],
       specialite: [''],
       identifiant: ['', [Validators.required, Validators.pattern(/^\d{3}[A-Z]{3}\d{4}$/)]],
@@ -49,7 +79,15 @@ export class AdminAdduserComponent implements OnInit {
       gitAccessToken: ['']
     });
   }
-
+  showUserForm() {
+    this.showaddUserForm = !this.showaddUserForm;
+    this.initializeForm();
+    if (this.showaddUserForm) {
+      this.buttonText = 'Consulter Liste des Utilisateurs';
+    } else {
+      this.buttonText = 'Add User';
+    }
+  }
   toggleMode(): void {
     this.isCsvMode = !this.isCsvMode;
     this.errorMessage = null;
@@ -83,29 +121,10 @@ export class AdminAdduserComponent implements OnInit {
   }
 
   onClassChange(): void {
-    const classe = this.userForm.get('classe')?.value?.toLowerCase();
+    const classe = this.userForm.get('classe');
     const specialiteControl = this.userForm.get('specialite');
 
-    specialiteControl?.setValue('');
-    this.showSpecialtyField = false;
-    specialiteControl?.clearValidators();
-
-    if (classe) {
-      if (classe === '1st year' || classe === '2nd year' || classe === '3a' || classe === '3b') {
-        this.showSpecialtyField = false;
-        specialiteControl?.clearValidators();
-      } else if (classe.match(/[4-5]th year/)) {
-        this.showSpecialtyField = true;
-        this.isComputerScienceFourthYearOrHigher = true;
-        specialiteControl?.setValidators([Validators.required]);
-      } else {
-        this.showSpecialtyField = true;
-        this.isComputerScienceFourthYearOrHigher = false;
-        specialiteControl?.setValidators([Validators.required]);
-      }
-    }
-
-    specialiteControl?.updateValueAndValidity();
+    
   }
 
   formatIdentifiant(event: any): void {
@@ -140,7 +159,9 @@ export class AdminAdduserComponent implements OnInit {
       const userData: User = {
         firstName: this.userForm.get('prenom')?.value,
         lastName: this.userForm.get('nom')?.value,
-        role: this.userForm.get('role')?.value,
+        role: Array.isArray(this.userForm.get('role')?.value)
+        ? this.userForm.get('role')?.value
+        : [this.userForm.get('role')?.value],
         identifiant: this.userForm.get('identifiant')?.value,
         password: this.userForm.get('password')?.value,
         classe: this.userForm.get('classe')?.value || undefined,
@@ -221,11 +242,13 @@ export class AdminAdduserComponent implements OnInit {
 
     this.userService.addUsersFromCsv(this.selectedFile).subscribe({
       next: (response) => {
+        
         this.isSubmitting = false;
         this.successMessage = `Successfully added ${response.length} users.`;
         this.selectedFile = null;
         this.csvData = [];
         (document.getElementById('csvFile') as HTMLInputElement).value = '';
+      console.log(response);
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -237,4 +260,73 @@ export class AdminAdduserComponent implements OnInit {
   goBack(): void {
     window.history.back();
   }
+  users: User[] = [];
+  showModal = false;
+
+
+  loadUsers() {
+    this.userService.getAllUsers().subscribe((data) => {
+      this.users = data;
+      console.log(data);
+    });
+  }
+
+  openEditModal(user: User) {
+    this.selectedUser = { ...user };
+    this.userRoles = [...user.role];
+    this.userForm.patchValue({
+      nom: this.selectedUser.firstName,
+      prenom: this.selectedUser.lastName,
+      email: this.selectedUser.email,
+      identifiant: this.selectedUser.identifiant,
+      role: this.userRoles,
+       // vide si tu veux pas montrer l’ancien mot de passe
+    });
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+    this.selectedUser = null;
+  }
+
+    addRole(event: any) {
+      const role = event.target.value;
+      if (role && !this.userRoles.includes(role)) {
+        this.userRoles.push(role);
+        this.userForm.get('roles')?.setValue(this.userRoles);
+      }
+      event.target.value = ''; // reset dropdown
+    }
+  
+    removeRole(role: string) {
+      this.userRoles = this.userRoles.filter(r => r !== role);
+      this.userForm.get('roles')?.setValue(this.userRoles);
+    }
+  saveUser() {
+
+    const userData: User = {
+      firstName: this.userForm.get('prenom')?.value,
+      lastName: this.userForm.get('nom')?.value,
+      email: this.userForm.get('email')?.value,
+      identifiant: this.userForm.get('identifiant')?.value,
+      role: this.userRoles // map to Role[] if needed
+    };
+
+    if (this.selectedUser) {
+      // update existing user
+      this.userService.updateUser(userData.identifiant, userData).subscribe(() => {
+        this.closeModal();
+      });
+    } 
+  }
+  deleteUser(user : User) {
+    if (confirm('Are you sure you want to delete this user?')) {
+      this.userService.deleteUser((user.identifiant)).subscribe(() => {
+        console.log('User deleted successfully.');
+        this.loadUsers();
+      });
+    }
+  }
+  
 }

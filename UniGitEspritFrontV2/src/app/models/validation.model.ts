@@ -15,5 +15,5 @@ export interface ValidationDTO {
   remarques: string[];
   etapeId: number;
   etudiantIds: number[];
-  note?: number; // Optional if not always provided
+  note?: number; 
 }

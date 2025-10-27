@@ -5,6 +5,33 @@
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
         <div><p class="subtitle">Manage your student groups</p></div>
         <div class="action-buttons">
+          
+          <div class="w-full">
+            <div class="flex items-center ">
+              <input
+                type="text"
+                placeholder="Search group or class"
+                [(ngModel)]="searchTerm"
+                class="search-input" 
+                (keyup.enter)="onSearch()"
+              />                <i class="fas fa-search search-icon"></i>
+
+            </div>
+          
+            <!-- Loading state -->
+            <p *ngIf="searching" class="text-gray-500">Searching...</p>
+          
+            <!-- Error message -->
+            <p *ngIf="errorMessage" class="text-red-500">{{ errorMessage }}</p>
+          
+          </div>
+          <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
+            <i class="fas fa-search search-icon"></i>search
+
+          </button>
+          <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
+            ✕
+          </button>
           <div class="filter-container">
             <button class="btn btn-secondary" style="color: #dc2626;border-color: #dc2626;" (click)="onFilter()">
               <i class="fas fa-filter" style="color: #dc2626;"></i>
@@ -29,7 +56,7 @@
               </div>
             </div>
           </div>
-          <button class="btn btn-primary" (click)="addGroup()">
+          <button *ngIf="isProfessor || isAdmin" class="btn btn-primary" (click)="addGroup()">
             <i class="fas fa-plus"></i>
             Add Group
           </button>
@@ -45,7 +72,7 @@
       <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
       <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
     </p>
-    <button class="clear-filters" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
+    <button class="clear-filters" (click)="searchTerm = ''; loadGroups()" *ngIf="searchTerm || currentFilter !== 'all'">
       <i class="fas fa-times"></i>
       Clear Filters
     </button>
@@ -62,7 +89,7 @@
           <i class="fas fa-heart"></i>
         </button>
         <div class="card-menu-container">
-          <button class="card-menu" (click)="toggleMenu(group.id, $event)">
+          <button class="card-menu" *ngIf="isProfessor || isAdmin" (click)="toggleMenu(group.id, $event)">
             <i class="fas fa-ellipsis-h"></i>
           </button>
           <div class="dropdown-menu" [class.show]="isMenuOpen(group.id)">

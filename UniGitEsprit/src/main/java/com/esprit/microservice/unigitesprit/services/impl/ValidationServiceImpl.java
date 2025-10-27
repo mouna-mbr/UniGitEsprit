@@ -55,27 +55,14 @@ public class ValidationServiceImpl {
         Etape etape = etapeRepository.findById(etapeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Etape does not exist"));
 
-        if (validationDTO.getRemarques() == null || validationDTO.getRemarques().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one remark is required");
-        }
-        if (validationDTO.getDateValidation() != null && !validationDTO.getDateValidation().isAfter(LocalDate.now())) {
+        if (validationDTO.getDateValidation() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Validation date must be in the future");
-        }
-        if (validationDTO.getEtudiantIds() == null || validationDTO.getEtudiantIds().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one student is required");
         }
 
         Validation validation = new Validation();
         validation.setEtape(etape);
         validation.setDateValidation(validationDTO.getDateValidation() != null ? validationDTO.getDateValidation() : LocalDate.now());
-        validation.setRemarques(validationDTO.getRemarques());
         validation.setNote(validationDTO.getNote());
-
-        List<User> etudiants = userRepository.findAllById(validationDTO.getEtudiantIds());
-        if (etudiants.size() != validationDTO.getEtudiantIds().size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Some student IDs do not exist");
-        }
-        validation.setEtudiants(etudiants);
 
         validationRepository.save(validation);
 

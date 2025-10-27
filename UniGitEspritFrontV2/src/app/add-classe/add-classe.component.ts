@@ -64,7 +64,7 @@ export class AddClasseComponent implements OnInit {
     const numericId = Number(this.newStudentId); // Convert to number
     const user = this.users.find(u => u.id === numericId);
     console.log('User found for id', numericId, ':', user); // Debug specific user
-    if (this.newStudentId && user && user.role?.toUpperCase() === 'STUDENT') {
+    if (this.newStudentId && user && user.role?.includes('STUDENT') ) {
       const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
       if (!etudiantIds.includes(numericId)) {
         etudiantIds.push(numericId);
@@ -92,7 +92,7 @@ export class AddClasseComponent implements OnInit {
     const numericId = Number(this.newTeacherId); // Convert to number
     const user = this.users.find(u => u.id === numericId);
     console.log('User found for id', numericId, ':', user); // Debug specific user
-    if (this.newTeacherId && user && user.role?.toUpperCase() === 'PROFESSOR') {
+    if (this.newTeacherId && user && user.role?.includes('PROFESSOR')) {
       const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
       if (!enseignantIds.includes(numericId)) {
         enseignantIds.push(numericId);

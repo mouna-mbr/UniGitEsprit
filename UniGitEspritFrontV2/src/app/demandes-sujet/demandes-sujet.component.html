@@ -1,0 +1,92 @@
+<div class="p-6 max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold">Listes des demandes de parrainage</h1>
+  <div class="action-buttons">
+    <div class="w-full">
+      <div class="flex items-center ">
+        <input
+          type="text"
+          placeholder="Search group or class"
+          [(ngModel)]="searchTerm"
+          class="search-input" 
+          (keyup.enter)="onSearch()"
+        />                <i class="fas fa-search search-icon"></i>
+        <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
+          <i class="fas fa-search search-icon"></i>search
+        </button>
+        <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
+          ✕
+        </button>
+      </div>
+     
+     
+    
+    </div>
+  <table class="w-full border-collapse border border-gray-600 mt-4">
+    <thead>
+      <tr class="table-header">
+        <th class="border border-gray-600 p-2 text-white">ID</th>
+        <th class="border border-gray-600 p-2 text-white">Utilisateur</th>
+        <th class="border border-gray-600 p-2 text-white">Entreprise</th>
+        <th class="border border-gray-600 p-2 text-white">Sujet</th>
+        <th class="border border-gray-600 p-2 text-white">Status</th>
+        <th class="border border-gray-600 p-2 text-white">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let demande of demandesParainage" class="table-row">
+        <td class="border border-gray-600 p-2 text-white">{{ demande.id }}</td>
+        <td class="border border-gray-600 p-2 text-white">
+          {{ demande.user.firstName }} {{ demande.user.lastName }}
+        </td>
+        <td class="border border-gray-600 p-2 text-white">
+          {{ demande?.entreprise?.name || '—' }}
+        </td>
+        <td class="border border-gray-600 p-2 text-white">
+          {{ demande.sujet.titre || '—' }}
+        </td>
+        <td class="border border-gray-600 p-2 text-white">
+          {{ demande.status }}
+        </td>
+        <td class="border border-gray-600 p-2 space-x-2">
+          <div *ngIf="isAdmin || isCpi">
+          <button *ngIf="demande.status === 'PENDING'" 
+                  class="btn-accept text-white px-2 py-1 rounded"
+                  (click)="handleAccept(demande.id)">
+            Accept
+          </button>
+          <button *ngIf="demande.status === 'PENDING'" 
+                  class="btn-refuse px-2 py-1 rounded"
+                  (click)="handleRefuse(demande.id)">
+            Refuse
+          </button>
+        </div>
+          <button *ngIf="demande.entreprise" class="btn-consult px-2 py-1 rounded" 
+                  (click)="showEntrepriseDetails(demande.entreprise)">
+            <i class="fa fa-share-square-o"></i>
+            Consulter Entreprise
+          </button>
+          <button class="btn-consult px-2 py-1 rounded" 
+                  (click)="showSujetDetails(demande)">
+            <i class="fa fa-share-square-o"></i>
+            Consulter Sujet
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Entreprise Details Modal -->
+  <div *ngIf="selectedEntreprise" class="modal-bg fixed inset-0 flex items-center justify-center">
+    <div class="modal-content p-6 rounded-lg max-w-md w-full">
+      <h2 class="text-xl font-bold mb-4 text-black">Entreprise Details</h2>
+      <p class="text-black"><strong>Nom:</strong> {{ selectedEntreprise.name }}</p>
+      <p class="text-black"><strong>Adresse:</strong> {{ selectedEntreprise.address }}</p>
+      <p class="text-black"><strong>Email:</strong> {{ selectedEntreprise.email }}</p>
+      <p class="text-black"><strong>Téléphone:</strong> {{ selectedEntreprise.phone }}</p>
+      <button class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" 
+              (click)="closeModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

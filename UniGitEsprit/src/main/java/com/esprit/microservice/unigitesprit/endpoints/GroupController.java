@@ -32,6 +32,14 @@ public class GroupController {
         GroupResponseDTO group = groupService.getGroupByPipelineId(pipelineId);
         return ResponseEntity.ok(group);
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<GroupResponseDTO>> searchGroups(@RequestParam String query) {
+        return ResponseEntity.ok(groupService.searchGroups(query));
+    }
+    @GetMapping("/GroupsbyUser/{id}")
+    public ResponseEntity<List<GroupResponseDTO>> getGroupsByUser(@PathVariable String id) {
+        return ResponseEntity.ok(groupService.getGroupsByUser(id));
+    }
 
     @GetMapping
     public ResponseEntity<List<GroupResponseDTO>> getAllGroups() {

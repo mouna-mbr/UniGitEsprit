@@ -37,8 +37,8 @@
             <button class="card-menu" (click)="toggleMenu(sujet.id, $event)">
               <i class="fas fa-ellipsis-h"></i>
             </button>
-            <div class="dropdown-menu" [class.show]="isMenuOpen(sujet.id)">
-              <div class="menu-item" (click)="editSujet($event)">
+            <div class="dropdown-menu" *ngIf="isAdmin || isOwner" [class.show]="isMenuOpen(sujet.id)">
+              <div class="menu-item"  (click)="editSujet($event)">
                 <i class="fas fa-edit"></i>
                 <span>Edit Sujet</span>
               </div>
@@ -54,7 +54,26 @@
         </div>
         <div class="card-content">
           <h3 class="class-name">{{ sujet.titre }}</h3>
-          <p class="class-level">{{ sujet.description }}</p>
+          <p class="class-level">description: {{ sujet.description }}</p>
+          <div class="technology-container">
+            <h2 class="title">Technologies</h2>
+          
+            <div class="technology-bubbles">
+              <span *ngFor="let tech of sujet.technologies" class="bubble">
+                {{ tech.replace('_', ' ') }}
+              </span>
+            </div>
+          </div>
+          <div class="technology-container">
+            <h2 class="title">Groups</h2>
+          
+            <div class="technology-bubbles">
+              <span *ngFor="let group of sujet.groups"  class="bubble" >
+               <p (click)="viewGroup(group.id)"> {{ group.nom }}</p>
+              </span>
+            </div>
+          </div>
+          
           <div class="class-stats">
             <div class="stat">
               <i class="fas fa-user"></i>
@@ -63,7 +82,7 @@
           </div>
         </div>
         <div class="card-footer">
-          <button class="btn-consult" style="background-color: brown;color: white;" (click)="goBack()">
+          <button class="btn-consult" style="background-color: brown;color: white;" *ngIf="isRefEntreprise" (click)="applySujet()">
             <span>Apply</span>
           </button>
         </div>

@@ -32,6 +32,8 @@ public class PipelineServiceImpl {
     private EtapeRepository etapeRepository;
 
     public PipelineDTO addPipeline(PipelineDTO pipelineDTO) {
+        Pipeline pipeline ;
+        List<Etape> etapes;
         if (pipelineDTO.getNom() == null || pipelineDTO.getNom().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pipeline name cannot be empty");
         }
@@ -55,22 +57,39 @@ public class PipelineServiceImpl {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage deadline must be in the future: " + etapeDTO.getNom());
             }
         }
-        Pipeline pipeline = new Pipeline();
-        pipeline.setNom(pipelineDTO.getNom());
-        pipeline.setGroup(group);
+        Optional<Pipeline> pipelineiNdB= pipelineRepository.findByGroupId(group.getId());
+        if (pipelineiNdB.isPresent()) {
+            pipeline=pipelineiNdB.get();
+            pipeline.setNom(pipelineDTO.getNom());
+            pipeline.setGroup(group);
 
-        List<Etape> etapes = etapeDTOs.stream().map(dto -> {
-            Etape etape = new Etape();
-            etape.setNom(dto.getNom());
-            etape.setConsigne(dto.getConsigne());
-            etape.setDeadline(dto.getDeadline());
-            etape.setPipeline(pipeline);
-            return etape;
-        }).collect(Collectors.toList());
-        pipeline.setEtapes(etapes);
+         etapes = etapeDTOs.stream().map(dto -> {
+                Etape etape = new Etape();
+                etape.setNom(dto.getNom());
+                etape.setConsigne(dto.getConsigne());
+                etape.setDeadline(dto.getDeadline());
+                etape.setPipeline(pipeline);
+                return etape;
+            }).collect(Collectors.toList());
+            pipeline.setEtapes(etapes);
 
-        pipelineRepository.save(pipeline);
+        }else {
+            pipeline = new Pipeline();
+            pipeline.setNom(pipelineDTO.getNom());
+            pipeline.setGroup(group);
 
+             etapes = etapeDTOs.stream().map(dto -> {
+                Etape etape = new Etape();
+                etape.setNom(dto.getNom());
+                etape.setConsigne(dto.getConsigne());
+                etape.setDeadline(dto.getDeadline());
+                etape.setPipeline(pipeline);
+                return etape;
+            }).collect(Collectors.toList());
+            pipeline.setEtapes(etapes);
+
+            pipelineRepository.save(pipeline);
+        }
         pipelineDTO.setId(pipeline.getId());
         pipelineDTO.setEtapes(etapes.stream().map(etape -> {
             EtapeDTO dto = new EtapeDTO();
@@ -104,6 +123,7 @@ public class PipelineServiceImpl {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pipeline must have at least one stage");
         }
         LocalDate currentDate = LocalDate.now();
+
         for (EtapeDTO etapeDTO : etapeDTOs) {
             if (etapeDTO.getNom() == null || etapeDTO.getNom().trim().isEmpty()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage name cannot be empty");
@@ -111,25 +131,20 @@ public class PipelineServiceImpl {
             if (etapeDTO.getDeadline() == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage deadline cannot be null");
             }
-            if (!etapeDTO.getDeadline().isAfter(currentDate)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage deadline must be in the future: " + etapeDTO.getNom());
-            }
+
         }
 
         // Update pipeline fields
         pipeline.setNom(pipelineDTO.getNom());
         pipeline.setGroup(group);
 
-        // Manage etapes: update existing, add new, delete removed
         List<Etape> existingEtapes = pipeline.getEtapes();
-        Map<Long, Etape> existingEtapeMap = existingEtapes.stream()
-                .collect(Collectors.toMap(Etape::getId, etape -> etape));
 
         List<Etape> updatedEtapes = etapeDTOs.stream().map(dto -> {
             Etape etape;
-            if (dto.getId() != null && existingEtapeMap.containsKey(dto.getId())) {
-                // Update existing etape
-                etape = existingEtapeMap.get(dto.getId());
+
+            if (dto.getId()!=null ) {
+                etape=etapeRepository.findById(dto.getId()).orElse(null);
                 etape.setNom(dto.getNom());
                 etape.setConsigne(dto.getConsigne());
                 etape.setDeadline(dto.getDeadline());
@@ -138,6 +153,9 @@ public class PipelineServiceImpl {
                 etape = new Etape();
                 etape.setNom(dto.getNom());
                 etape.setConsigne(dto.getConsigne());
+                if (!dto.getDeadline().isAfter(currentDate)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage deadline must be in the future: " + dto.getNom());
+                }
                 etape.setDeadline(dto.getDeadline());
                 etape.setPipeline(pipeline);
             }
@@ -146,10 +164,12 @@ public class PipelineServiceImpl {
 
         // Remove etapes not in the updated list
         existingEtapes.removeIf(etape -> !updatedEtapes.contains(etape));
-        pipeline.setEtapes(updatedEtapes);
+        existingEtapes.clear();
+        existingEtapes.addAll(updatedEtapes);
 
-        // Save updated pipeline
+        pipeline.setEtapes(updatedEtapes);
         pipelineRepository.save(pipeline);
+        // Save updated pipeline
 
         // Update DTO with saved data
         pipelineDTO.setId(pipeline.getId());

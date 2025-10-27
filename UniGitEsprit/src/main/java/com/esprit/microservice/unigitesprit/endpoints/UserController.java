@@ -4,6 +4,7 @@ import com.esprit.microservice.unigitesprit.dto.UserCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.UserLoginDTO;
 import com.esprit.microservice.unigitesprit.dto.UserResponseDTO;
 import com.esprit.microservice.unigitesprit.dto.UserUpdateGitDTO;
+import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.services.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,12 @@ public class UserController {
         List<UserResponseDTO> responses = userService.getAllUsers();
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
-
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable String id, @RequestBody User user) {
+        UserResponseDTO responses = userService.updateUser(id, user);
+        if (responses != null) {return new ResponseEntity<>(responses, HttpStatus.OK);}
+        return new ResponseEntity<>(responses, HttpStatus.NOT_FOUND);
+    }
     @PostMapping
     public ResponseEntity<UserResponseDTO> addUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
         UserResponseDTO response = userService.addUser(userCreateDTO);
@@ -41,8 +47,9 @@ public class UserController {
 
     @PostMapping("/csv")
     public ResponseEntity<List<UserResponseDTO>> addUsersFromCsv(@RequestParam("file") MultipartFile file) {
-        List<UserResponseDTO> responses = userService.addUsersFromCsv(file);
-        return new ResponseEntity<>(responses, HttpStatus.CREATED);
+        if( userService.addUsersFromCsv(file)){
+        return new ResponseEntity<>( HttpStatus.CREATED);}else
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/login")
@@ -54,6 +61,13 @@ public class UserController {
     @PutMapping("/{id}/git-credentials")
     public ResponseEntity<UserResponseDTO> updateGitCredentials(@PathVariable Long id, @Valid @RequestBody UserUpdateGitDTO updateGitDTO) {
         UserResponseDTO response = userService.updateGitCredentials(id, updateGitDTO);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        if (response!=null){return new ResponseEntity<>(response, HttpStatus.OK);}
+        else return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        return userService.deleteUser(id)
+                ? ResponseEntity.noContent().build()  // 204 if deleted
+                : ResponseEntity.notFound().build();  // 404 if not found
     }
 }

@@ -87,7 +87,7 @@ export class ClassDetailsComponent implements OnInit {
   editClass(event?: Event): void {
     if (event) event.stopPropagation();
     if (this.classe) {
-      this.router.navigate([`/classes/edit/${this.classe.id}`]);
+      this.router.navigate([`/edit-classe/${this.classe.id}`]);
     }
   }
 

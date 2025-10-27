@@ -63,8 +63,49 @@
               ></textarea>
             </div>
           </div>
-        </div>
+        
+<!-- Technologies Section -->
+<div class="form-group">
+  <label class="form-label">Technologies</label>
 
+  <!-- ✅ Chips: show selected technologies -->
+  <!-- Each selected technology appears as a blue "chip" with a small remove (×) button -->
+  <div class="chips-container">
+    <span *ngFor="let tech of selectedTechnologies" class="chip">
+      {{ tech }}
+      <!-- When clicking ×, the technology is removed from selectedTechnologies -->
+      <button type="button" class="remove-btn" (click)="removeTechnology(tech)">×</button>
+    </span>
+  </div>
+
+  <!-- ✅ Input + Dropdown for technology search -->
+  <div class="autocomplete-container">
+    <!-- Input connected to the FormControl 'techControl' -->
+    <!-- As user types, filteredTechnologies updates automatically via valueChanges -->
+    <!-- Pressing Enter adds the technology manually -->
+    <input
+      type="text"
+      class="form-textarea"
+      placeholder="Type to search technologies..."
+      [formControl]="techControl"
+      (keydown.enter)="addTechnology(techControl.value || '')"
+    />
+
+    <!-- ✅ Dropdown (appears only if there are matching results AND the user typed something) -->
+    <!-- Each <li> shows a suggestion from filteredTechnologies -->
+    <!-- Clicking a suggestion calls addTechnology(tech) -->
+    <ul class="autocomplete-list" *ngIf="(filteredTechnologies | async)?.length && techControl.value">
+      <li
+        *ngFor="let tech of (filteredTechnologies | async)"
+        (click)="addTechnology(tech)"
+        class="autocomplete-item"
+      >
+        {{ tech }}
+      </li>
+    </ul>
+  </div>
+</div>
+        </div>
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>

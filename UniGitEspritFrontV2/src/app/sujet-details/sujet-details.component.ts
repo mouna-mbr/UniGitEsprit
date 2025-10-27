@@ -4,6 +4,9 @@ import { SujetService } from '../services/sujet.service';
 import { UserService } from '../services/user.service';
 import { SujetResponse } from '../models/sujet.model';
 import { UserResponse } from '../models/user.model';
+import { DemandeParainageService } from '../services/demande-parainage.service';
+import { DemandeParainageRequest } from '../models/demande.model';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-sujet-details',
@@ -11,19 +14,29 @@ import { UserResponse } from '../models/user.model';
   styleUrls: ['./sujet-details.component.css'] // Reusing class CSS for consistency
 })
 export class SujetDetailsComponent implements OnInit {
+  isAdmin: boolean | undefined = false;
+  isProfessor: boolean | undefined = false;
+  isRefEntreprise : boolean | undefined  = false;
+  isOwner: boolean | undefined = false;
   sujet: SujetResponse | null = null;
   users: UserResponse[] = [];
   openMenus: Set<number> = new Set();
   errorMessage: string | null = null;
+  currentUser:any;
 
   constructor(
+    private DemandeParainageService: DemandeParainageService,
     private route: ActivatedRoute,
     private router: Router,
     private sujetService: SujetService,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService
+    
   ) {}
 
   ngOnInit(): void {
+    const currentUser = this.authService.getCurrentUser();
+    this.currentUser= currentUser;
     this.loadUsers();
     this.loadSujet();
   }
@@ -35,6 +48,11 @@ export class SujetDetailsComponent implements OnInit {
       },
       error: (error) => this.showNotification('error', error.message)
     });
+    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
+    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+    this.isRefEntreprise = this.authService.getCurrentUser()?.role.includes('REFERENT_ENTREPRISE');
+    this.isOwner = this.authService.getCurrentUser()?.identifiant === this.sujet?.proposeParId;
+
   }
 
   loadSujet(): void {
@@ -49,12 +67,30 @@ export class SujetDetailsComponent implements OnInit {
       }
     });
   }
-
+  viewGroup(id: number): void {
+    this.router.navigate([`/groupdetails/${id}`]);
+  }
   getUserName(id: number): string {
     const user = this.users.find(u => u.id === id);
     return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
   }
-
+  applySujet(): void {
+    if (this.sujet) {
+      let demande: DemandeParainageRequest = {
+        user: this.currentUser,
+        sujet: this.sujet,
+        status: 'PENDING'
+        
+      }
+      this.DemandeParainageService.createDemande(demande).subscribe({
+        next: () => {
+          this.showNotification('success', 'Sujet applied successfully');
+          this.goBack();
+        },
+        error: (error) => this.showNotification('error', error.message)
+      });
+    }
+  }
   toggleFavorite(id: number, event: Event): void {
     event.stopPropagation();
     if (this.sujet) {
@@ -91,7 +127,7 @@ export class SujetDetailsComponent implements OnInit {
 
   deleteSujet(id: number, event: Event): void {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this sujet?')) {
+  
       this.sujetService.deleteSujet(id).subscribe({
         next: () => {
           this.showNotification('success', 'Sujet deleted successfully');
@@ -99,7 +135,7 @@ export class SujetDetailsComponent implements OnInit {
         },
         error: (error) => this.showNotification('error', error.message)
       });
-    }
+    
     this.openMenus.clear();
   }
 

@@ -4,6 +4,8 @@ import com.esprit.microservice.unigitesprit.enumeration.Role;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -18,20 +20,32 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    private Set<Role> roles = new HashSet<>();
+
+    public Entreprise getEntreprise() {
+        return entreprise;
+    }
+
+    public void setEntreprise(Entreprise entreprise) {
+        this.entreprise = entreprise;
+    }
 
     @Column(nullable = false, unique = true)
     private String identifiant;
 
     @Column(nullable = false)
-    private String password; // Hashed
+    private String password;
 
-    private String classe; // Optional for non-students
+    private String classe;
 
-    private String specialite; // Optional
-
+    private String specialite;
+    @OneToOne
+    @JoinColumn(name = "entreprise_id")// Optional
+    private Entreprise entreprise; // Optional
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -47,11 +61,11 @@ public class User {
     // Constructors
     public User() {}
 
-    public User(String firstName, String lastName, Role role, String identifiant, String password,
+    public User(String firstName, String lastName, HashSet<Role> role, String identifiant, String password,
                 String classe, String specialite, String email, String gitUsername, String gitAccessToken) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = role;
+        this.roles = role;
         this.identifiant = identifiant;
         this.password = password; // Will be encoded in service
         this.classe = classe;
@@ -71,8 +85,10 @@ public class User {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public HashSet<Role> getRole() {
+        return new HashSet<>(roles);
+    }
+    public void setRole(HashSet<Role> role) { this.roles = role; }
 
     public String getIdentifiant() { return identifiant; }
     public void setIdentifiant(String identifiant) { this.identifiant = identifiant; }

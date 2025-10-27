@@ -12,4 +12,6 @@ public interface ClasseService {
     ClasseResponseDTO updateClasse(Long id, ClasseCreateDTO classeCreateDTO);
     void deleteClasse(Long id);
     ClasseResponseDTO toggleFavorite(Long id);
+
+    List<ClasseResponseDTO> searchGroups(String query);
 }

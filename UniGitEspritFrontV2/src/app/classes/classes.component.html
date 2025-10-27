@@ -5,6 +5,28 @@
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
         <div><p class="subtitle">Manage your student classes</p></div>
         <div class="action-buttons">
+          <div class="w-full">
+            <div class="flex items-center ">
+              <input
+                type="text"
+                placeholder="Search group or class"
+                [(ngModel)]="searchTerm"
+                class="search-input" 
+                (keyup.enter)="onSearch()"
+              />                <i class="fas fa-search search-icon"></i>
+
+            </div>
+          
+           
+          
+          </div>
+          <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
+            <i class="fas fa-search search-icon"></i>search
+
+          </button>
+          <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
+            ✕
+          </button>
           <div class="filter-container">
             <button class="btn btn-secondary" style="color: #dc2626;border-color: #dc2626;" (click)="onFilter()">
               <i class="fas fa-filter" style="color: #dc2626;"></i>

@@ -21,6 +21,9 @@ import { GroupDetailsComponent } from './group-details/group-details.component';
 import { EditGroupComponent } from './edit-group/edit-group.component';
 import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
 import { RepositoryViewerComponent } from './repository-viewer/repository-viewer.component';
+import { DemandesComponent } from './demandes/demandes.component';
+import { DemandesSujetComponent } from './demandes-sujet/demandes-sujet.component';
+import { MergeRequestsComponentComponent } from './merge-requests-component/merge-requests-component.component';
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
@@ -35,8 +38,14 @@ const routes: Routes = [
       { path: 'adduser', component: AdminAdduserComponent }, // Corrected from 'addduser' to 'adduser'
       { path: 'profile', component: ProfileComponent },
       { path: 'dashbord', component: AdminDashboardComponent }, // Default route
-
       //class
+      { path: 'demandesGroup', component: DemandesComponent },
+      { path: 'demandesSujet', component: DemandesSujetComponent },
+      { path: 'MergeRequest', component: MergeRequestsComponentComponent },
+
+
+
+
       { path: 'classes', component: ClassesComponent },
       { path: 'add-classe', component: AddClasseComponent },
       {path:'edit-classe/:id', component: EditClasseComponent},

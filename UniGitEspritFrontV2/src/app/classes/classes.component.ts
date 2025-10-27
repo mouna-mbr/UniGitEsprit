@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { ClasseResponse } from '../models/classe.model';
+import { Subject } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-classes',
@@ -9,6 +11,7 @@ import { ClasseResponse } from '../models/classe.model';
   styleUrls: ['./classes.component.css']
 })
 export class ClassesComponent implements OnInit {
+  isProf : boolean | undefined = false;
   classes: ClasseResponse[] = [];
   filteredClasses: ClasseResponse[] = [];
   paginatedClasses: ClasseResponse[] = [];
@@ -19,13 +22,42 @@ export class ClassesComponent implements OnInit {
   currentPage = 1;
   pageSize = 6;
   totalPages = 1;
-
-  constructor(private classeService: ClasseService, private router: Router) {}
+  private searchSubject = new Subject<string>();
+  results: ClasseResponse[] = [];
+  searching = false;
+  errorMessage = '';
+  constructor(private classeService: ClasseService,private authService: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.loadClasses();
+    this.isProf = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+  }
+  onSearch(): void {
+    if (!this.searchTerm.trim()) {
+      this.results = [];
+      return;
+    }
+    this.searching = true;
+    this.classeService.searchClasses(this.searchTerm).subscribe({
+      next: (res) => {
+        this.classes = res;
+        this.paginatedClasses = res;
+        this.results = res;
+        this.searching = false;
+      },
+      error: (err) => {
+        console.error('Search error:', err);
+        this.errorMessage = 'An error occurred while searching.';
+        this.searching = false;
+      }
+    });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.results = [];
+    this.loadClasses();
+  }
   loadClasses(): void {
     this.classeService.getAllClasses().subscribe({
       next: (classes) => {

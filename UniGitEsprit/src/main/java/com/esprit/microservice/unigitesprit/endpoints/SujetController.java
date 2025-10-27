@@ -1,5 +1,6 @@
 package com.esprit.microservice.unigitesprit.endpoints;
 
+import com.esprit.microservice.unigitesprit.dto.DemandeBDPDTO;
 import com.esprit.microservice.unigitesprit.dto.SujetCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.SujetResponseDTO;
 import com.esprit.microservice.unigitesprit.services.interfaces.SujetService;
@@ -46,5 +47,9 @@ public class SujetController {
     @PostMapping("/{id}/toggle-favorite")
     public ResponseEntity<SujetResponseDTO> toggleFavorite(@PathVariable Long id) {
         return ResponseEntity.ok(sujetService.toggleFavorite(id));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<SujetResponseDTO>> searchGroups(@RequestParam String query) {
+        return ResponseEntity.ok(sujetService.searchSujet(query));
     }
 }

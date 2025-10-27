@@ -1,6 +1,10 @@
 package com.esprit.microservice.unigitesprit.entities;
 
+import com.esprit.microservice.unigitesprit.enumeration.TechnoLogies;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "sujets")
@@ -22,7 +26,26 @@ public class Sujet {
     @JoinColumn(name = "propose_par", nullable = false)
     private User proposePar;
 
+    @ElementCollection(targetClass = TechnoLogies.class, fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "sujet_technologies",
+            joinColumns = @JoinColumn(name = "sujet_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "technology", nullable = false)
+    private Set<TechnoLogies> technologies = new HashSet<>();
+
+
     // Getters and Setters
+
+    public Set<TechnoLogies> getTechnologies() {
+        return technologies;
+    }
+
+    public void setTechnologies(Set<TechnoLogies> technologies) {
+        this.technologies = technologies;
+    }
+
     public Long getId() {
         return id;
     }

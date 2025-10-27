@@ -15,6 +15,8 @@ import { ClasseResponse } from '../models/classe.model';
 import { UserResponse } from '../models/user.model';
 import { PipelineDTO, EtapeDTO, EtapeStatus } from '../models/pipeline.model';
 import { GitCommitDTO, GitCommitRequest } from '../models/git-repository.model';
+import { DemandesService } from '../services/demandes.service';
+import { DemandeBDPDTO, DemandeBDPRequest } from '../models/demande.model';
 
 @Component({
   selector: 'app-group-details',
@@ -28,9 +30,10 @@ export class GroupDetailsComponent implements OnInit {
   showEditMemberModal = false;
   hasPipeline = false;
   isRefreshing = false;
-
+  isProfessor : boolean | undefined = false
+  isAdmin :boolean | undefined = false
   groupId!: number;
-  currentGroup: GroupResponse | null = null;
+  currentGroup!: GroupResponse;
   currentClass: ClasseResponse | null = null;
   currentPipeline: PipelineDTO | null = null;
   etapesWithStatus: EtapeStatus[] = [];
@@ -38,15 +41,15 @@ export class GroupDetailsComponent implements OnInit {
   contributors: { name: string; rank: string; commits: number; gitUsername: string }[] = [];
   repositories: { name: string; url: string }[] = [];
   newMember: UserResponse = {
-    id: 0, firstName: '', lastName: '', role: 'STUDENT', identifiant: '',
-    classe: '', specialite: '', email: '', gitUsername: '', gitAccessToken: '',
+    id: 0, firstName: '', lastName: '', role: ['STUDENT'], identifiant: '',
+    classe: undefined, specialite: '', email: '', gitUsername: '', gitAccessToken: '',
     password: '', createdAt: ''
   };
   newPipeline: PipelineDTO = { nom: '', groupId: 0, etapes: [{ nom: '', consigne: '', deadline: '' }] };
   currentUser: UserResponse | null = null;
 
   memberToEdit: UserResponse | null = null;
-  newRoleForMember = '';
+  newRoleForMember = [''];
 
   private allUsers: UserResponse[] = [];
 
@@ -61,10 +64,12 @@ export class GroupDetailsComponent implements OnInit {
     private gitService: GitRepositoryService,
     private renderer: Renderer2,
     private sanitizer: DomSanitizer,
-    private userService: UserService
+    private userService: UserService,
+    private demandeService:DemandesService
   ) {}
 
   ngOnInit(): void {
+  
     const id = this.route.snapshot.paramMap.get('id');
     if (!id || isNaN(+id)) {
       this.router.navigate(['/groups']);
@@ -74,6 +79,8 @@ export class GroupDetailsComponent implements OnInit {
     this.newPipeline.groupId = this.groupId;
     this.currentUser = this.authService.getCurrentUser();
     this.loadGroupDetails();
+    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
+    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
   }
 
   loadGroupDetails() {
@@ -172,7 +179,7 @@ export class GroupDetailsComponent implements OnInit {
         const commitCountByAuthor: { [key: string]: number } = {};
         commits.forEach(commit => {
           const authorName = commit.author.name.toLowerCase();
-          commitCountByAuthor[authorName] = (commitCountByAuthor[authorName] || 0) + 1;
+          commitCountByAuthor[authorName] = (commitCountByAuthor[authorName] || 0) ;
         });
 
         this.contributors = Object.entries(commitCountByAuthor)
@@ -251,9 +258,34 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   editGroup() { this.router.navigate(['/update-group', this.groupId]); }
-  showSettings() { alert('Settings functionality to be implemented'); }
+ 
   viewSprint(etape: EtapeStatus) { if (etape.id) this.router.navigate([`/detailssprint/${etape.id}`]); }
-  openPipelineModal() { this.showPipelineModal = true; this.newPipeline = { nom: '', groupId: this.groupId, etapes: [{ nom: '', consigne: '', deadline: '' }] }; }
+  openPipelineModal() {
+    this.showPipelineModal = true;
+  
+    if (this.currentPipeline) {
+      // Deep copy to avoid mutation of original object
+      this.newPipeline = {
+        id: this.currentPipeline.id,
+        nom: this.currentPipeline.nom,
+        groupId: this.groupId,
+        etapes: this.currentPipeline.etapes.map(etape => ({
+          id: etape.id,
+          nom: etape.nom,
+          consigne: etape.consigne,
+          deadline: etape.deadline
+        }))
+      };
+    } else {
+      // Initialize empty form
+      this.newPipeline = {
+        nom: '',
+        groupId: this.groupId,
+        etapes: [{ nom: '', consigne: '', deadline: '' }]
+      };
+    }
+  }
+  
   closePipelineModal() { this.showPipelineModal = false; }
 
   addEtapeToPipeline() { this.newPipeline.etapes.push({ nom: '', consigne: '', deadline: '' }); }
@@ -263,6 +295,23 @@ export class GroupDetailsComponent implements OnInit {
     if (!this.newPipeline.nom.trim() || !this.newPipeline.etapes.every(e => e.nom && e.deadline)) {
       alert('Please fill all required fields.');
       return;
+    }
+    if(this.currentPipeline?.id){
+      this.isLoading = true;
+      this.pipelineService.updatePipeline(this.currentPipeline.id, this.newPipeline).subscribe({
+        next: (updatedPipeline: PipelineDTO) => {
+          this.currentPipeline = updatedPipeline;
+          this.processEtapes();
+          this.closePipelineModal();
+          this.isLoading = false;
+          alert('Pipeline updated successfully!');
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('Error updating pipeline:', err);
+          this.isLoading = false;
+          alert(`Error updating pipeline: ${err.status} - ${err.statusText}`);
+        }
+      });
     }
     this.isLoading = true;
     this.pipelineService.createPipeline(this.newPipeline).subscribe({
@@ -312,7 +361,7 @@ export class GroupDetailsComponent implements OnInit {
   closeEditMemberModal() {
     this.showEditMemberModal = false;
     this.memberToEdit = null;
-    this.newRoleForMember = '';
+    this.newRoleForMember = [''];
   }
 
   saveMemberRole() {
@@ -369,6 +418,30 @@ export class GroupDetailsComponent implements OnInit {
     const suffix = (relevantDigits - 20) % 10 > 3 ? suffixes[0] : suffixes[(relevantDigits - 20) % 10 + 1];
     return position + suffix;
   }
+  showSettings() {
+    if (!this.currentGroup || !this.currentUser) {
+      console.error('Missing group or user');
+      return;
+    }
+
+    let curentGroupBdp: DemandeBDPRequest = {
+      status: 'PENDING',
+      group: this.currentGroup,
+      user: this.currentUser||null
+    };
+    
+    this.demandeService.createDemande(curentGroupBdp).subscribe({
+      next: (demande) => {
+        this.router.navigate(['/demandesGroup']);
+      },
+      error: (err) => {
+        console.error('Error creating demande:', err);
+        this.isLoading = false;
+        alert(`Error creating demande: ${err.status} - ${err.statusText}`);
+      }
+    })
+     }
+
 
   getDefaultAvatar(event: Event): void { const img = event.target as HTMLImageElement; img.src = 'https://github.com/identicons/default.png'; }
   getSafeUrl(url: string): SafeUrl { return this.sanitizer.bypassSecurityTrustUrl(url); }

@@ -6,13 +6,16 @@ import com.esprit.microservice.unigitesprit.dto.UserRoleDTO;
 import com.esprit.microservice.unigitesprit.dto.UserRoleResponseDTO;
 import com.esprit.microservice.unigitesprit.entities.*;
 import com.esprit.microservice.unigitesprit.repository.*;
+import com.esprit.microservice.unigitesprit.services.interfaces.GitServiceInterface;
 import com.esprit.microservice.unigitesprit.services.interfaces.GroupService;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,12 +24,16 @@ import java.util.stream.Collectors;
 @Service
 public class GroupServiceImpl implements GroupService {
 
+    public static final String GROUP_NOT_FOUND = "Group not found";
+    public static final String USER_NOT_FOUND = "User not found";
     @Autowired
     private GroupRepository groupRepository;
-
+@Autowired
+    GitServiceInterface gitHubRepoService;
     @Autowired
     private ClasseRepository classeRepository;
-
+@Autowired
+   private NotificationService mailService;
     @Autowired
     private SujetRepository sujetRepository;
 
@@ -55,17 +62,33 @@ public class GroupServiceImpl implements GroupService {
         return dto;
     }
 
+
     @Override
-    public GroupResponseDTO addGroup(GroupCreateDTO groupCreateDTO) {
+    public GroupResponseDTO addGroup(GroupCreateDTO groupCreateDTO)  {
         validate(groupCreateDTO);
         Group group = mapToGroup(groupCreateDTO);
         Group savedGroup = groupRepository.save(group);
+        for(var member:group.getUsers()){
+            try {
+                mailService.notifyAjoutMembre(member.getUser().getEmail(), member.getUser().getEmail(), group.getNom());
+            }catch (MessagingException e){
+                System.out.println("famma error");
+            }
+        }
         return mapToGroupResponseDTO(savedGroup);
     }
 
     @Override
     public List<GroupResponseDTO> getAllGroups() {
         return groupRepository.findAll().stream()
+                .map(this::mapToGroupResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<GroupResponseDTO> getGroupsByUser(String identifiant) {
+        Long id =userRepository.findByIdentifiant(identifiant).get().getId();
+        return groupRepository.findGroupsByUserId(id).stream()
                 .map(this::mapToGroupResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -114,7 +137,6 @@ public class GroupServiceImpl implements GroupService {
             throw new IllegalArgumentException("Either Git Repo URL or Git Repo Name is required");
         }
     }
-
     private Group mapToGroup(GroupCreateDTO dto) {
         Group group = new Group();
         group.setNom(dto.getNom());
@@ -132,6 +154,7 @@ public class GroupServiceImpl implements GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("Enseignant not found with id: " + dto.getEnseignantId()));
         group.setEnseignant(enseignant);
 
+        // Build UserGroup set
         Set<UserGroup> userGroups = new HashSet<>();
         for (UserRoleDTO userRole : dto.getUsers()) {
             User user = userRepository.findById(userRole.getUserId())
@@ -144,23 +167,81 @@ public class GroupServiceImpl implements GroupService {
         }
         group.setUsers(userGroups);
 
-        // Determine gitRepoName and gitRepoUrl
-        String gitRepoName = dto.getGitRepoName();
-        String gitRepoUrl = dto.getGitRepoUrl();
-        if (gitRepoUrl != null && !gitRepoUrl.isEmpty()) {
-            // Extract gitRepoName from gitRepoUrl (e.g., last segment)
-            gitRepoName = gitRepoUrl.substring(gitRepoUrl.lastIndexOf('/') + 1);
-        } else if (gitRepoName != null && !gitRepoName.isEmpty()) {
-            // Use gitRepoName to create a new repo (placeholder)
-            gitRepoUrl = createGitRepo(gitRepoName);
-        } else {
-            throw new IllegalArgumentException("Git repository information is invalid");
+        if (dto.getGitRepoName() != null && !dto.getGitRepoName().isEmpty()) {
+            String repoUrl = gitHubRepoService.createRepo(dto.getGitRepoName(), enseignant.getGitUsername());
+            group.setGitRepoName(dto.getGitRepoName());
+            group.setGitRepoUrl(repoUrl);
+
+            gitHubRepoService.addCollaborator(
+                    repoUrl,
+                    enseignant.getGitUsername(),
+                    "admin"
+            );
+
+            for (UserGroup ug : userGroups) {
+                    String githubUsername = ug.getUser().getGitUsername();
+                    if (githubUsername == null || githubUsername.isBlank()) {
+                        continue;
+                    }
+                    try {
+                        gitHubRepoService.addCollaborator(
+                                repoUrl,
+                                githubUsername,
+                                "push"
+                        );
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+
         }
-        group.setGitRepoUrl(gitRepoUrl);
-        group.setGitRepoName(gitRepoName);
 
         return group;
     }
+
+//    private Group mapToGroup(GroupCreateDTO dto) {
+//        Group group = new Group();
+//        group.setNom(dto.getNom());
+//        group.setFavori(dto.isFavori());
+//
+//        Classe classe = classeRepository.findById(dto.getClasseId())
+//                .orElseThrow(() -> new EntityNotFoundException("Classe not found with id: " + dto.getClasseId()));
+//        group.setClasse(classe);
+//
+//        Sujet sujet = sujetRepository.findById(dto.getSujetId())
+//                .orElseThrow(() -> new EntityNotFoundException("Sujet not found with id: " + dto.getSujetId()));
+//        group.setSujet(sujet);
+//
+//        User enseignant = userRepository.findById(dto.getEnseignantId())
+//                .orElseThrow(() -> new EntityNotFoundException("Enseignant not found with id: " + dto.getEnseignantId()));
+//        group.setEnseignant(enseignant);
+//
+//        Set<UserGroup> userGroups = new HashSet<>();
+//        for (UserRoleDTO userRole : dto.getUsers()) {
+//            User user = userRepository.findById(userRole.getUserId())
+//                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userRole.getUserId()));
+//            UserGroup userGroup = new UserGroup();
+//            userGroup.setGroup(group);
+//            userGroup.setUser(user);
+//            userGroup.setRole(userRole.getRole());
+//            userGroups.add(userGroup);
+//        }
+//        group.setUsers(userGroups);
+//
+//        String gitRepoName = dto.getGitRepoName();
+//        String gitRepoUrl = dto.getGitRepoUrl();
+//        if (gitRepoUrl != null && !gitRepoUrl.isEmpty()) {
+//            gitRepoName = gitRepoUrl.substring(gitRepoUrl.lastIndexOf('/') + 1);
+//        } else if (gitRepoName != null && !gitRepoName.isEmpty()) {
+//            gitRepoUrl = createGitRepo(gitRepoName);
+//        } else {
+//            throw new IllegalArgumentException("Git repository information is invalid");
+//        }
+//        group.setGitRepoUrl(gitRepoUrl);
+//        group.setGitRepoName(gitRepoName);
+//
+//        return group;
+//    }
 
     private void updateGroupFromDTO(Group group, GroupCreateDTO dto) {
         group.setNom(dto.getNom());
@@ -178,17 +259,36 @@ public class GroupServiceImpl implements GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("Enseignant not found with id: " + dto.getEnseignantId()));
         group.setEnseignant(enseignant);
 
-        // Update users
-        group.getUsers().clear();
+        Set<Long> existingUserIds = group.getUsers().stream()
+                .map(ug -> ug.getUser().getId())
+                .collect(Collectors.toSet());
+        Set<Long> newUserIds = dto.getUsers().stream()
+                .map(UserRoleDTO::getUserId)
+                .collect(Collectors.toSet());
+
+        Set<Long> removedUserIds = new HashSet<>(existingUserIds);
+        removedUserIds.removeAll(newUserIds);
+
+        group.getUsers().removeIf(ug -> removedUserIds.contains(ug.getUser().getId()));
         for (UserRoleDTO userRole : dto.getUsers()) {
-            User user = userRepository.findById(userRole.getUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userRole.getUserId()));
-            UserGroup userGroup = new UserGroup();
-            userGroup.setGroup(group);
-            userGroup.setUser(user);
-            userGroup.setRole(userRole.getRole());
-            group.getUsers().add(userGroup);
+            if (!existingUserIds.contains(userRole.getUserId())) {
+
+                User user = userRepository.findById(userRole.getUserId())
+                        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userRole.getUserId()));
+                UserGroup userGroup = new UserGroup();
+                userGroup.setGroup(group);
+                userGroup.setUser(user);
+                userGroup.setRole(userRole.getRole());
+                gitHubRepoService.addCollaborator(
+                        group.getGitRepoUrl(),
+                        user.getGitUsername(),
+                        "push"
+                );
+                group.getUsers().add(userGroup);
+            }
+
         }
+
 
         // Update Git repo if changed
         String newGitRepoName = dto.getGitRepoName();
@@ -210,7 +310,7 @@ public class GroupServiceImpl implements GroupService {
         return "https://github.com/username/" + repoName;
     }
 
-    private GroupResponseDTO mapToGroupResponseDTO(Group group) {
+    public  GroupResponseDTO mapToGroupResponseDTO(Group group) {
         GroupResponseDTO dto = new GroupResponseDTO();
         dto.setId(group.getId());
         dto.setNom(group.getNom());
@@ -237,10 +337,10 @@ public class GroupServiceImpl implements GroupService {
         @Override
         public GroupResponseDTO addMemberToGroup(Long groupId, UserRoleResponseDTO request) {
             Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new EntityNotFoundException("Group not found"));
+                    .orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND));
 
             User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                    .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND));
 
             // Ici tu dois avoir une entité intermédiaire GroupUser (group_id, user_id, role)
           UserGroup   groupUser = new UserGroup();
@@ -279,7 +379,15 @@ public class GroupServiceImpl implements GroupService {
             groupRepository.save(group);
             return mapToGroupResponseDTO(group);
         }
-
+        @Override
+        public List<GroupResponseDTO> searchGroups(String query){
+        List<Group> groups  = groupRepository.findBySearch(query);
+        List<GroupResponseDTO> dtos = new ArrayList<>();
+        for(var group:groups){
+            dtos.add(mapToGroupResponseDTO(group));
+        }
+        return dtos;
+        }
     }
 
 

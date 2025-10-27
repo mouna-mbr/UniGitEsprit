@@ -16,13 +16,18 @@ export class UserService {
       catchError(this.handleError)
     );
   }
-
+  updateUser(id: string, user: User): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+  }
   getAllUsers(): Observable<UserResponse[]> {
     return this.http.get<UserResponse[]>(this.apiUrl).pipe(
       catchError(this.handleError)
     );
   }
-
+  deleteUser(id: string) {
+    console.log(id);
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
   addUser(user: User): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.apiUrl, user).pipe(
       catchError(this.handleError)

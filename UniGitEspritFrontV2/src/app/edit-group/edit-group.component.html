@@ -103,7 +103,7 @@
                 [class.error]="groupForm.get('enseignantId')?.invalid && groupForm.get('enseignantId')?.touched"
               >
                 <option value="">Select enseignant</option>
-                <option *ngFor="let user of users$ | async" [value]="user.id" [disabled]="user.role !== 'PROFESSOR'">
+                <option *ngFor="let user of users$ | async" [value]="user.id" [disabled]="!user.role.includes('PROFESSOR')">
                   {{ user.firstName }} {{ user.lastName }}
                 </option>
               </select>

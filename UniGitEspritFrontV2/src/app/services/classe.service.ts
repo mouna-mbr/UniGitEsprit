@@ -66,4 +66,7 @@ export class ClasseService {
     }
     return throwError(() => new Error(errorMessage));
   }
+  searchClasses(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/search?query=${query}`);
+  }
 }

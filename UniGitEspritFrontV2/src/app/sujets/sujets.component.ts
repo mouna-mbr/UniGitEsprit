@@ -4,6 +4,8 @@ import { SujetService } from '../services/sujet.service';
 import { SujetResponse } from '../models/sujet.model';
 import { UserService } from '../services/user.service'; // Import UserService
 import { UserResponse } from '../models/user.model'; // Import User interface if defined
+import { Subject } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-sujets',
@@ -11,6 +13,8 @@ import { UserResponse } from '../models/user.model'; // Import User interface if
   styleUrls: ['./sujets.component.css'] // Reusing class CSS for consistency
 })
 export class SujetsComponent implements OnInit {
+  isAdmin: boolean | undefined = false;
+  isProfessor: boolean | undefined = false;
   sujets: SujetResponse[] = [];
   filteredSujets: SujetResponse[] = [];
   paginatedSujets: SujetResponse[] = [];
@@ -22,15 +26,47 @@ export class SujetsComponent implements OnInit {
   pageSize = 6;
   totalPages = 1;
   users: UserResponse[] = []; // Add users array to store user data
-
+  private searchSubject = new Subject<string>();
+  results: SujetResponse[] = [];
+  searching = false;
+  errorMessage = '';
   constructor(
     private sujetService: SujetService,
     private router: Router,
+    private authService: AuthService,
     private userService: UserService // Inject UserService
   ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadSujets();
+    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
+    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+  }
+  onSearch(): void {
+    if (!this.searchTerm.trim()) {
+      this.results = [];
+      return;
+    }
+    this.searching = true;
+    this.sujetService.searchDemands(this.searchTerm).subscribe({
+      next: (res) => {
+        this.sujets = res;
+        this.paginatedSujets = res;
+        this.results = res;
+        this.searching = false;
+      },
+      error: (err) => {
+        console.error('Search error:', err);
+        this.errorMessage = 'An error occurred while searching.';
+        this.searching = false;
+      }
+    });
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.results = [];
     this.loadSujets();
   }
 

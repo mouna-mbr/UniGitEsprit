@@ -3,6 +3,10 @@ import com.esprit.microservice.unigitesprit.enumeration.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.HashSet;
+import java.util.Set;
+
 public class UserCreateDTO {
     @NotBlank(message = "First name is required")
     private String firstName;
@@ -11,7 +15,7 @@ public class UserCreateDTO {
     private String lastName;
 
     @NotNull(message = "Role is required")
-    private Role role;
+    private HashSet<Role> role;
 
     @NotBlank(message = "Identifiant is required")
     private String identifiant;
@@ -31,7 +35,7 @@ public class UserCreateDTO {
         return lastName;
     }
 
-    public @NotNull(message = "Role is required") Role getRole() {
+    public HashSet<Role> getRole() {
         return role;
     }
 

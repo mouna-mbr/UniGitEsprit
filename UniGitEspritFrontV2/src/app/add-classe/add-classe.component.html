@@ -156,7 +156,7 @@
                   class="form-select member-input"
                 >
                   <option value="">Select student</option>
-                  <option *ngFor="let user of users" [value]="user.id" [disabled]="user.role !== 'STUDENT'">{{ user.firstName }} {{ user.lastName }}</option>
+                  <option *ngFor="let user of users" [value]="user.id" [disabled]="!user.role.includes('STUDENT')">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
                 <button type="button" class="btn-add-member" (click)="addStudent()">
                   <i class="fas fa-plus"></i>
@@ -204,7 +204,7 @@
                   class="form-select member-input"
                 >
                   <option value="">Select teacher</option>
-                  <option *ngFor="let user of users" [value]="user.id" [disabled]="user.role !== 'PROFESSOR'">{{ user.firstName }} {{ user.lastName }}</option>
+                  <option *ngFor="let user of users" [value]="user.id" [disabled]="!user.role.includes('PROFESSOR')">{{ user.firstName }} {{ user.lastName }}</option>
                 </select>
                 <button type="button" class="btn-add-member" (click)="addTeacher()">
                   <i class="fas fa-plus"></i>

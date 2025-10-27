@@ -1,12 +1,15 @@
 export interface UserRole {
   userId: number;
-  role: string;
+  role: string[];
 }
-
+export interface AuthResponse {
+  token: string;
+  user: UserResponse;
+}
 export interface User {
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'STUDENT' | 'PROFESSOR';
+  role:string[];
   identifiant: string;
   classe?: string;
   specialite?: string;

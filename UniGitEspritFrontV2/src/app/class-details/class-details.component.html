@@ -33,14 +33,6 @@
           </div>
         </div>
         <div class="class-actions">
-          <button class="btn btn-outline" (click)="toggleFavorite(classe.id, $event)" [class.active]="classe.favori">
-            <i class="fas fa-heart"></i>
-            {{ classe.favori ? 'Remove Favorite' : 'Add Favorite' }}
-          </button>
-          <button class="btn btn-secondary" (click)="editClass()">
-            <i class="fas fa-edit"></i>
-            Edit
-          </button>
           <div class="dropdown-container">
             <button class="btn btn-secondary" (click)="toggleMenu(classe.id, $event)">
               <i class="fas fa-ellipsis-h"></i>
@@ -57,6 +49,10 @@
               </div>
             </div>
           </div>
+          <button class="btn btn-outline" (click)="toggleFavorite(classe.id, $event)" [class.active]="classe.favori">
+            <i class="fas fa-heart"></i>
+            <!-- {{ classe.favori ? 'Remove Favorite' : 'Add Favorite' }} -->
+          </button>
         </div>
       </div>
 

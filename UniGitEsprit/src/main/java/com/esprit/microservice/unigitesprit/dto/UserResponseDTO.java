@@ -3,6 +3,8 @@ package com.esprit.microservice.unigitesprit.dto;
 import com.esprit.microservice.unigitesprit.enumeration.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Set;
+
 public class UserResponseDTO {
     @JsonProperty("id")
     private Long id;
@@ -16,8 +18,9 @@ public class UserResponseDTO {
     @JsonProperty("email")
     private String email;
 
-    @JsonProperty("role")
-    private Role role;
+    @JsonProperty("roles")
+    private Set<Role> roles;
+
 
     @JsonProperty("identifiant")
     private String identifiant;
@@ -70,12 +73,12 @@ public class UserResponseDTO {
         this.email = email;
     }
 
-    public Role getRole() {
-        return role;
+    public Set<Role> getRole() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRole(Set<Role> role) {
+        this.roles = role;
     }
 
     public String getIdentifiant() {

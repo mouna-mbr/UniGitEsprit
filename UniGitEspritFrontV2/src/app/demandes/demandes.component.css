@@ -1,0 +1,248 @@
+/* General body styling */
+body {
+  background-color: #f9fafb; /* Very light grey background */
+  color: #000000; /* Pure black text */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container styling */
+.p-6 {
+  padding: 2rem;
+}
+
+/* Heading styling */
+.text-2xl {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #000000; /* Black for heading */
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff; /* White table background */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Table header */
+.table-header {
+  background-color: #f3f4f6; /* Softer light grey */
+  color: #000000; /* Black text */
+}
+
+.table-header th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #b91c1c;
+}
+
+/* Table row */
+.table-row {
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: #fef2f2; /* Very soft red on hover */
+}
+
+/* Table cells */
+td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+  color: #000000; /* Black text */
+}
+
+td button {
+  transition: all 0.2s ease;
+}
+
+/* Group link button */
+.text-red-500 {
+  color: #ffffff;
+  background-color: #dc2626;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.text-red-500:hover {
+  background-color: #b91c1c;
+  text-decoration: none;
+}
+
+/* Action buttons */
+.btn-accept {
+  background-color: #dc2626;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+  margin-right: 0.5rem;
+}
+.btn-consult{
+  background-color: #d6d6d6;
+  color: #040404;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 1%;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+  margin-right: 0.5rem;}
+
+.btn-accept:hover {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+.search-input {
+  padding: 10px 40px 10px 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 25px;
+  outline: none;
+  width: 300px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+
+.btn-primary {
+  background: #dc2626;
+  color: white;
+}
+.search-input:focus {
+  border-color: #e63946;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.2);
+}
+
+.search-icon {
+  pointer-events: none;
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+
+
+.relative {
+  position: relative;
+  display: inline-block;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+.btn-refuse {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.btn-refuse:hover {
+  background-color: #333333;
+  transform: translateY(-1px);
+}
+
+/* Modal background */
+.modal-bg {
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Modal content */
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.2s ease-in-out;
+}
+
+/* Modal heading */
+.modal-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #000000;
+  text-align: center;
+}
+
+/* Modal text */
+.modal-content p {
+  color: #000000;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+/* Modal close button */
+.modal-content button {
+  background-color: #dc2626;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+
+.modal-content button:hover {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+/* Apply black text color to the whole table */
+table, 
+table th, 
+table td {
+  color: black !important;
+}

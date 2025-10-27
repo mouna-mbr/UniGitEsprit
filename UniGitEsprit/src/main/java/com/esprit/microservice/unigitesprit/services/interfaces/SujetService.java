@@ -11,4 +11,6 @@ public interface SujetService {
     SujetResponseDTO updateSujet(Long id, SujetCreateDTO sujetCreateDTO);
     void deleteSujet(Long id);
     SujetResponseDTO toggleFavorite(Long id);
+
+    List<SujetResponseDTO> searchSujet(String query);
 }

@@ -3,7 +3,6 @@ package com.esprit.microservice.unigitesprit.services.impl;
 import com.esprit.microservice.unigitesprit.dto.ClasseCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.ClasseResponseDTO;
 import com.esprit.microservice.unigitesprit.entities.Classe;
-import com.esprit.microservice.unigitesprit.entities.Sujet;
 import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.repository.ClasseRepository;
 //import com.esprit.microservice.unigitesprit.repository.SujetRepository;
@@ -15,6 +14,7 @@ import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -164,5 +164,14 @@ public class ClasseServiceImpl implements ClasseService {
         dto.setEtudiantIds(classe.getEtudiants() != null ? classe.getEtudiants().stream().map(User::getId).collect(Collectors.toSet()) : null);
         dto.setEnseignantIds(classe.getEnseignants() != null ? classe.getEnseignants().stream().map(User::getId).collect(Collectors.toSet()) : null);
         return dto;
+    }
+    @Override
+    public List<ClasseResponseDTO> searchGroups(String query){
+        List<Classe> groups  = classeRepository.findBySearch(query);
+        List<ClasseResponseDTO> dtos = new ArrayList<>();
+        for(var group:groups){
+            dtos.add(mapToClasseResponseDTO(group));
+        }
+        return dtos;
     }
 }

@@ -86,7 +86,7 @@ export class EditClasseComponent implements OnInit {
   addStudent(): void {
     const numericId = Number(this.newStudentId);
     const user = this.users.find(u => u.id === numericId);
-    if (this.newStudentId && user && user.role?.toUpperCase() === 'STUDENT') {
+    if (this.newStudentId && user && user.role?.includes('STUDENT')) {
       const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
       if (!etudiantIds.includes(numericId)) {
         etudiantIds.push(numericId);
@@ -109,7 +109,7 @@ export class EditClasseComponent implements OnInit {
   addTeacher(): void {
     const numericId = Number(this.newTeacherId);
     const user = this.users.find(u => u.id === numericId);
-    if (this.newTeacherId && user && user.role?.toUpperCase() === 'PROFESSOR') {
+    if (this.newTeacherId && user && user.role?.includes( 'PROFESSOR')) {
       const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
       if (!enseignantIds.includes(numericId)) {
         enseignantIds.push(numericId);

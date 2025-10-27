@@ -18,7 +18,7 @@
         <i class="fas fa-code-branch"></i>
         View Repository
       </button>
-      <button class="btn btn-primary" (click)="editSprint()">
+      <button class="btn btn-primary" (click)="editSprint()" *ngIf="isProfessor || isAdmin">
         <i class="fas fa-edit"></i>
         Edit Sprint
       </button>
@@ -163,23 +163,23 @@
           <i class="fas fa-check-double"></i>
           Validations
         </h2>
-        <button class="add-validation-btn" (click)="addValidation()">
+        <button class="add-validation-btn" (click)="addValidation()" *ngIf="isProfessor || isAdmin">
           <i class="fas fa-plus"></i>
         </button>
       </div>
       <div *ngFor="let validation of validations" class="validation-group">
         <div class="validation-header">
-          <h3 class="validation-title">{{ validation.note || 'No note' }}</h3>
+          <h3 class="validation-title">note:{{ validation.note || 'No note' }}</h3>
           <span class="validation-date">Date: {{ validation.dateValidation | date:'yyyy-MM-dd' }}</span>
         </div>
         <div class="validation-remarks">
           <div *ngFor="let remark of validation.remarques; let i = index" class="remark-card">
             <div class="remark-label">Remark:</div>
             <div class="remark-content">{{ remark }}</div>
-            <button class="btn btn-small btn-warning" (click)="updateRemark(validation.id, i)">Update</button>
-            <button class="btn btn-small btn-danger" (click)="deleteRemark(validation.id, i)">Delete</button>
+            <!-- <button class="btn btn-small btn-warning" (click)="updateRemark(validation.id, i)">Update</button> -->
+            <button class="btn btn-small btn-danger" *ngIf="isProfessor || isAdmin" (click)="deleteRemark(validation.id, i)">Delete</button>
           </div>
-          <button class="add-remark-btn" (click)="addRemark(validation.id)">Add Remark</button>
+          <button class="add-remark-btn" *ngIf="isProfessor || isAdmin" (click)="addRemark(validation.id)">Add Remark</button>
         </div>
       </div>
     </div>
@@ -407,6 +407,43 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+<!-- Add Remark Modal -->
+<div class="modal-overlay" *ngIf="showRemarkPopup" (click)="closeRemarkPopup()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title text-danger">
+        <i class="fas fa-comment-dots"></i>
+        Ajouter une remarque
+      </h2>
+      <button class="modal-close" (click)="closeRemarkPopup()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="remarkInput" class="fw-bold">Remarque</label>
+        <input
+          type="text"
+          id="remarkInput"
+          class="form-control"
+          placeholder="Écrivez votre remarque ici"
+          [(ngModel)]="newRemark"
+        />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeRemarkPopup()">
+        Annuler
+      </button>
+      <button type="button" class="btn btn-danger" [disabled]="!newRemark.trim()" (click)="submitRemark()">
+        <i class="fas fa-plus-circle"></i>
+        Ajouter
+      </button>
     </div>
   </div>
 </div>

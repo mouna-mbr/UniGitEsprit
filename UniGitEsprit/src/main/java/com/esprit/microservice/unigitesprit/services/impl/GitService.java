@@ -3,14 +3,17 @@ package com.esprit.microservice.unigitesprit.services.impl;
 // GitService.java
 
 import com.esprit.microservice.unigitesprit.dto.*;
-import com.esprit.microservice.unigitesprit.entities.Repository;
 import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.repository.RepositoryRepository;
+import com.esprit.microservice.unigitesprit.repository.UserRepository;
+import com.esprit.microservice.unigitesprit.services.interfaces.GitServiceInterface;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -18,9 +21,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 @Service
-public class GitService {
+public class GitService implements GitServiceInterface {
 
     @Autowired
     private RestTemplate restTemplate;
@@ -31,11 +35,114 @@ public class GitService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public GitRepositoryDTO getRepositoryInfo(String repoUrl, User user) {
+    @Value("${github.token}")
+    private String githubToken;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public String createRepo(String repoName, String ownerUsername) {
+        String url = "https://api.github.com/user/repos";
+
+        Map<String, Object> body = Map.of(
+                "name", repoName,
+                "private", true,
+                "auto_init", true,
+                "description", "Repository created by " + ownerUsername
+        );
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, buildHeaders()), Map.class
+        );
+
+        if (response.getStatusCode() == HttpStatus.CREATED) {
+            String fullName = (String) response.getBody().get("html_url");
+            return fullName;
+        }
+        throw new RuntimeException("Failed to create repo: " + response.getBody());
+    }
+
+
+
+
+    @Override
+    public void addCollaborator(String repoFullName, String username, String permission) {
+        try {
+             repoFullName = repoFullName.substring(repoFullName.indexOf("github.com/") + "github.com/".length());
+
+            String url = "https://api.github.com/repos/" + repoFullName + "/collaborators/" + username;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(githubToken);
+            headers.set("Accept", "application/vnd.github+json");
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, String> body = Map.of("permission", permission);
+            HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("✅ Added collaborator: " + username);
+            } else {
+                System.err.println("❌ GitHub API returned " + response.getStatusCode() + ": " + response.getBody());
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to add collaborator: " + e.getMessage());
+        }
+    }
+
+
+//    public void addCollaborator(String repoFullName, String username, String permission) {
+//
+//
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setBearerAuth(githubToken);
+//            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//            Map<String, String> body = Map.of("permission", permission);
+//
+//            HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
+//
+//            try {
+//                restTemplate.exchange(repoFullName, HttpMethod.PUT, entity, String.class);
+//                System.out.println("Added collaborator: " + username);
+//            } catch (Exception e) {
+//                System.err.println("Failed to add collaborator: " + e.getMessage());
+//            }
+//        }
+
+    public boolean verifyGitHubCredentials(String username, String accessToken) {
+        String url = "https://api.github.com/users/" + username;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "token " + accessToken);
+        headers.set("Accept", "application/vnd.github.v3+json");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        try {
+            restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            return true;
+        } catch (HttpClientErrorException e) {
+            return false;
+        }
+    }
+
+    private HttpHeaders buildHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(githubToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+    public GitRepositoryDTO getRepositoryInfo(String repoUrl) {
         try {
             String apiUrl = convertToApiUrl(repoUrl);
-            HttpHeaders headers = createHeaders(user);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
+
 
             ResponseEntity<String> response = restTemplate.exchange(
                     apiUrl, HttpMethod.GET, entity, String.class);
@@ -49,11 +156,12 @@ public class GitService {
         }
         return null;
     }
-
-    public List<GitBranchDTO> getBranches(String repoUrl, User user) {
+    @Override
+    public List<GitBranchDTO> getBranches(String repoUrl) {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/branches";
-            HttpHeaders headers = createHeaders(user);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -69,10 +177,12 @@ public class GitService {
             throw new RuntimeException("Erreur lors de la récupération des branches: " + e.getMessage(), e);
         }
     }
-    public List<GitCommitDTO> getCommits(String repoUrl, User user, String branch, int page, int perPage) {
+    @Override
+    public List<GitCommitDTO> getCommits(String repoUrl,  String branch, int page, int perPage) {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/commits?sha=" + branch + "&page=" + page + "&per_page=" + perPage;
-            HttpHeaders headers = createHeaders(user);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -87,15 +197,16 @@ public class GitService {
         }
         return new ArrayList<>();
     }
-
-    public List<GitFileDTO> getFiles(String repoUrl, User user, String branch, String path) {
+    @Override
+    public List<GitFileDTO> getFiles(String repoUrl, String branch, String path) {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/contents/" + (path != null ? path : "");
             if (branch != null) {
                 apiUrl += "?ref=" + branch;
             }
 
-            HttpHeaders headers = createHeaders(user);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -110,15 +221,16 @@ public class GitService {
         }
         return new ArrayList<>();
     }
-
-    public GitFileContentDTO getFileContent(String repoUrl, User user, String path, String branch) {
+    @Override
+    public GitFileContentDTO getFileContent(String repoUrl,  String path, String branch) {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/contents/" + path;
             if (branch != null) {
                 apiUrl += "?ref=" + branch;
             }
 
-            HttpHeaders headers = createHeaders(user);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -133,8 +245,8 @@ public class GitService {
         }
         return null;
     }
-
-    private HttpHeaders createHeaders(User user) {
+    @Override
+    public HttpHeaders createHeaders(User user) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/vnd.github.v3+json");
 
@@ -150,8 +262,8 @@ public class GitService {
 
         return headers;
     }
-
-    private String convertToApiUrl(String repoUrl) {
+    @Override
+    public String convertToApiUrl(String repoUrl) {
         if (repoUrl.contains("github.com")) {
             String path = repoUrl.replace("https://github.com/", "")
                     .replace(".git", "");
@@ -346,16 +458,13 @@ public class GitService {
 
                 if ("base64".equals(encoding)) {
                     try {
-                        // Nettoyer le contenu Base64 (enlever les retours à la ligne)
                         String cleanContent = content.replaceAll("\\s+", "");
                         fileContentDTO.setContent(new String(Base64.getDecoder().decode(cleanContent)));
                     } catch (IllegalArgumentException e) {
-                        // Si le décodage échoue, retourner le contenu brut
                         fileContentDTO.setContent(content);
                         fileContentDTO.setEncoding("raw");
                     }
                 } else {
-                    // Pour les autres encodages, retourner le contenu tel quel
                     fileContentDTO.setContent(content);
                 }
             }

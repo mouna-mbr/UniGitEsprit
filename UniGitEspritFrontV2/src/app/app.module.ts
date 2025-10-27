@@ -4,7 +4,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SigninComponent } from './signin/signin.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { GitauthComponent } from './gitauth/gitauth.component';
 import { AdminDashboardComponent } from './admin-dashboard/admin-dashboard.component';
 import { HeaderComponent } from './components/header/header.component';
@@ -27,6 +27,8 @@ import { EditGroupComponent } from './edit-group/edit-group.component';
 import { GroupDetailsComponent } from './group-details/group-details.component';
 import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
 import { RepositoryViewerComponent } from './repository-viewer/repository-viewer.component';
+import { NgChartsModule } from 'ng2-charts';
+import { AuthInterceptor } from './auth.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
@@ -57,13 +59,15 @@ import { RepositoryViewerComponent } from './repository-viewer/repository-viewer
     // Removed AdminAdduserComponent
   ],
   imports: [
+    NgChartsModule,
     BrowserModule,
     AppRoutingModule,
     FormsModule,
     HttpClientModule,
     ReactiveFormsModule
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor , multi: true }
+  ],  bootstrap: [AppComponent]
 })
 export class AppModule { }

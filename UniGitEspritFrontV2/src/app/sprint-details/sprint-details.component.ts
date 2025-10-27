@@ -20,6 +20,8 @@ import { EtapeDTO } from '../models/pipeline.model';
   styleUrls: ['./sprint-details.component.css']
 })
 export class SprintDetailsComponent implements OnInit {
+  isAdmin :boolean | undefined = false;
+  isProfessor :boolean | undefined = false;
   currentRoute: string = 'groups';
   currentEtape: EtapeDTO | null = null;
   currentEtapeId: number = 0;
@@ -27,6 +29,9 @@ export class SprintDetailsComponent implements OnInit {
   sprintNotes: string = '';
   remarks: string = '';
   isProcessing = false;
+  showRemarkPopup = false;
+newRemark = '';
+currentValidationId!: number;
   showTaskMenu = false;
   validations: ValidationDTO[] = [];
   students: UserResponse[] = [];
@@ -86,6 +91,9 @@ export class SprintDetailsComponent implements OnInit {
         this.currentEtape = null;
       }
     });
+
+    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
+    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
   }
 
   navigate(route: string) {
@@ -320,7 +328,6 @@ export class SprintDetailsComponent implements OnInit {
   }
 
   showNotification() {
-    alert('Notification clicked!');
   }
 
   deleteTask(taskId: number) {
@@ -331,12 +338,10 @@ export class SprintDetailsComponent implements OnInit {
         this.categorizeTasks();
         this.isProcessing = false;
         this.closeDeleteModal();
-        alert('Task deleted successfully!');
       },
       error: (error) => {
         console.error('Error deleting task:', error);
         this.isProcessing = false;
-        alert('Failed to delete task: ' + (error.error?.message || 'Please try again.'));
       }
     });
   }
@@ -354,21 +359,17 @@ export class SprintDetailsComponent implements OnInit {
           if (group.gitRepoUrl) {
             this.router.navigate(['/repository-viewer'], { queryParams: { repoUrl: group.gitRepoUrl } });
           } else {
-            alert('No repository URL available for this group.');
           }
         },
         error: (err) => {
           console.error('Error fetching group:', err);
-          alert('Failed to fetch group repository URL.');
         }
       });
     } else {
-      alert('No pipeline associated with this sprint. Please ensure the sprint is linked to a pipeline and group.');
     }
   }
 
   editSprint() {
-    alert('Edit Sprint functionality would be implemented here');
   }
 
   onDragStart(task: TacheDTO) {
@@ -451,12 +452,12 @@ export class SprintDetailsComponent implements OnInit {
   submitAddValidation() {
     console.log('Submitting validation:', this.newValidation);
     if (!this.newValidation.dateValidation) {
-      alert('Please enter a valid date.');
+      
       return;
     }
     const noteValue = this.newValidation.note ? parseFloat(this.newValidation.note as any) : undefined;
     if (noteValue !== undefined && isNaN(noteValue)) {
-      alert('Please enter a valid number for the note.');
+      
       return;
     }
     this.newValidation.note = noteValue;
@@ -465,11 +466,11 @@ export class SprintDetailsComponent implements OnInit {
       next: (createdValidation) => {
         this.validations.push(createdValidation);
         this.closeAddValidationModal();
-        alert('Validation added successfully!');
+       
       },
       error: (error) => {
         console.error('Error adding validation:', error);
-        alert('Failed to add validation: ' + (error.error?.message || 'Please try again.'));
+       
       }
     });
   }
@@ -477,7 +478,7 @@ export class SprintDetailsComponent implements OnInit {
   saveNotes() {
     console.log('Sprint Notes:', this.sprintNotes);
     console.log('Remarks:', this.remarks);
-    alert('Notes saved successfully!');
+    
   }
 
   toggleTaskMenu(task: TacheDTO, event: MouseEvent) {
@@ -523,23 +524,48 @@ export class SprintDetailsComponent implements OnInit {
       this.resetNewTask();
     }
   }
-
   addRemark(validationId: number) {
-    const newRemark = prompt('Enter new remark:');
-    if (newRemark) {
-      this.validationService.addRemark(validationId, newRemark).subscribe({
-        next: (updatedValidation) => {
-          const index = this.validations.findIndex(v => v.id === validationId);
-          if (index !== -1) this.validations[index] = updatedValidation;
-          alert('Remark added successfully!');
-        },
-        error: (error) => {
-          console.error('Error adding remark:', error);
-          alert('Failed to add remark.');
-        }
-      });
-    }
+    this.currentValidationId = validationId;
+    this.newRemark = '';
+    this.showRemarkPopup = true;
   }
+  
+  closeRemarkPopup() {
+    this.showRemarkPopup = false;
+  }
+  
+  submitRemark() {
+    if (!this.newRemark.trim()) return;
+  
+    this.validationService.addRemark(this.currentValidationId, this.newRemark).subscribe({
+      next: (updatedValidation) => {
+        const index = this.validations.findIndex(v => v.id === this.currentValidationId);
+        if (index !== -1) this.validations[index] = updatedValidation;
+       
+        this.closeRemarkPopup();
+      },
+      error: (error) => {
+        console.error('Error adding remark:', error);
+      
+      }
+    });
+  }
+  // addRemark(validationId: number) {
+  //   const newRemark = prompt('Enter new remark:');
+  //   if (newRemark) {
+  //     this.validationService.addRemark(validationId, newRemark).subscribe({
+  //       next: (updatedValidation) => {
+  //         const index = this.validations.findIndex(v => v.id === validationId);
+  //         if (index !== -1) this.validations[index] = updatedValidation;
+  //         alert('Remark added successfully!');
+  //       },
+  //       error: (error) => {
+  //         console.error('Error adding remark:', error);
+  //         alert('Failed to add remark.');
+  //       }
+  //     });
+  //   }
+  // }
 
   updateRemark(validationId: number, remarkIndex: number) {
     const updatedRemark = prompt('Enter updated remark:');
@@ -548,29 +574,28 @@ export class SprintDetailsComponent implements OnInit {
         next: (updatedValidation) => {
           const index = this.validations.findIndex(v => v.id === validationId);
           if (index !== -1) this.validations[index] = updatedValidation;
-          alert('Remark updated successfully!');
+        
         },
         error: (error) => {
           console.error('Error updating remark:', error);
-          alert('Failed to update remark.');
+         
         }
       });
     }
   }
 
   deleteRemark(validationId: number, remarkIndex: number) {
-    if (confirm('Are you sure you want to delete this remark?')) {
+    
       this.validationService.deleteRemark(validationId, remarkIndex).subscribe({
         next: (updatedValidation) => {
           const index = this.validations.findIndex(v => v.id === validationId);
           if (index !== -1) this.validations[index] = updatedValidation;
-          alert('Remark deleted successfully!');
+          
         },
         error: (error) => {
           console.error('Error deleting remark:', error);
-          alert('Failed to delete remark.');
+         
         }
       });
     }
   }
-}

@@ -1,0 +1,76 @@
+<div class="p-6 max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold  ">Listes des demandes </h1>
+  <div class="action-buttons">
+    <div class="w-full">
+      <div class="flex items-center ">
+        <input
+          type="text"
+          placeholder="Search group or class"
+          [(ngModel)]="searchTerm"
+          class="search-input" 
+          (keyup.enter)="onSearch()"
+        />                <i class="fas fa-search search-icon"></i>
+        <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
+          <i class="fas fa-search search-icon"></i>search
+        </button>
+        <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
+          ✕
+        </button>
+      </div>
+     
+     
+    
+    </div>
+ 
+  <table class="w-full border-collapse border border-gray-600">
+    <thead>
+      <tr class="table-header">
+        <th class="border border-gray-600 p-2 text-white">ID</th>
+        <th class="border border-gray-600 p-2 text-white">Utilisateur</th>
+        <th class="border border-gray-600 p-2 text-white">Group</th>
+        <th class="border border-gray-600 p-2 text-white">Status</th>
+        <th class="border border-gray-600 p-2 text-white">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let demand of demands" class="table-row">
+        <td class="border border-gray-600 p-2 text-white">{{ demand.id }}</td>
+        <td class="border border-gray-600 p-2 text-white">{{ demand.user.firstName }} {{ demand.user.lastName }}</td>
+        <td class="border border-gray-600 p-2">{{ demand.group.nom }}
+          
+        </td>
+        <td class="border border-gray-600 p-2 text-white">{{ demand.status }}</td>
+        <td class="border border-gray-600 p-2 space-x-2">
+          <div *ngIf="isAdmin || isCpi">
+          <button *ngIf="demand.status === 'PENDING'" 
+                  class="btn-accept text-white px-2 py-1 rounded"
+                  (click)="handleAccept(demand.id)">
+            Accept
+          </button>
+          <button *ngIf="demand.status === 'PENDING'" 
+                  class="btn-refuse px-2 py-1 rounded"
+                  (click)="handleRefuse(demand.id)">
+            Refuse
+          </button>
+        </div>
+          <button class="btn-consult px-2 py-1 rounded" (click)="showGroupDetails(demand.group.id)">
+            <i class="fa fa-share-square-o"></i>
+            Consulter Group
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Group Details Modal -->
+  <div *ngIf="selectedGroup" class="modal-bg fixed inset-0 flex items-center justify-center">
+    <div class="modal-content p-6 rounded-lg max-w-md w-full">
+      <h2 class="text-xl font-bold mb-4 text-white">Group Details</h2>
+      <p class="text-white"><strong>Name:</strong> {{ selectedGroup.nom }}</p>
+      <p class="text-white"><strong>Description:</strong> {{ selectedGroup.gitRepoUrl }}</p>
+      <button class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" (click)="closeModal()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

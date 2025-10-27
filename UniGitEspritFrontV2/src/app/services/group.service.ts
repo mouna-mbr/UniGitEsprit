@@ -15,6 +15,10 @@ export class GroupService {
     return this.http.post<GroupResponse>(this.apiUrl, group);
   }
 
+  getGroupsByUser(id: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/GroupsbyUser/${id}`);
+  }
+
   getAllGroups(): Observable<GroupResponse[]> {
     return this.http.get<GroupResponse[]>(this.apiUrl);
   }
@@ -37,7 +41,7 @@ export class GroupService {
   getGroupByPipelineId(pipelineId: number): Observable<GroupResponse> {
     return this.http.get<GroupResponse>(`${this.apiUrl}/by-pipeline/${pipelineId}`);
   }
-  addMember(groupId: number, payload: { userId: number, role: string }) {
+  addMember(groupId: number, payload: { userId: number, role: string[] }) {
     return this.http.post<GroupResponse>(`${this.apiUrl}/${groupId}/members`, payload);
   }
   
@@ -45,8 +49,10 @@ export class GroupService {
     return this.http.delete<GroupResponse>(`${this.apiUrl}/${groupId}/members/${userId}`);
   }
   
-  updateMemberRole(groupId: number, userId: number, role: string) {
+  updateMemberRole(groupId: number, userId: number, role: string[]) {
     return this.http.put<GroupResponse>(`${this.apiUrl}/${groupId}/members/${userId}`, role);
   }
-  
+  searchGroups(query: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/search?query=${query}`);
+  }
 }

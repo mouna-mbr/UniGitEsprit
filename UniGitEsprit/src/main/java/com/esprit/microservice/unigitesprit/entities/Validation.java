@@ -32,6 +32,8 @@ public class Validation {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> etudiants = new ArrayList<>();
+    @ManyToOne
+    private  User professor;
 
     private Double note;
 

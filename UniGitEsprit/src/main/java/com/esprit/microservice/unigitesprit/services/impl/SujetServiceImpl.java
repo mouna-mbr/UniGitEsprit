@@ -1,9 +1,11 @@
 package com.esprit.microservice.unigitesprit.services.impl;
 
-import com.esprit.microservice.unigitesprit.dto.SujetCreateDTO;
-import com.esprit.microservice.unigitesprit.dto.SujetResponseDTO;
+import com.esprit.microservice.unigitesprit.dto.*;
+import com.esprit.microservice.unigitesprit.entities.Group;
 import com.esprit.microservice.unigitesprit.entities.Sujet;
 import com.esprit.microservice.unigitesprit.entities.User;
+import com.esprit.microservice.unigitesprit.enumeration.Role;
+import com.esprit.microservice.unigitesprit.repository.GroupRepository;
 import com.esprit.microservice.unigitesprit.repository.SujetRepository;
 import com.esprit.microservice.unigitesprit.repository.UserRepository;
 import com.esprit.microservice.unigitesprit.services.interfaces.SujetService;
@@ -13,6 +15,7 @@ import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,15 +28,26 @@ public class SujetServiceImpl implements SujetService {
 
     @Autowired
     private UserRepository userRepository;
-
+@Autowired
+private NotificationService mailService;
     @Autowired
     private Validator validator;
+    @Autowired
+    private GroupRepository groupRepository;
 
     @Override
     public SujetResponseDTO addSujet(SujetCreateDTO sujetCreateDTO, Long userId) {
         validate(sujetCreateDTO);
         Sujet sujet = mapToSujet(sujetCreateDTO, userId);
         Sujet savedSujet = sujetRepository.save(sujet);
+        List<User> users = userRepository.findByRolesContaining(Role.ADMIN);
+        for (User user : users) {
+            try {
+                mailService.notifyNouveauSujet(user.getEmail(),sujet.getProposePar().getFirstName(),sujet.getTitre());
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+        }
         return mapToSujetResponseDTO(savedSujet);
     }
 
@@ -58,6 +72,7 @@ public class SujetServiceImpl implements SujetService {
                 .orElseThrow(() -> new EntityNotFoundException("Sujet not found with id: " + id));
         updateSujetFromDTO(sujet, sujetCreateDTO);
         Sujet updatedSujet = sujetRepository.save(sujet);
+
         return mapToSujetResponseDTO(updatedSujet);
     }
 
@@ -90,6 +105,7 @@ public class SujetServiceImpl implements SujetService {
         sujet.setTitre(dto.getTitre());
         sujet.setDescription(dto.getDescription());
         sujet.setFavori(false);
+        sujet.setTechnologies(dto.getTechnologies());
         User proposePar = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
         sujet.setProposePar(proposePar);
@@ -102,12 +118,51 @@ public class SujetServiceImpl implements SujetService {
     }
 
     private SujetResponseDTO mapToSujetResponseDTO(Sujet sujet) {
+        Set<Group> groups = groupRepository.findBySujetId(sujet.getId());
+        Set<GroupResponseDTO> groupDtos = groups.stream()
+                .map(this::mapToGroupResponseDTO)
+                .collect(Collectors.toSet());
+
         SujetResponseDTO dto = new SujetResponseDTO();
         dto.setId(sujet.getId());
         dto.setTitre(sujet.getTitre());
         dto.setFavori(sujet.isFavori());
         dto.setDescription(sujet.getDescription());
+        dto.setTechnologies(sujet.getTechnologies());
         dto.setProposeParId(sujet.getProposePar().getId());
+        dto.setGroups(groupDtos);
         return dto;
+    }
+    public  GroupResponseDTO mapToGroupResponseDTO(Group group) {
+        GroupResponseDTO dto = new GroupResponseDTO();
+        dto.setId(group.getId());
+        dto.setNom(group.getNom());
+        dto.setClasseId(group.getClasse().getId());
+        dto.setSujetId(group.getSujet().getId());
+        dto.setGitRepoUrl(group.getGitRepoUrl());
+        dto.setGitRepoName(group.getGitRepoName());
+        dto.setIsFavori(group.isFavori());
+        dto.setEnseignantId(group.getEnseignant().getId());
+
+        Set<UserRoleResponseDTO> userRoles = group.getUsers().stream()
+                .map(userGroup -> {
+                    UserRoleResponseDTO urDto = new UserRoleResponseDTO();
+                    urDto.setUserId(userGroup.getUser().getId());
+                    urDto.setRole(userGroup.getRole());
+                    return urDto;
+                })
+                .collect(Collectors.toSet());
+        dto.setUsers(userRoles);
+
+        return dto;
+    }
+    @Override
+    public List<SujetResponseDTO> searchSujet(String query){
+        List<Sujet> groups  = sujetRepository.findBySearch(query);
+        List<SujetResponseDTO> dtos = new ArrayList<>();
+        for(var group:groups){
+            dtos.add( mapToSujetResponseDTO(group) );
+        }
+        return dtos;
     }
 }

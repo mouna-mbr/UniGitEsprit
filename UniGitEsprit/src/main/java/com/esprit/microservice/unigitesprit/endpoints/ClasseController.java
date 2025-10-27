@@ -2,6 +2,7 @@ package com.esprit.microservice.unigitesprit.endpoints;
 
 import com.esprit.microservice.unigitesprit.dto.ClasseCreateDTO;
 import com.esprit.microservice.unigitesprit.dto.ClasseResponseDTO;
+import com.esprit.microservice.unigitesprit.dto.GroupResponseDTO;
 import com.esprit.microservice.unigitesprit.services.interfaces.ClasseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -51,5 +52,10 @@ public class ClasseController {
     @PostMapping("/{id}/toggle-favorite")
     public ResponseEntity<ClasseResponseDTO> toggleFavorite(@PathVariable Long id) {
         return ResponseEntity.ok(classeService.toggleFavorite(id));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ClasseResponseDTO>> searchGroups(@RequestParam String query) {
+        return ResponseEntity.ok(classeService.searchGroups(query));
     }
 }
