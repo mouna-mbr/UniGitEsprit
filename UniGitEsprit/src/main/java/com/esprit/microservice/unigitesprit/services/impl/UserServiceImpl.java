@@ -5,10 +5,13 @@ import com.esprit.microservice.unigitesprit.dto.UserLoginDTO;
 import com.esprit.microservice.unigitesprit.dto.UserResponseDTO;
 import com.esprit.microservice.unigitesprit.dto.UserUpdateGitDTO;
 import com.esprit.microservice.unigitesprit.entities.User;
+import com.esprit.microservice.unigitesprit.repository.ClasseUserRepository;
+import com.esprit.microservice.unigitesprit.repository.UserGroupRepository;
 import com.esprit.microservice.unigitesprit.repository.UserRepository;
 import com.esprit.microservice.unigitesprit.services.interfaces.UserService;
 import com.opencsv.bean.CsvToBeanBuilder;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +40,11 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
+    @Autowired
+    private ClasseUserRepository classeUserRepository;
     @Autowired
     private GitService gitService;
+     @Autowired private UserGroupRepository userGroupRepository ;
 
     @Override
     public UserResponseDTO addUser(UserCreateDTO userCreateDTO) {
@@ -149,15 +154,22 @@ public class UserServiceImpl implements UserService {
         return mapToUserResponseDTO(user);
     }
 
+    @Transactional
     @Override
-    public boolean deleteUser(String identifiant) {
-        Optional<User> userOpt = userRepository.findByIdentifiant(identifiant);
-        if (userOpt.isPresent()) {
-            userRepository.delete(userOpt.get());
-            return true;
-        }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'identifiant : " + identifiant);
+    public void deleteUser(String identifiant) {
+        User user = userRepository.findByIdentifiant(identifiant)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Supprimer les relations dans classe_user
+        classeUserRepository.deleteByUserId(user.getId());
+
+        // Supprimer les rôles/groupes liés
+        userGroupRepository.deleteByUserId(user.getId());
+
+        // Supprimer l'utilisateur
+        userRepository.delete(user);
     }
+
 
     @Override
     public UserResponseDTO updateGitCredentials(Long id, UserUpdateGitDTO updateGitDTO) {

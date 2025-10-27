@@ -18,6 +18,6 @@ public interface UserService {
     List<UserResponseDTO> getAllUsers();
 
     UserResponseDTO updateUser(String id, User user);
-
-    boolean deleteUser(String id);
+    void deleteUser(String id);
+    //boolean deleteUser(String id);
 }

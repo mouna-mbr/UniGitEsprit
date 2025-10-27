@@ -6,8 +6,10 @@ import com.esprit.microservice.unigitesprit.dto.UserResponseDTO;
 import com.esprit.microservice.unigitesprit.dto.UserUpdateGitDTO;
 import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.services.interfaces.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -92,10 +94,19 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         try {
-            boolean deleted = userService.deleteUser(id);
-            return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getStatusCode());
+            // Appelle le service pour supprimer l'utilisateur avec les dépendances
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (EntityNotFoundException e) {
+            // Si l'utilisateur n'existe pas
+            return ResponseEntity.notFound().build();
+        } catch (DataIntegrityViolationException e) {
+            // Si l'utilisateur a encore des dépendances non supprimées
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            // Erreurs générales
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 }
