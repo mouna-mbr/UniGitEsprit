@@ -8,26 +8,34 @@ import { User, UserResponse } from '../models/user.model';
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:8081/uniGitEsprit/api/users';
+  private apiUrl = 'http://localhost:8081/uniGitEsprit/api/users'; // Vérifiez que le port correspond à votre backend
 
   constructor(private http: HttpClient) {}
+
   getStudentsByEtapeId(etapeId: number): Observable<UserResponse[]> {
     return this.http.get<UserResponse[]>(`http://localhost:8081/uniGitEsprit/api/etapes/${etapeId}/students`).pipe(
       catchError(this.handleError)
     );
   }
-  updateUser(id: string, user: User): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, user);
+
+  updateUser(id: string, user: User): Observable<UserResponse> {
+    return this.http.put<UserResponse>(`${this.apiUrl}/${id}`, user).pipe(
+      catchError(this.handleError)
+    );
   }
+
   getAllUsers(): Observable<UserResponse[]> {
     return this.http.get<UserResponse[]>(this.apiUrl).pipe(
       catchError(this.handleError)
     );
   }
-  deleteUser(id: string) {
-    console.log(id);
-    return this.http.delete(`${this.apiUrl}/${id}`);
+
+  deleteUser(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
   }
+
   addUser(user: User): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.apiUrl, user).pipe(
       catchError(this.handleError)
@@ -40,10 +48,10 @@ export class UserService {
     );
   }
 
-  addUsersFromCsv(file: File): Observable<UserResponse[]> {
+  addUsersFromCsv(file: File): Observable<void> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<UserResponse[]>(`${this.apiUrl}/csv`, formData).pipe(
+    return this.http.post<void>(`${this.apiUrl}/csv`, formData).pipe(
       catchError(this.handleError)
     );
   }
@@ -59,21 +67,30 @@ export class UserService {
       catchError(this.handleError)
     );
   }
-getUserById(id: number): Observable<UserResponse> {
-  return this.http.get<UserResponse>(`${this.apiUrl}/${id}`).pipe(
-    catchError(this.handleError)
-  );
-}
+
+  getUserById(id: number): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
 
   private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An error occurred';
+    console.error('Erreur HTTP interceptée :', {
+      status: error.status,
+      statusText: error.statusText,
+      message: error.message,
+      error: error.error,
+      url: error.url
+    });
+    let errorMessage = 'Une erreur est survenue';
     if (error.error instanceof ErrorEvent) {
-      errorMessage = `Error: ${error.error.message}`;
+      errorMessage = `Erreur : ${error.error.message}`;
     } else {
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
-      if (error.error && typeof error.error === 'string') {
-        errorMessage = error.error;
-      }
+      errorMessage = (typeof error.error === 'object' && error.error !== null && 'message' in error.error)
+        ? error.error.message
+        : `Erreur ${error.status}: ${error.message || 'Détails inconnus'}`;
+      console.log('Corps brut de l\'erreur :', JSON.stringify(error.error, null, 2));
     }
     return throwError(() => new Error(errorMessage));
   }

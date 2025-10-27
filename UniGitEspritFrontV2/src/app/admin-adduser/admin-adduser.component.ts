@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
-import { User } from '../models/user.model';
+import { User, UserResponse } from '../models/user.model';
 import { ClasseService } from '../services/classe.service';
 import { ClasseResponse } from '../models/classe.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-admin-adduser',
@@ -14,13 +15,11 @@ export class AdminAdduserComponent implements OnInit {
   buttonText = 'Add User';
   userForm!: FormGroup;
   showaddUserForm = false;
-  selectedUser: User | null = null;
+  selectedUser: UserResponse | null = null;
   showPassword = false;
   isSubmitting = false;
   showSpecialtyField = false;
   isComputerScienceFourthYearOrHigher = false;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
   selectedFile: File | null = null;
   isCsvMode: boolean = false;
   csvData: any[] = [];
@@ -32,36 +31,32 @@ export class AdminAdduserComponent implements OnInit {
     'REFERENT_ENTREPRISE',
     'COORDINATEUR_PI'
   ];
-  userRoles: string[] = []; // initially empty or prefilled with user roles
+  userRoles: string[] = [];
+  classOptions: ClasseResponse[] = [];
 
-toggleRole(role: string, event: Event) {
-  const isChecked = (event.target as HTMLInputElement).checked;
-
-  if (isChecked) {
-    if (!this.userRoles.includes(role)) {
-      this.userRoles.push(role);
-    }
-  } else {
-    this.userRoles = this.userRoles.filter(r => r !== role);
-  }
-}
-  classOptions: ClasseResponse[]  = [];
-
-  constructor(private fb: FormBuilder,private classService: ClasseService, private userService: UserService) {}
+  constructor(
+    private fb: FormBuilder,
+    private classService: ClasseService,
+    private userService: UserService,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
     this.initializeForm();
     this.loadUsers();
     this.loadClasses();
-
   }
-loadClasses(): void {
+
+  loadClasses(): void {
     this.classService.getAllClasses().subscribe({
       next: (classes) => {
         this.classOptions = classes;
         console.log(this.classOptions);
       },
-      error: (error) => console.error('error', error.message)
+      error: (error) => {
+        this.toastr.error('Erreur lors du chargement des classes.', 'Erreur');
+        console.error('error', error.message);
+      }
     });
   }
 
@@ -79,6 +74,7 @@ loadClasses(): void {
       gitAccessToken: ['']
     });
   }
+
   showUserForm() {
     this.showaddUserForm = !this.showaddUserForm;
     this.initializeForm();
@@ -88,10 +84,9 @@ loadClasses(): void {
       this.buttonText = 'Add User';
     }
   }
+
   toggleMode(): void {
     this.isCsvMode = !this.isCsvMode;
-    this.errorMessage = null;
-    this.successMessage = null;
     this.selectedFile = null;
     this.csvData = [];
     if (document.getElementById('csvFile')) {
@@ -103,7 +98,6 @@ loadClasses(): void {
     const role = this.userForm.get('role')?.value;
     const classeControl = this.userForm.get('classe');
     const specialiteControl = this.userForm.get('specialite');
-
     if (role === 'STUDENT') {
       classeControl?.setValidators([Validators.required]);
       this.onClassChange();
@@ -115,7 +109,6 @@ loadClasses(): void {
       this.showSpecialtyField = false;
       this.isComputerScienceFourthYearOrHigher = false;
     }
-
     classeControl?.updateValueAndValidity();
     specialiteControl?.updateValueAndValidity();
   }
@@ -123,14 +116,12 @@ loadClasses(): void {
   onClassChange(): void {
     const classe = this.userForm.get('classe');
     const specialiteControl = this.userForm.get('specialite');
-
-    
+    // Logique pour gérer les spécialités selon la classe sélectionnée
   }
 
   formatIdentifiant(event: any): void {
     let value = event.target.value.replace(/[^0-9A-Za-z]/g, '');
     value = value.toUpperCase();
-
     if (value.length > 3 && value.length <= 6) {
       const digits = value.substring(0, 3).replace(/[^0-9]/g, '');
       const letters = value.substring(3).replace(/[^A-Z]/g, '');
@@ -141,7 +132,6 @@ loadClasses(): void {
       const digits2 = value.substring(6, 10).replace(/[^0-9]/g, '');
       value = digits1 + letters + digits2;
     }
-
     event.target.value = value;
     this.userForm.get('identifiant')?.setValue(value);
   }
@@ -153,15 +143,12 @@ loadClasses(): void {
   onSubmit(): void {
     if (this.userForm.valid) {
       this.isSubmitting = true;
-      this.errorMessage = null;
-      this.successMessage = null;
-
       const userData: User = {
         firstName: this.userForm.get('prenom')?.value,
         lastName: this.userForm.get('nom')?.value,
         role: Array.isArray(this.userForm.get('role')?.value)
-        ? this.userForm.get('role')?.value
-        : [this.userForm.get('role')?.value],
+          ? this.userForm.get('role')?.value
+          : [this.userForm.get('role')?.value],
         identifiant: this.userForm.get('identifiant')?.value,
         password: this.userForm.get('password')?.value,
         classe: this.userForm.get('classe')?.value || undefined,
@@ -170,21 +157,25 @@ loadClasses(): void {
         gitUsername: this.userForm.get('gitUsername')?.value || undefined,
         gitAccessToken: this.userForm.get('gitAccessToken')?.value || undefined
       };
-
       this.userService.addUser(userData).subscribe({
         next: (response) => {
           this.isSubmitting = false;
-          this.successMessage = 'User added successfully!';
+          this.toastr.success('Utilisateur ajouté avec succès !', 'Succès');
           this.userForm.reset();
           this.showSpecialtyField = false;
           this.isComputerScienceFourthYearOrHigher = false;
+          this.loadUsers();
         },
         error: (error) => {
           this.isSubmitting = false;
-          if (error.message.includes('net::ERR_FAILED') || error.message.includes('CORS')) {
-            this.errorMessage = 'Failed to connect to the server. Please check if the backend is running and CORS is configured correctly.';
+          console.error('Erreur lors de l\'ajout de l\'utilisateur :', error);
+          if (error.status === 409) {
+            const errorMessage = (error.error as any)?.message || 'Un utilisateur avec cet identifiant ou cet email existe déjà.';
+            this.toastr.error(errorMessage, 'Erreur');
+          } else if (error.status === 400) {
+            this.toastr.error(error.message || 'Les données fournies sont invalides.', 'Erreur');
           } else {
-            this.errorMessage = error.message || 'Failed to add user. Please try again.';
+            this.toastr.error(error.message || 'Échec de l\'ajout de l\'utilisateur. Veuillez réessayer.', 'Erreur');
           }
         }
       });
@@ -192,6 +183,7 @@ loadClasses(): void {
       Object.keys(this.userForm.controls).forEach((key) => {
         this.userForm.get(key)?.markAsTouched();
       });
+      this.toastr.error('Veuillez remplir correctement tous les champs requis.', 'Formulaire invalide');
     }
   }
 
@@ -208,7 +200,6 @@ loadClasses(): void {
 
   previewCsv(): void {
     if (!this.selectedFile) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
@@ -232,27 +223,28 @@ loadClasses(): void {
 
   onUploadCsv(): void {
     if (!this.selectedFile) {
-      this.errorMessage = 'Please select a CSV file to upload.';
+      this.toastr.error('Veuillez sélectionner un fichier CSV à charger.', 'Erreur');
       return;
     }
-
     this.isSubmitting = true;
-    this.errorMessage = null;
-    this.successMessage = null;
-
     this.userService.addUsersFromCsv(this.selectedFile).subscribe({
-      next: (response) => {
-        
+      next: () => {
         this.isSubmitting = false;
-        this.successMessage = `Successfully added ${response.length} users.`;
+        this.toastr.success('Utilisateurs ajoutés avec succès via CSV.', 'Succès');
         this.selectedFile = null;
         this.csvData = [];
         (document.getElementById('csvFile') as HTMLInputElement).value = '';
-      console.log(response);
+        this.loadUsers();
       },
       error: (error) => {
         this.isSubmitting = false;
-        this.errorMessage = error.message || 'Failed to upload users. Please check the CSV and try again.';
+        if (error.status === 409) {
+          this.toastr.error(error.message || 'Un ou plusieurs utilisateurs existent déjà (identifiant ou email déjà utilisé).', 'Erreur');
+        } else if (error.status === 400) {
+          this.toastr.error(error.message || 'Le fichier CSV contient des données invalides.', 'Erreur');
+        } else {
+          this.toastr.error(error.message || 'Échec du chargement des utilisateurs. Vérifiez le fichier CSV et réessayez.', 'Erreur');
+        }
       }
     });
   }
@@ -260,27 +252,32 @@ loadClasses(): void {
   goBack(): void {
     window.history.back();
   }
-  users: User[] = [];
+
+  users: UserResponse[] = [];
   showModal = false;
 
-
   loadUsers() {
-    this.userService.getAllUsers().subscribe((data) => {
-      this.users = data;
-      console.log(data);
+    this.userService.getAllUsers().subscribe({
+      next: (data) => {
+        this.users = data;
+        console.log(data);
+      },
+      error: (error) => {
+        this.toastr.error(error.message || 'Erreur lors du chargement des utilisateurs.', 'Erreur');
+        console.error(error);
+      }
     });
   }
 
-  openEditModal(user: User) {
+  openEditModal(user: UserResponse) {
     this.selectedUser = { ...user };
     this.userRoles = [...user.role];
     this.userForm.patchValue({
-      nom: this.selectedUser.firstName,
-      prenom: this.selectedUser.lastName,
+      nom: this.selectedUser.lastName,
+      prenom: this.selectedUser.firstName,
       email: this.selectedUser.email,
       identifiant: this.selectedUser.identifiant,
-      role: this.userRoles,
-       // vide si tu veux pas montrer l’ancien mot de passe
+      role: this.userRoles
     });
     this.showModal = true;
   }
@@ -290,43 +287,79 @@ loadClasses(): void {
     this.selectedUser = null;
   }
 
-    addRole(event: any) {
-      const role = event.target.value;
-      if (role && !this.userRoles.includes(role)) {
-        this.userRoles.push(role);
-        this.userForm.get('roles')?.setValue(this.userRoles);
-      }
-      event.target.value = ''; // reset dropdown
+  addRole(event: any) {
+    const role = event.target.value;
+    if (role && !this.userRoles.includes(role)) {
+      this.userRoles.push(role);
+      this.userForm.get('role')?.setValue(this.userRoles);
     }
-  
-    removeRole(role: string) {
-      this.userRoles = this.userRoles.filter(r => r !== role);
-      this.userForm.get('roles')?.setValue(this.userRoles);
-    }
+    event.target.value = '';
+  }
+
+  removeRole(role: string) {
+    this.userRoles = this.userRoles.filter(r => r !== role);
+    this.userForm.get('role')?.setValue(this.userRoles);
+  }
+
   saveUser() {
-
-    const userData: User = {
-      firstName: this.userForm.get('prenom')?.value,
-      lastName: this.userForm.get('nom')?.value,
-      email: this.userForm.get('email')?.value,
-      identifiant: this.userForm.get('identifiant')?.value,
-      role: this.userRoles // map to Role[] if needed
-    };
-
-    if (this.selectedUser) {
-      // update existing user
-      this.userService.updateUser(userData.identifiant, userData).subscribe(() => {
-        this.closeModal();
-      });
-    } 
+    if (this.userForm.valid) {
+      const userData: User = {
+        firstName: this.userForm.get('prenom')?.value,
+        lastName: this.userForm.get('nom')?.value,
+        email: this.userForm.get('email')?.value,
+        identifiant: this.userForm.get('identifiant')?.value,
+        role: this.userRoles
+      };
+      if (this.selectedUser) {
+        this.userService.updateUser(userData.identifiant, userData).subscribe({
+          next: () => {
+            this.toastr.success('Utilisateur modifié avec succès !', 'Succès');
+            this.closeModal();
+            this.loadUsers();
+          },
+          error: (error) => {
+            if (error.status === 409) {
+              this.toastr.error(error.message || 'Cet email est déjà utilisé par un autre utilisateur.', 'Erreur');
+            } else if (error.status === 404) {
+              this.toastr.error('Utilisateur non trouvé.', 'Erreur');
+            } else {
+              this.toastr.error(error.message || 'Échec de la modification de l\'utilisateur.', 'Erreur');
+            }
+          }
+        });
+      }
+    } else {
+      this.toastr.error('Veuillez remplir correctement tous les champs requis.', 'Formulaire invalide');
+    }
   }
-  deleteUser(user : User) {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.userService.deleteUser((user.identifiant)).subscribe(() => {
-        console.log('User deleted successfully.');
-        this.loadUsers();
+
+  deleteUser(user: UserResponse) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      this.userService.deleteUser(user.identifiant).subscribe({
+        next: () => {
+          this.toastr.success('Utilisateur supprimé avec succès.', 'Succès');
+          this.loadUsers();
+        },
+        error: (error) => {
+          if (error.status === 404) {
+            this.toastr.error('Utilisateur non trouvé.', 'Erreur');
+          } else {
+            this.toastr.error(error.message || 'Échec de la suppression de l\'utilisateur.', 'Erreur');
+          }
+        }
       });
     }
   }
-  
+
+  toggleRole(role: string, event: Event) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+    if (isChecked) {
+      if (!this.userRoles.includes(role)) {
+        this.userRoles.push(role);
+      }
+    } else {
+      this.userRoles = this.userRoles.filter(r => r !== role);
+    }
+    this.userForm.get('role')?.setValue(this.userRoles);
+  }
 }

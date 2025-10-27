@@ -29,6 +29,8 @@ import {  SprintDetailsComponent } from './sprint-details/sprint-details.compone
 import { RepositoryViewerComponent } from './repository-viewer/repository-viewer.component';
 import { NgChartsModule } from 'ng2-charts';
 import { AuthInterceptor } from './auth.interceptor';
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 @NgModule({
   declarations: [
     AppComponent,
@@ -64,7 +66,13 @@ import { AuthInterceptor } from './auth.interceptor';
     AppRoutingModule,
     FormsModule,
     HttpClientModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    BrowserAnimationsModule, // Nécessaire pour les animations de toastr
+    ToastrModule.forRoot({
+      timeOut: 3000,
+      positionClass: 'toast-top-right',
+      preventDuplicates: true,
+    }),
   ],
   providers: [
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor , multi: true }

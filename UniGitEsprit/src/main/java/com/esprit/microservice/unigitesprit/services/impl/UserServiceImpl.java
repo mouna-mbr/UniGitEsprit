@@ -12,10 +12,11 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -35,26 +36,43 @@ public class UserServiceImpl implements UserService {
     private Validator validator;
 
     @Autowired
-    private  PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
+
     @Autowired
     private GitService gitService;
 
     @Override
     public UserResponseDTO addUser(UserCreateDTO userCreateDTO) {
         validate(userCreateDTO);
+
+        // Vérifier si l'identifiant ou l'email existe déjà
+        if (userRepository.findByIdentifiant(userCreateDTO.getIdentifiant()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec cet identifiant existe déjà.");
+        }
+        if (userRepository.findByEmail(userCreateDTO.getEmail()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec cet email existe déjà.");
+        }
+
         User user = mapToUser(userCreateDTO);
         User savedUser = userRepository.save(user);
         return mapToUserResponseDTO(savedUser);
     }
 
+    @Override
     public UserResponseDTO updateUser(String id, User updatedUser) {
         Optional<User> optionalUser = userRepository.findByIdentifiant(id);
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
+
+            // Vérifier si l'email est modifié et s'il est déjà utilisé par un autre utilisateur
+            if (!existingUser.getEmail().equals(updatedUser.getEmail()) &&
+                    userRepository.findByEmail(updatedUser.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Cet email est déjà utilisé par un autre utilisateur.");
+            }
+
             existingUser.setFirstName(updatedUser.getFirstName());
             existingUser.setLastName(updatedUser.getLastName());
             existingUser.setEmail(updatedUser.getEmail());
-            System.out.println(updatedUser.getRole().toString());
             existingUser.setRole(updatedUser.getRole());
             existingUser.setIdentifiant(updatedUser.getIdentifiant());
             existingUser.setClasse(updatedUser.getClasse());
@@ -62,17 +80,23 @@ public class UserServiceImpl implements UserService {
             existingUser.setGitUsername(updatedUser.getGitUsername());
             existingUser.setGitAccessToken(updatedUser.getGitAccessToken());
             User savedUser = userRepository.save(existingUser);
-            UserResponseDTO dto = mapToUserResponseDTO(savedUser);
-            return dto;
+            return mapToUserResponseDTO(savedUser);
         } else {
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'identifiant : " + id);
         }
-
     }
 
     @Override
     public List<UserResponseDTO> addUsersBulk(List<UserCreateDTO> userCreateDTOs) {
         userCreateDTOs.forEach(this::validate);
+        for (UserCreateDTO dto : userCreateDTOs) {
+            if (userRepository.findByIdentifiant(dto.getIdentifiant()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec l'identifiant " + dto.getIdentifiant() + " existe déjà.");
+            }
+            if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec l'email " + dto.getEmail() + " existe déjà.");
+            }
+        }
         List<User> users = userCreateDTOs.stream().map(this::mapToUser).collect(Collectors.toList());
         List<User> savedUsers = userRepository.saveAll(users);
         return savedUsers.stream().map(this::mapToUserResponseDTO).collect(Collectors.toList());
@@ -80,9 +104,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean addUsersFromCsv(MultipartFile file) {
-
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-
             List<User> users = new CsvToBeanBuilder<User>(reader)
                     .withType(User.class)
                     .withIgnoreLeadingWhiteSpace(true)
@@ -93,44 +115,40 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalArgumentException("Le fichier CSV est vide !");
             }
 
-            users.forEach(user -> {
-                System.out.println(user.getFirstName());
+            for (User user : users) {
+                // Vérifier si l'identifiant ou l'email existe déjà
+                if (userRepository.findByIdentifiant(user.getIdentifiant()).isPresent()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec l'identifiant " + user.getIdentifiant() + " existe déjà.");
+                }
+                if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Un utilisateur avec l'email " + user.getEmail() + " existe déjà.");
+                }
+
                 if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                     user.setPassword(passwordEncoder.encode(user.getPassword()));
                 }
-                 User knownUser = userRepository.findByIdentifiant(user.getIdentifiant()).get();
-                if (knownUser != null) {
-                    knownUser.setRole(user.getRole());
-                    knownUser.setClasse(user.getClasse());
-                    knownUser.setSpecialite(user.getSpecialite());
-                    knownUser.setGitUsername(user.getGitUsername());
-                    knownUser.setGitAccessToken(user.getGitAccessToken());
-                    knownUser.setGitAccessToken(knownUser.getGitAccessToken());
-                    userRepository.save(knownUser);
-                }else {
-                userRepository.save(user);}
-            });
-
+                userRepository.save(user);
+            }
             return true;
-
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Erreur : " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erreur : " + e.getMessage());
+        } catch (ResponseStatusException e) {
+            throw e; // Propager l'erreur de conflit
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors du traitement du fichier CSV : " + e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors du traitement du fichier CSV : " + e.getMessage(), e);
         }
     }
-
 
     @Override
     public UserResponseDTO login(UserLoginDTO userLoginDTO) {
         User user = userRepository.findByIdentifiant(userLoginDTO.getIdentifiant())
-                .orElseThrow(() -> new EntityNotFoundException("User not found with identifiant: " + userLoginDTO.getIdentifiant()));
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'identifiant : " + userLoginDTO.getIdentifiant()));
         if (!passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Mot de passe incorrect");
         }
         return mapToUserResponseDTO(user);
     }
+
     @Override
     public boolean deleteUser(String identifiant) {
         Optional<User> userOpt = userRepository.findByIdentifiant(identifiant);
@@ -138,7 +156,7 @@ public class UserServiceImpl implements UserService {
             userRepository.delete(userOpt.get());
             return true;
         }
-        return false;
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'identifiant : " + identifiant);
     }
 
     @Override
@@ -146,15 +164,16 @@ public class UserServiceImpl implements UserService {
         boolean exists = gitService.verifyGitHubCredentials(updateGitDTO.getGitUsername(), updateGitDTO.getGitAccessToken());
         if (exists) {
             User user = userRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur non trouvé avec l'id : " + id));
             user.setGitUsername(updateGitDTO.getGitUsername());
             user.setGitAccessToken(updateGitDTO.getGitAccessToken());
             User updatedUser = userRepository.save(user);
             return mapToUserResponseDTO(updatedUser);
         } else {
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Les identifiants GitHub ne sont pas valides.");
         }
     }
+
     @Override
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -165,7 +184,7 @@ public class UserServiceImpl implements UserService {
     private void validate(UserCreateDTO userCreateDTO) {
         Set<ConstraintViolation<UserCreateDTO>> violations = validator.validate(userCreateDTO);
         if (!violations.isEmpty()) {
-            throw new IllegalArgumentException("Validation errors: " + violations);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Erreurs de validation : " + violations);
         }
     }
 

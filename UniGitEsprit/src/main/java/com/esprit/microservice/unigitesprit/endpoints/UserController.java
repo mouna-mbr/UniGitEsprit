@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -27,47 +28,74 @@ public class UserController {
         List<UserResponseDTO> responses = userService.getAllUsers();
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable String id, @RequestBody User user) {
-        UserResponseDTO responses = userService.updateUser(id, user);
-        if (responses != null) {return new ResponseEntity<>(responses, HttpStatus.OK);}
-        return new ResponseEntity<>(responses, HttpStatus.NOT_FOUND);
+        try {
+            UserResponseDTO response = userService.updateUser(id, user);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(null, e.getStatusCode());
+        }
     }
+
     @PostMapping
     public ResponseEntity<UserResponseDTO> addUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
-        UserResponseDTO response = userService.addUser(userCreateDTO);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        try {
+            UserResponseDTO response = userService.addUser(userCreateDTO);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(null, e.getStatusCode());
+        }
     }
 
     @PostMapping("/bulk")
     public ResponseEntity<List<UserResponseDTO>> addUsersBulk(@Valid @RequestBody List<UserCreateDTO> userCreateDTOs) {
-        List<UserResponseDTO> responses = userService.addUsersBulk(userCreateDTOs);
-        return new ResponseEntity<>(responses, HttpStatus.CREATED);
+        try {
+            List<UserResponseDTO> responses = userService.addUsersBulk(userCreateDTOs);
+            return new ResponseEntity<>(responses, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(null, e.getStatusCode());
+        }
     }
 
     @PostMapping("/csv")
-    public ResponseEntity<List<UserResponseDTO>> addUsersFromCsv(@RequestParam("file") MultipartFile file) {
-        if( userService.addUsersFromCsv(file)){
-        return new ResponseEntity<>( HttpStatus.CREATED);}else
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Void> addUsersFromCsv(@RequestParam("file") MultipartFile file) {
+        try {
+            userService.addUsersFromCsv(file);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(e.getStatusCode());
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<UserResponseDTO> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        UserResponseDTO response = userService.login(userLoginDTO);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        try {
+            UserResponseDTO response = userService.login(userLoginDTO);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(null, e.getStatusCode());
+        }
     }
 
     @PutMapping("/{id}/git-credentials")
     public ResponseEntity<UserResponseDTO> updateGitCredentials(@PathVariable Long id, @Valid @RequestBody UserUpdateGitDTO updateGitDTO) {
-        UserResponseDTO response = userService.updateGitCredentials(id, updateGitDTO);
-        if (response!=null){return new ResponseEntity<>(response, HttpStatus.OK);}
-        else return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+        try {
+            UserResponseDTO response = userService.updateGitCredentials(id, updateGitDTO);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(null, e.getStatusCode());
+        }
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        return userService.deleteUser(id)
-                ? ResponseEntity.noContent().build()  // 204 if deleted
-                : ResponseEntity.notFound().build();  // 404 if not found
+        try {
+            boolean deleted = userService.deleteUser(id);
+            return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        } catch (ResponseStatusException e) {
+            return new ResponseEntity<>(e.getStatusCode());
+        }
     }
 }
