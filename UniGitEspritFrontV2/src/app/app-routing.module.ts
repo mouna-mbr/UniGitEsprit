@@ -1,3 +1,4 @@
+// app-routing.module.ts
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { SigninComponent } from './signin/signin.component';
@@ -19,11 +20,12 @@ import { GroupsComponent } from './groups/groups.component';
 import { AddGroupComponent } from './add-group/add-group.component';
 import { GroupDetailsComponent } from './group-details/group-details.component';
 import { EditGroupComponent } from './edit-group/edit-group.component';
-import {  SprintDetailsComponent } from './sprint-details/sprint-details.component';
+import { SprintDetailsComponent } from './sprint-details/sprint-details.component';
 import { RepositoryViewerComponent } from './repository-viewer/repository-viewer.component';
 import { DemandesComponent } from './demandes/demandes.component';
 import { DemandesSujetComponent } from './demandes-sujet/demandes-sujet.component';
 import { MergeRequestsComponentComponent } from './merge-requests-component/merge-requests-component.component';
+import { AuthGuard } from './auth.guard'; // Import ajouté
 
 const routes: Routes = [
   { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
@@ -33,42 +35,37 @@ const routes: Routes = [
   {
     path: '', // Parent route for all other pages
     component: LayoutComponent,
+    canActivate: [AuthGuard], // ✅ GARDE AJOUTÉE ICI
     children: [
-
-      { path: 'adduser', component: AdminAdduserComponent }, // Corrected from 'addduser' to 'adduser'
+      { path: 'adduser', component: AdminAdduserComponent },
       { path: 'profile', component: ProfileComponent },
-      { path: 'dashbord', component: AdminDashboardComponent }, // Default route
+      { path: 'dashbord', component: AdminDashboardComponent },
+      
       //class
       { path: 'demandesGroup', component: DemandesComponent },
       { path: 'demandesSujet', component: DemandesSujetComponent },
       { path: 'MergeRequest', component: MergeRequestsComponentComponent },
 
-
-
-
       { path: 'classes', component: ClassesComponent },
       { path: 'add-classe', component: AddClasseComponent },
-      {path:'edit-classe/:id', component: EditClasseComponent},
-      {path:'favoritesClasses', component: FavoriteClassesComponent},
-      {path:'classesDetails/:id', component: ClassDetailsComponent},
+      { path: 'edit-classe/:id', component: EditClasseComponent },
+      { path: 'favoritesClasses', component: FavoriteClassesComponent },
+      { path: 'classesDetails/:id', component: ClassDetailsComponent },
+      
       //sujet
       { path: 'sujets', component: SujetsComponent },
       { path: 'add-sujet', component: AddSujetComponent },
-      {path:'edit-sujet/:id', component: EditSujetComponent},
-      {path:'favoritesClasses', component: FavoriteClassesComponent},
-      {path:'sujetDetails/:id', component: SujetDetailsComponent},
+      { path: 'edit-sujet/:id', component: EditSujetComponent },
+      { path: 'sujetDetails/:id', component: SujetDetailsComponent },
+      
       //group
       { path: 'groupes', component: GroupsComponent },
       { path: 'addgroupe', component: AddGroupComponent },
       { path: 'groupdetails/:id', component: GroupDetailsComponent },
       { path: 'update-group/:id', component: EditGroupComponent },
 
-      
       { path: 'detailssprint/:id', component: SprintDetailsComponent },
-      {path:'repository-viewer',component:RepositoryViewerComponent},
-     // {path:'repository-viewer',component:GitGroupComponent}
-
-
+      { path: 'repository-viewer', component: RepositoryViewerComponent }
     ]
   },
   { path: '**', redirectTo: '/signin' } // Wildcard route to redirect invalid paths to signin
