@@ -78,13 +78,13 @@
   </div>
 
   <div class="groups-grid">
-    <div class="class-card" *ngFor="let group of paginatedGroups" [ngClass]="{'favorite': group.isFavori}" [attr.data-group-id]="group.id">
+    <div class="class-card" *ngFor="let group of paginatedGroups" [ngClass]="{'favorite': group.favori}" [attr.data-group-id]="group.id">
       <div class="card-header">
         <div class="card-gradient"></div>
         <div class="card-icon">
           <i class="fas fa-users"></i>
         </div>
-        <button class="favorite-btn" [class.active]="group.isFavori" (click)="toggleFavorite(group.id, $event)">
+        <button class="favorite-btn" [class.active]="group.favori" (click)="toggleFavorite(group.id, $event)">
           <i class="fas fa-heart"></i>
         </button>
         <div class="card-menu-container">
@@ -102,7 +102,7 @@
             </div>
           </div>
         </div>
-        <div class="favorite-badge" *ngIf="group.isFavori">
+        <div class="favorite-badge" *ngIf="group.favori">
           <i class="fas fa-heart"></i>
         </div>
       </div>

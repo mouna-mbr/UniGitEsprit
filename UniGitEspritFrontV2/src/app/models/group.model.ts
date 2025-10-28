@@ -6,7 +6,7 @@ export interface GroupResponse {
   sujetId: number;
   gitRepoUrl: string;
   gitRepoName: string;
-  isFavori: boolean;
+  favori: boolean;
   enseignantId: number;
 }
 
@@ -22,7 +22,7 @@ export interface GroupCreate {
   sujetId: number;
   gitRepoName: string;
   gitRepoUrl: string; // If providing existing URL
-  isFavori: boolean;
+  favori: boolean;
   enseignantId: number;
 }
 

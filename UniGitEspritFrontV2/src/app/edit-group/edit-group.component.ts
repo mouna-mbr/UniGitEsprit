@@ -71,7 +71,7 @@ export class EditGroupComponent implements OnInit {
           gitRepoUrl: group.gitRepoUrl,
           gitRepoName: group.gitRepoName,
           users: group.users,
-          isFavori: group.isFavori
+          isFavori: group.favori
         });
         this.toastr.success('Groupe chargé avec succès', 'Chargement', {
           timeOut: 3000,

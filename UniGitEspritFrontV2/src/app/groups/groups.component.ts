@@ -143,7 +143,7 @@ export class GroupsComponent implements OnInit {
   applyFilter(): void {
     let filtered = this.groups;
     if (this.currentFilter === 'favorites') {
-      filtered = filtered.filter(group => group.isFavori);
+      filtered = filtered.filter(group => group.favori);
     } else if (this.currentFilter === 'recent') {
       filtered = filtered.sort((a, b) => b.id - a.id);
     }
@@ -184,18 +184,25 @@ export class GroupsComponent implements OnInit {
   }
 
   getFavoriteCount(): number {
-    return this.groups.filter(group => group.isFavori).length;
+    return this.groups.filter(group => group.favori    ).length;
   }
 
   toggleFavorite(id: number, event: Event): void {
     event.stopPropagation();
+    console.log('Toggle favorite appelé pour le groupe ID:', id);
+    
     this.groupService.toggleFavorite(id).subscribe({
       next: (updatedGroup) => {
+        console.log('Réponse du serveur:', updatedGroup);
         const index = this.groups.findIndex(g => g.id === id);
+        console.log('Index trouvé:', index);
+        
         if (index !== -1) {
           this.groups[index] = updatedGroup;
+          console.log('Groupe mis à jour:', this.groups[index]);
           this.applyFilter();
-          if (updatedGroup.isFavori) {
+          
+          if (updatedGroup.favori) {
             this.toastr.success('Groupe ajouté aux favoris', 'Favori', {
               timeOut: 3000,
               positionClass: 'toast-top-right'
@@ -206,15 +213,18 @@ export class GroupsComponent implements OnInit {
               positionClass: 'toast-top-right'
             });
           }
+        } else {
+          console.error('Groupe non trouvé dans la liste');
+          this.toastr.error('Groupe non trouvé', 'Erreur');
         }
       },
       error: (error) => {
+        console.error('Erreur complète:', error);
         console.error('Erreur lors du basculement du favori', error);
         this.toastr.error('Erreur lors de la modification des favoris', 'Erreur');
       }
     });
   }
-
   toggleMenu(id: number, event: Event): void {
     event.stopPropagation();
     if (this.openMenus.has(id)) {
