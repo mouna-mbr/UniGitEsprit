@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SujetService } from '../services/sujet.service';
 import { SujetCreate, SujetResponse } from '../models/sujet.model';
 import { AuthService } from '../services/auth.service';
+import { ToastrService } from 'ngx-toastr'; // Import Toastr
 
 @Component({
   selector: 'app-edit-sujet',
@@ -22,13 +23,14 @@ export class EditSujetComponent implements OnInit {
     private sujetService: SujetService,
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService // Injecter AuthService
+    private authService: AuthService,
+    private toastr: ToastrService // Inject Toastr
   ) {
     this.sujetId = +this.route.snapshot.paramMap.get('id')!;
     this.sujetForm = this.fb.group({
       titre: ['', Validators.required],
       description: [''],
-      proposeParId: [null, Validators.required] // Ajouter proposeParId avec validation
+      proposeParId: [null, Validators.required]
     });
   }
 
@@ -44,13 +46,17 @@ export class EditSujetComponent implements OnInit {
         this.sujetForm.patchValue({
           titre: sujet.titre,
           description: sujet.description,
-          proposeParId: sujet.proposeParId || currentUserId // Utiliser l'ID existant ou celui de l'utilisateur connecté si null
+          proposeParId: sujet.proposeParId || currentUserId
         });
         this.isLoaded = true;
       },
       error: (error) => {
         this.errorMessage = error.message;
-        this.showNotification('error', error.message);
+        this.toastr.error(error.message, 'Erreur de chargement', {
+          timeOut: 5000,
+          positionClass: 'toast-top-right',
+          progressBar: true
+        });
         this.isLoaded = true;
       }
     });
@@ -61,35 +67,54 @@ export class EditSujetComponent implements OnInit {
       const updatedSujet: SujetCreate = this.sujetForm.value;
       this.sujetService.updateSujet(this.sujetId, updatedSujet).subscribe({
         next: () => {
-          this.showNotification('success', 'Sujet updated successfully');
-          this.router.navigate(['/sujets']);
+          this.toastr.success('Sujet modifié avec succès', 'Succès', {
+            timeOut: 3000,
+            positionClass: 'toast-top-right',
+            progressBar: true,
+            closeButton: true
+          });
+          setTimeout(() => {
+            this.router.navigate(['/sujets']);
+          }, 1500); // Redirection après 1.5 secondes
         },
         error: (error) => {
           this.errorMessage = error.message;
-          this.showNotification('error', error.message);
+          this.toastr.error(error.message, 'Erreur de modification', {
+            timeOut: 5000,
+            positionClass: 'toast-top-right',
+            progressBar: true,
+            closeButton: true
+          });
         }
       });
+    } else {
+      // Afficher un toast si le formulaire est invalide
+      this.toastr.warning('Veuillez corriger les erreurs du formulaire', 'Formulaire invalide', {
+        timeOut: 4000,
+        positionClass: 'toast-top-right',
+        progressBar: true
+      });
+      
+      // Marquer tous les champs comme touchés pour afficher les erreurs
+      this.markFormGroupTouched();
     }
   }
 
   goBack(): void {
-    this.router.navigate(['/sujets']);
+    this.toastr.info('Modification annulée', 'Information', {
+      timeOut: 2000,
+      positionClass: 'toast-top-right'
+    });
+    setTimeout(() => {
+      this.router.navigate(['/sujets']);
+    }, 500);
   }
 
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-      `;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+  // Méthode utilitaire pour marquer tous les champs comme touchés
+  private markFormGroupTouched(): void {
+    Object.keys(this.sujetForm.controls).forEach(key => {
+      const control = this.sujetForm.get(key);
+      control?.markAsTouched();
+    });
   }
 }
