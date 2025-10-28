@@ -1,205 +1,481 @@
-<div class="p-6">
-
-  <!-- Header + bouton principal -->
-  <div class="flex justify-between items-center mb-4">
-    <h2 class="text-2xl font-bold">Gestion des utilisateurs</h2>
-    <button class="btn btn-primary flex items-center gap-2" (click)="toggleForm()">
-      <i class="fas fa-plus"></i> {{ buttonText }}
-    </button>
-  </div>
-
-  <!-- ==================== LISTE ==================== -->
-  <div *ngIf="!showForm">
-    <table class="min-w-full border">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-4 py-2 text-left">Nom complet</th>
-          <th class="px-4 py-2 text-left">Email</th>
-          <th class="px-4 py-2 text-left">Rôles</th>
-          <th class="px-4 py-2 text-left">Créé le</th>
-          <th class="px-4 py-2 text-left">Classe</th>
-          <th class="px-4 py-2 text-left">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let u of users" class="border-b">
-          <td class="px-4 py-2">{{ u.lastName }} {{ u.firstName }}</td>
-          <td class="px-4 py-2">{{ u.email }}</td>
-          <td class="px-4 py-2">
-            <span *ngFor="let r of u.roles; let last = last">
-              {{ r }}{{ last ? '' : ', ' }}
-            </span>
-          </td>
-          <td class="px-4 py-2">{{ u.createdAt | date:'short' }}</td>
-          <td class="px-4 py-2">{{ u.classe || '-' }}</td>
-          <td class="px-4 py-2">
-            <button class="btn btn-sm btn-warning mr-2" (click)="openEdit(u)">Edit</button>
-            <button class="btn btn-sm btn-danger" (click)="delete(u)">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ==================== FORMULAIRE / CSV ==================== -->
-  <div *ngIf="showForm" class="mt-6">
-
-    <!-- Toggle CSV / Form -->
-    <div class="mb-4">
-      <button class="btn btn-outline" (click)="toggleCsv()">
-        {{ isCsvMode ? 'Passer au formulaire' : 'Passer au CSV' }}
+<div class="admin-container">
+  <!-- Header avec design moderne -->
+  <div class="admin-header">
+    <div class="header-content">
+      <div class="title-section">
+        <i class="fas fa-users-cog header-icon"></i>
+        <h1 class="page-title">Gestion des Utilisateurs</h1>
+        <p class="page-subtitle">Administrez les comptes et permissions</p>
+      </div>
+      <button class="floating-action-btn" (click)="toggleForm()">
+        <i class="fas" [ngClass]="showForm ? 'fa-list' : 'fa-plus'"></i>
+        <span>{{ buttonText }}</span>
       </button>
     </div>
+  </div>
 
-    <!-- ------------------- FORMULAIRE UNIQUE ------------------- -->
-    <div *ngIf="!isCsvMode">
-      <form [formGroup]="userForm" (ngSubmit)="selectedUser ? saveEdit() : onSubmit()" class="space-y-4">
-
-        <!-- Nom / Prénom -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block font-medium">Nom <span class="text-danger">*</span></label>
-            <input formControlName="lastName" class="input w-full" placeholder="Nom">
-            <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" class="text-danger text-sm">
-              Nom requis.
-            </div>
-          </div>
-          <div>
-            <label class="block font-medium">Prénom <span class="text-danger">*</span></label>
-            <input formControlName="firstName" class="input w-full" placeholder="Prénom">
-            <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" class="text-danger text-sm">
-              Prénom requis.
-            </div>
-          </div>
+  <!-- ==================== LISTE DES UTILISATEURS ==================== -->
+  <div *ngIf="!showForm" class="users-list-section">
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon total-users">
+          <i class="fas fa-users"></i>
         </div>
-
-        <!-- Email -->
-        <div>
-          <label class="block font-medium">Email <span class="text-danger">*</span></label>
-          <input type="email" formControlName="email" class="input w-full" placeholder="email@exemple.com">
-          <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-danger text-sm">
-            Email invalide.
-          </div>
+        <div class="stat-info">
+          <h3>{{ users.length }}</h3>
+          <p>Utilisateurs total</p>
         </div>
-
-        <!-- Rôles -->
-        <div>
-          <label class="block font-medium">Rôles <span class="text-danger">*</span></label>
-          <div class="flex flex-wrap gap-2 mb-2">
-            <span *ngFor="let r of userRoles" class="chip">
-              {{ r }}
-              <button type="button" (click)="removeRole(r)" class="ml-1 text-xs">×</button>
-            </span>
-          </div>
-          <select (change)="addRole($event)" class="select w-full">
-            <option value="">-- Choisir un rôle --</option>
-            <option *ngFor="let r of availableRoles" [value]="r" [disabled]="userRoles.includes(r)">
-              {{ r }}
-            </option>
-          </select>
-          <div *ngIf="userForm.get('roles')?.invalid && userForm.get('roles')?.touched" class="text-danger text-sm">
-            Au moins un rôle requis.
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon students">
+          <i class="fas fa-graduation-cap"></i>
         </div>
-
-        <!-- Classe (si STUDENT) -->
-        <div *ngIf="userRoles.includes(Role.STUDENT)">
-          <label class="block font-medium">Classe <span class="text-danger">*</span></label>
-          <select formControlName="classe" class="select w-full">
-            <option value="">-- Sélectionner --</option>
-            <option *ngFor="let c of classOptions" [value]="c.nom">{{ c.nom }}</option>
-          </select>
-          <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" class="text-danger text-sm">
-            Classe requise pour étudiant.
-          </div>
+        <div class="stat-info">
+          <h3>{{ getRoleCount('STUDENT') }}</h3>
+          <p>Étudiants</p>
         </div>
-
-        <!-- Identifiant -->
-        <div>
-          <label class="block font-medium">Identifiant <span class="text-danger">*</span></label>
-          <input formControlName="identifiant" class="input w-full" placeholder="123ABC4567">
-          <div *ngIf="userForm.get('identifiant')?.invalid && userForm.get('identifiant')?.touched" class="text-danger text-sm">
-            Format: 123ABC4567
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon teachers">
+          <i class="fas fa-chalkboard-teacher"></i>
         </div>
-
-        <!-- Mot de passe (création uniquement) -->
-        <div *ngIf="!selectedUser">
-          <label class="block font-medium">Mot de passe <span class="text-danger">*</span></label>
-          <div class="relative">
-            <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
-                   class="input w-full pr-10" placeholder="••••••">
-            <button type="button" class="absolute right-2 top-2" (click)="showPassword = !showPassword">
-              <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-            </button>
-          </div>
-          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-danger text-sm">
-            Minimum 6 caractères.
-          </div>
+        <div class="stat-info">
+          <h3>{{ getRoleCount('PROFESSOR') }}</h3>
+          <p>Enseignants</p>
         </div>
-
-        <!-- Git -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block font-medium">Git Username</label>
-            <input formControlName="gitUsername" class="input w-full">
-          </div>
-          <div>
-            <label class="block font-medium">Git Token</label>
-            <input formControlName="gitAccessToken" class="input w-full">
-          </div>
-        </div>
-
-        <!-- Boutons -->
-        <div class="flex gap-2">
-          <button type="button" class="btn btn-secondary" (click)="toggleForm()">Annuler</button>
-          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || userForm.invalid">
-            {{ isSubmitting ? 'Envoi…' : (selectedUser ? 'Mettre à jour' : 'Créer') }}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
 
-    <!-- ------------------- CSV ------------------- -->
-    <div *ngIf="isCsvMode" class="space-y-4">
-      <h3 class="text-xl font-semibold">Import CSV</h3>
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Liste des Utilisateurs</h3>
+        <div class="table-actions">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" placeholder="Rechercher un utilisateur..." class="search-input">
+          </div>
+        </div>
+      </div>
 
-      <input type="file" accept=".csv" (change)="onFileSelected($event)" class="input">
-
-      <p class="text-sm text-gray-600">
-        Colonnes : <code>firstName,lastName,email,roles,identifiant,password,classe,gitUsername,gitAccessToken</code><br>
-        Rôles séparés par <code>;</code> (ex: <code>STUDENT;PROFESSOR</code>)
-      </p>
-
-      <!-- Preview -->
-      <div *ngIf="csvData.length" class="overflow-x-auto">
-        <table class="min-w-full border text-xs">
-          <thead class="bg-gray-100">
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
             <tr>
-              <th class="px-2 py-1">Prénom</th>
-              <th class="px-2 py-1">Nom</th>
-              <th class="px-2 py-1">Email</th>
-              <th class="px-2 py-1">Rôles</th>
-              <th class="px-2 py-1">Identifiant</th>
-              <th class="px-2 py-1">Classe</th>
+              <th class="user-col">Utilisateur</th>
+              <th class="email-col">Email</th>
+              <th class="roles-col">Rôles</th>
+              <th class="date-col">Date création</th>
+              <th class="classe-col">Classe</th>
+              <th class="actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of csvData">
-              <td class="px-2 py-1">{{ row.firstName }}</td>
-              <td class="px-2 py-1">{{ row.lastName }}</td>
-              <td class="px-2 py-1">{{ row.email }}</td>
-              <td class="px-2 py-1">{{ row.roles?.join(', ') }}</td>
-              <td class="px-2 py-1">{{ row.identifiant }}</td>
-              <td class="px-2 py-1">{{ row.classe }}</td>
+            <tr *ngFor="let u of users" class="table-row">
+              <td class="user-cell">
+                <div class="user-avatar">
+                  {{ u.firstName.charAt(0) }}{{ u.lastName.charAt(0) }}
+                </div>
+                <div class="user-info">
+                  <strong>{{ u.firstName }} {{ u.lastName }}</strong>
+                  <small>{{ u.identifiant }}</small>
+                </div>
+              </td>
+              <td class="email-cell">{{ u.email }}</td>
+              <td class="roles-cell">
+                <div class="roles-tags">
+                  <span *ngFor="let r of u.roles" 
+                        class="role-tag" 
+                        [class]="'role-' + r.toLowerCase()">
+                    {{ r }}
+                  </span>
+                </div>
+              </td>
+              <td class="date-cell">
+                <div class="date-wrapper">
+                  <i class="fas fa-calendar"></i>
+                  {{ u.createdAt | date:'dd/MM/yyyy' }}
+                </div>
+              </td>
+              <td class="classe-cell">
+                <span class="classe-badge" *ngIf="u.classe; else dash">
+                  {{ u.classe }}
+                </span>
+                <ng-template #dash>
+                  <span class="no-classe">-</span>
+                </ng-template>
+              </td>
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <button class="btn-action btn-edit" (click)="openEdit(u)" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-action btn-delete" (click)="delete(u)" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
 
-      <button class="btn btn-primary" (click)="uploadCsv()" [disabled]="!selectedFile || isSubmitting">
-        {{ isSubmitting ? 'Import…' : 'Importer' }}
-      </button>
+  <!-- ==================== FORMULAIRE / CSV ==================== -->
+  <div *ngIf="showForm" class="form-section">
+    <div class="form-card">
+      <!-- Navigation entre modes -->
+      <div class="form-mode-nav">
+        <button class="mode-btn" 
+                [class.active]="!isCsvMode" 
+                (click)="isCsvMode = false">
+          <i class="fas fa-user-plus"></i>
+          Formulaire individuel
+        </button>
+        <button class="mode-btn" 
+                [class.active]="isCsvMode" 
+                (click)="isCsvMode = true">
+          <i class="fas fa-file-csv"></i>
+          Import CSV
+        </button>
+      </div>
+
+      <!-- ------------------- FORMULAIRE UNIQUE ------------------- -->
+      <div *ngIf="!isCsvMode" class="individual-form">
+        <div class="form-header">
+          <h2>
+            <i class="fas" [ngClass]="selectedUser ? 'fa-user-edit' : 'fa-user-plus'"></i>
+            {{ selectedUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}
+          </h2>
+          <p *ngIf="selectedUser" class="editing-user">
+            Modification de {{ selectedUser.firstName }} {{ selectedUser.lastName }}
+          </p>
+        </div>
+
+        <form [formGroup]="userForm" (ngSubmit)="selectedUser ? saveEdit() : onSubmit()" class="modern-form">
+          <!-- Section Informations personnelles -->
+          <div class="form-section-card">
+            <h3 class="section-title">
+              <i class="fas fa-id-card"></i>
+              Informations personnelles
+            </h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-signature"></i>
+                  Prénom <span class="required">*</span>
+                </label>
+                <input formControlName="firstName" 
+                       class="modern-input" 
+                       placeholder="Entrez le prénom">
+                <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" 
+                     class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Le prénom est requis
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-signature"></i>
+                  Nom <span class="required">*</span>
+                </label>
+                <input formControlName="lastName" 
+                       class="modern-input" 
+                       placeholder="Entrez le nom">
+                <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" 
+                     class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Le nom est requis
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Contact -->
+          <div class="form-section-card">
+            <h3 class="section-title">
+              <i class="fas fa-envelope"></i>
+              Contact et identification
+            </h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-at"></i>
+                  Email <span class="required">*</span>
+                </label>
+                <input type="email" 
+                       formControlName="email" 
+                       class="modern-input" 
+                       placeholder="email@exemple.com">
+                <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" 
+                     class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Format d'email invalide
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-id-card-alt"></i>
+                  Identifiant <span class="required">*</span>
+                </label>
+                <input formControlName="identifiant" 
+                       class="modern-input" 
+                       placeholder="123ABC4567">
+                <div *ngIf="userForm.get('identifiant')?.invalid && userForm.get('identifiant')?.touched" 
+                     class="error-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Format: 123ABC4567
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Rôles et permissions -->
+          <div class="form-section-card">
+            <h3 class="section-title">
+              <i class="fas fa-user-shield"></i>
+              Rôles et permissions
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-tags"></i>
+                Rôles assignés <span class="required">*</span>
+              </label>
+              
+              <div class="roles-selection">
+                <div class="selected-roles">
+                  <span *ngFor="let r of userRoles" class="selected-role-tag">
+                    {{ r }}
+                    <button type="button" 
+                            (click)="removeRole(r)" 
+                            class="remove-role-btn">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </span>
+                </div>
+                
+                <select (change)="addRole($event)" class="role-select">
+                  <option value="">Ajouter un rôle...</option>
+                  <option *ngFor="let r of availableRoles" 
+                          [value]="r" 
+                          [disabled]="userRoles.includes(r)">
+                    {{ r }}
+                  </option>
+                </select>
+              </div>
+              
+              <div *ngIf="userForm.get('roles')?.invalid && userForm.get('roles')?.touched" 
+                   class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Au moins un rôle est requis
+              </div>
+            </div>
+
+            <!-- Classe pour étudiants -->
+            <div *ngIf="userRoles.includes(Role.STUDENT)" class="form-group">
+              <label class="form-label">
+                <i class="fas fa-graduation-cap"></i>
+                Classe <span class="required">*</span>
+              </label>
+              <select formControlName="classe" class="modern-select">
+                <option value="">Sélectionnez une classe</option>
+                <option *ngFor="let c of classOptions" [value]="c.nom">
+                  {{ c.nom }}
+                </option>
+              </select>
+              <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" 
+                   class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                La classe est requise pour les étudiants
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Sécurité -->
+          <div class="form-section-card">
+            <h3 class="section-title">
+              <i class="fas fa-lock"></i>
+              Sécurité
+            </h3>
+            
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-key"></i>
+                Mot de passe 
+                <span *ngIf="!selectedUser" class="required">*</span>
+                <span *ngIf="selectedUser" class="optional-info">
+                  (Laisser vide pour ne pas modifier)
+                </span>
+              </label>
+              
+              <div class="password-field">
+                <input [type]="showPassword ? 'text' : 'password'" 
+                       formControlName="password"
+                       class="modern-input password-input" 
+                       placeholder="••••••">
+                <button type="button" 
+                        class="password-toggle-btn"
+                        (click)="togglePasswordVisibility()">
+                  <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
+              </div>
+              
+              <div *ngIf="!selectedUser && userForm.get('password')?.invalid && userForm.get('password')?.touched" 
+                   class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                Minimum 6 caractères requis
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Git (optionnelle) -->
+          <div class="form-section-card">
+            <h3 class="section-title">
+              <i class="fab fa-github"></i>
+              Configuration Git (Optionnel)
+            </h3>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-user-tag"></i>
+                  Git Username
+                </label>
+                <input formControlName="gitUsername" 
+                       class="modern-input" 
+                       placeholder="Nom d'utilisateur Git">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-key"></i>
+                  Git Access Token
+                </label>
+                <input formControlName="gitAccessToken" 
+                       class="modern-input" 
+                       placeholder="Token d'accès Git">
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions du formulaire -->
+          <div class="form-actions">
+            <button type="button" 
+                    class="btn btn-cancel" 
+                    (click)="toggleForm()">
+              <i class="fas fa-times"></i>
+              Annuler
+            </button>
+            <button type="submit" 
+                    class="btn btn-submit" 
+                    [disabled]="isSubmitting || !isFormValid()">
+              <i class="fas" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : (selectedUser ? 'fa-save' : 'fa-user-plus')"></i>
+              {{ isSubmitting ? 'Traitement...' : (selectedUser ? 'Mettre à jour' : 'Créer l\'utilisateur') }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ------------------- IMPORT CSV ------------------- -->
+      <div *ngIf="isCsvMode" class="csv-import-section">
+        <div class="csv-header">
+          <h2>
+            <i class="fas fa-file-import"></i>
+            Import par fichier CSV
+          </h2>
+          <p>Importez plusieurs utilisateurs en une seule opération</p>
+        </div>
+
+        <div class="csv-upload-card">
+          <div class="upload-zone" [class.active]="selectedFile">
+            <i class="fas fa-file-csv upload-icon"></i>
+            <h3>Déposez votre fichier CSV</h3>
+            <p>ou</p>
+            <input type="file" 
+                   accept=".csv" 
+                   (change)="onFileSelected($event)" 
+                   class="file-input" 
+                   id="csvFile">
+            <label for="csvFile" class="btn btn-browse">
+              <i class="fas fa-folder-open"></i>
+              Parcourir les fichiers
+            </label>
+            <div *ngIf="selectedFile" class="file-info">
+              <i class="fas fa-check-circle success-icon"></i>
+              <span>{{ selectedFile.name }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions-card">
+          <h4>
+            <i class="fas fa-info-circle"></i>
+            Format du fichier CSV
+          </h4>
+          <div class="instructions-content">
+            <p>Le fichier doit contenir les colonnes suivantes :</p>
+            <code class="csv-columns">
+              firstName, lastName, email, roles, identifiant, password, classe, gitUsername, gitAccessToken
+            </code>
+            <p class="note">
+              <strong>Note :</strong> Les rôles multiples doivent être séparés par des points-virgules<br>
+              Exemple: <code>STUDENT;PROFESSOR</code>
+            </p>
+          </div>
+        </div>
+
+        <!-- Aperçu des données -->
+        <div *ngIf="csvData.length" class="preview-section">
+          <h4>
+            <i class="fas fa-eye"></i>
+            Aperçu des données ({{ csvData.length }} lignes)
+          </h4>
+          
+          <div class="preview-table-container">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>Prénom</th>
+                  <th>Nom</th>
+                  <th>Email</th>
+                  <th>Rôles</th>
+                  <th>Identifiant</th>
+                  <th>Classe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of csvData; let i = index" 
+                    [class]="i >= 5 ? 'hidden-row' : ''">
+                  <td>{{ row.firstName }}</td>
+                  <td>{{ row.lastName }}</td>
+                  <td>{{ row.email }}</td>
+                  <td>
+                    <span class="role-preview">
+                      {{ row.roles?.join(', ') }}
+                    </span>
+                  </td>
+                  <td>{{ row.identifiant }}</td>
+                  <td>{{ row.classe || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div *ngIf="csvData.length > 5" class="preview-more">
+              + {{ csvData.length - 5 }} autres lignes...
+            </div>
+          </div>
+
+          <button class="btn btn-import" 
+                  (click)="uploadCsv()" 
+                  [disabled]="!selectedFile || isSubmitting">
+            <i class="fas" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-upload'"></i>
+            {{ isSubmitting ? 'Import en cours...' : 'Importer les utilisateurs' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

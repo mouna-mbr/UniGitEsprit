@@ -17,7 +17,7 @@ export class AdminAdduserComponent implements OnInit {
   showForm = false;
   isCsvMode = false;
   isSubmitting = false;
-  Role = Role; // Expose l'enum au template
+  Role = Role;
   showPassword = false;
   userForm!: FormGroup;
   classOptions: ClasseResponse[] = [];
@@ -25,7 +25,7 @@ export class AdminAdduserComponent implements OnInit {
   selectedUser: UserResponse | null = null;
   userRoles: Role[] = [];
 
-  availableRoles = Object.values(Role); // utiliser l'enum pour options
+  availableRoles = Object.values(Role);
 
   selectedFile: File | null = null;
   csvData: any[] = [];
@@ -68,8 +68,12 @@ export class AdminAdduserComponent implements OnInit {
   toggleForm(): void {
     this.showForm = !this.showForm;
     this.buttonText = this.showForm ? 'Consulter la liste' : 'Add User';
-    if (!this.showForm) this.resetForm();
-    else this.isCsvMode = false;
+    if (!this.showForm) {
+      this.resetForm();
+      this.selectedUser = null; // Reset selected user when closing form
+    } else {
+      this.isCsvMode = false;
+    }
   }
 
   addRole(event: any): void {
@@ -131,12 +135,11 @@ export class AdminAdduserComponent implements OnInit {
     };
 
     console.log('Final payload sent to backend:', payload);
-    console.log('Roles being sent:', payload.roles);
     
     this.userService.addUser(payload).subscribe({
       next: () => {
         this.toastr.success('Utilisateur ajouté avec succès !');
-        this.resetForm();
+        this.resetFormAndClose(); // Fermer le formulaire après succès
         this.loadUsers();
         this.isSubmitting = false;
       },
@@ -161,6 +164,11 @@ export class AdminAdduserComponent implements OnInit {
       gitUsername: user.gitUsername,
       gitAccessToken: user.gitAccessToken,
     });
+    
+    // Désactiver la validation du mot de passe en mode édition
+    this.userForm.get('password')?.clearValidators();
+    this.userForm.get('password')?.updateValueAndValidity();
+    
     this.showForm = true;
     this.isCsvMode = false;
     this.updateClasseValidation();
@@ -171,7 +179,7 @@ export class AdminAdduserComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    const payload: Partial<User> = {
+    const payload: any = {
       firstName: this.userForm.get('firstName')?.value,
       lastName: this.userForm.get('lastName')?.value,
       email: this.userForm.get('email')?.value,
@@ -181,10 +189,18 @@ export class AdminAdduserComponent implements OnInit {
       gitAccessToken: this.userForm.get('gitAccessToken')?.value || null,
     };
 
+    // Inclure le mot de passe seulement s'il est modifié
+    const password = this.userForm.get('password')?.value;
+    if (password && password.length >= 6) {
+      payload.password = password;
+    }
+
+    console.log('Edit payload:', payload);
+
     this.userService.updateUser(this.selectedUser.identifiant, payload).subscribe({
       next: () => {
         this.toastr.success('Utilisateur mis à jour !');
-        this.toggleForm();
+        this.resetFormAndClose(); // Fermer le formulaire après succès
         this.loadUsers();
         this.isSubmitting = false;
       },
@@ -261,6 +277,7 @@ export class AdminAdduserComponent implements OnInit {
         this.toastr.success(`${report.successCount} utilisateurs ajoutés, ${report.errors.length} erreurs`);
         this.loadUsers();
         this.toggleCsv();
+        this.showForm = false; // Retour à la liste après import
       },
       error: (err) => {
         this.isSubmitting = false;
@@ -272,11 +289,22 @@ export class AdminAdduserComponent implements OnInit {
 
   private resetForm(): void {
     this.userForm.reset();
-    this.userRoles = [Role.STUDENT]; // Reset with default role
+    this.userRoles = [Role.STUDENT];
     this.userForm.get('roles')?.setValue(this.userRoles);
-    this.selectedUser = null;
+    
+    // Réactiver la validation du mot de passe
+    this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.userForm.get('password')?.updateValueAndValidity();
+    
     this.isCsvMode = false;
     this.updateClasseValidation();
+  }
+
+  private resetFormAndClose(): void {
+    this.resetForm();
+    this.selectedUser = null;
+    this.showForm = false; // Fermer le formulaire
+    this.buttonText = 'Add User'; // Remettre le texte du bouton
   }
 
   loadClasses() {
@@ -293,8 +321,30 @@ export class AdminAdduserComponent implements OnInit {
     });
   }
 
-  // Helper method to toggle password visibility
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+  getRoleCount(role: string): number {
+    return this.users.filter(user => user.roles.includes(role as Role)).length;
+  }
+  // Méthode pour vérifier si le formulaire est valide (utilisée dans le template)
+  isFormValid(): boolean {
+    if (this.selectedUser) {
+      // En mode édition, le mot de passe est optionnel
+      const baseValid = !!this.userForm.get('firstName')?.valid &&
+                       !!this.userForm.get('lastName')?.valid &&
+                       !!this.userForm.get('email')?.valid &&
+                       !!this.userForm.get('roles')?.valid &&
+                       !!this.userForm.get('identifiant')?.valid;
+      
+      // Vérifier la classe seulement si STUDENT
+      if (this.userRoles.includes(Role.STUDENT)) {
+        return baseValid && !!this.userForm.get('classe')?.valid;
+      }
+      return baseValid;
+    } else {
+      // En mode création, tout est requis
+      return this.userForm.valid;
+    }
   }
 }
