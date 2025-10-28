@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
 import { ClasseService } from '../services/classe.service';
 import { User, UserResponse, Role } from '../models/user.model';
-import { ClasseResponse } from '../models/classe.model';
+import { ClasseResponse, ClasseCreate } from '../models/classe.model';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -114,7 +114,7 @@ export class AdminAdduserComponent implements OnInit {
       this.toastr.error('Veuillez corriger les erreurs.', 'Formulaire invalide');
       return;
     }
-
+  
     this.isSubmitting = true;
 
     const formValue = this.userForm.value;
@@ -137,11 +137,16 @@ export class AdminAdduserComponent implements OnInit {
     console.log('Final payload sent to backend:', payload);
     
     this.userService.addUser(payload).subscribe({
-      next: () => {
-        this.toastr.success('Utilisateur ajouté avec succès !');
-        this.resetFormAndClose(); // Fermer le formulaire après succès
-        this.loadUsers();
-        this.isSubmitting = false;
+      next: (newUser) => {
+        // Si c'est un étudiant ET une classe est spécifiée, mettre à jour la classe
+        if (roles.includes(Role.STUDENT) && formValue.classe) {
+          this.updateClassWithNewStudent(newUser.id, formValue.classe);
+        } else {
+          this.toastr.success('Utilisateur ajouté avec succès !');
+          this.resetFormAndClose();
+          this.loadUsers();
+          this.isSubmitting = false;
+        }
       },
       error: (err) => {
         console.error('Erreur backend complète:', err);
@@ -149,6 +154,73 @@ export class AdminAdduserComponent implements OnInit {
         this.isSubmitting = false;
       },
     });
+  }
+
+  // Nouvelle méthode pour mettre à jour la classe avec le nouvel étudiant
+  private updateClassWithNewStudent(studentId: number, className: string): void {
+    // Trouver la classe par son nom
+    const classe = this.classOptions.find(c => c.nom === className);
+    if (!classe) {
+      this.toastr.error('Classe non trouvée');
+      this.isSubmitting = false;
+      return;
+    }
+
+    // Récupérer les détails complets de la classe
+    this.classeService.getClasseById(classe.id).subscribe({
+      next: (classeDetails) => {
+        const updatedEtudiantIds = [...(classeDetails.etudiantIds || []), studentId];
+        
+        // Créer le payload complet avec toutes les propriétés requises
+        const updatePayload: ClasseCreate = {
+          nom: classeDetails.nom,
+          anneeUniversitaire: classeDetails.anneeUniversitaire,
+          level: this.convertLevelForCreate(classeDetails.level), // Conversion du niveau
+          optionFormation: classeDetails.optionFormation,
+          sujetIds: classeDetails.sujetIds || [],
+          etudiantIds: updatedEtudiantIds,
+          enseignantIds: classeDetails.enseignantIds || []
+        };
+
+        this.classeService.updateClasse(classe.id, updatePayload).subscribe({
+          next: () => {
+            this.toastr.success('Utilisateur ajouté avec succès et classe mise à jour !');
+            this.resetFormAndClose();
+            this.loadUsers();
+            this.isSubmitting = false;
+          },
+          error: (err) => {
+            console.error('Erreur mise à jour classe:', err);
+            this.toastr.error('Utilisateur créé mais erreur mise à jour classe');
+            this.resetFormAndClose();
+            this.loadUsers();
+            this.isSubmitting = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Erreur récupération classe:', err);
+        this.toastr.error('Utilisateur créé mais erreur récupération classe');
+        this.resetFormAndClose();
+        this.loadUsers();
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  // Méthode utilitaire pour convertir le niveau entre ClasseResponse et ClasseCreate
+  private convertLevelForCreate(level: 'L1' | 'L2' | 'L3A' | 'L3B' | 'L4' | 'L5' | 'M1' | 'M2'): 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'M1' | 'M2' {
+    const levelMap: { [key: string]: 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'M1' | 'M2' } = {
+      'L1': 'L1',
+      'L2': 'L2',
+      'L3A': 'L3',
+      'L3B': 'L3',
+      'L4': 'L4',
+      'L5': 'L5',
+      'M1': 'M1',
+      'M2': 'M2'
+    };
+    return levelMap[level] || 'L1';
   }
 
   openEdit(user: UserResponse): void {
