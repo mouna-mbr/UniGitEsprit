@@ -71,7 +71,7 @@ const routes: Routes = [
 
     ]
   },
-  { path: '**', redirectTo: '/dashbord' } // Wildcard route to redirect invalid paths to signin
+  { path: '**', redirectTo: '/signin' } // Wildcard route to redirect invalid paths to signin
 ];
 
 @NgModule({

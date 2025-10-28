@@ -39,11 +39,19 @@ login(username: string, password: string): Observable<AuthResponse> {
     );
 }
 
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('roles');
-    this.router.navigate(['/login']);
-  }
+// Dans auth.service.ts
+logout(): void {
+  // Supprimer les données de l'utilisateur du localStorage
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('roles');
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('auth-token');
+  
+  // Rediriger vers la page de connexion
+  this.router.navigate(['/signin']);
+  
+}
 
   isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
