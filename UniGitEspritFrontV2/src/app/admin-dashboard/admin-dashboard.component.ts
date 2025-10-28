@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { ApiService } from "../services/api.service";
 import { AuthService } from "../services/auth.service";
 import { ChartData, ChartOptions } from "chart.js";
-
+import {Role} from "../models/user.model";
 @Component({
   selector: "app-admin-dashboard",
   templateUrl: "./admin-dashboard.component.html",
@@ -13,18 +13,29 @@ export class AdminDashboardComponent implements OnInit {
   statsAdmin: any = {};
   currentUser: any;
   stats: any = {};
-  
-  // KPIs
+  Role=Role
+  // KPIs existants
   totalDemandeBdp: number = 0;
   totalDemandeParrainage: number = 0;
   totalUsers: number = 0;
   
-  // Charts (Admin)
+  // Nouveaux KPIs
+  totalRepositories: number = 0;
+  
+  // Charts existants
   bdpBySpecialiteChart!: ChartData<'bar'>;
   bdpByStatusChart!: ChartData<'doughnut'>;
   parrainageByStatusChart!: ChartData<'doughnut'>;
   parrainageBySujetChart!: ChartData<'bar'>;
-  usersByRoleChart!: ChartData<'doughnut'>; // Changé de 'pie' à 'doughnut'
+  usersByRoleChart!: ChartData<'doughnut'>;
+
+  // Nouveaux charts
+  groupesParSujetChart!: ChartData<'bar'>;
+  sujetsParraineParEntrepriseChart!: ChartData<'bar'>;
+
+  // Charts Prof
+  commitsParGroupeChartData!: ChartData<'bar'>;
+  commitsParUtilisateurData: any = {};
 
   // Options des graphiques
   barChartOptions: ChartOptions<'bar'> = {
@@ -68,8 +79,8 @@ export class AdminDashboardComponent implements OnInit {
       this.totalDemandeBdp = data.totalDemandeBdp;
       this.totalDemandeParrainage = data.totalDemandeParrainage;
       this.totalUsers = data.totalUsers;
+      this.totalRepositories = data.totalRepositories;
 
-      // Initialiser les graphiques
       this.initCharts(data);
     });
   }
@@ -81,6 +92,7 @@ export class AdminDashboardComponent implements OnInit {
         data => { 
           this.stats = data; 
           console.log('Prof Stats:', data);
+          this.initProfCharts(data);
         },
         error => { console.error("Error fetching professor stats:", error); }
       );
@@ -136,7 +148,7 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Utilisateurs par Rôle (maintenant en doughnut au lieu de pie)
+    // Utilisateurs par Rôle
     if (data.usersByRole) {
       this.usersByRoleChart = {
         labels: data.usersByRole.map((x: any) => x[0]),
@@ -147,6 +159,48 @@ export class AdminDashboardComponent implements OnInit {
         }]
       };
     }
+
+    // NOUVEAUX CHARTS ADMIN
+    // Groupes par Sujet
+    if (data.groupesParSujet) {
+      this.groupesParSujetChart = {
+        labels: data.groupesParSujet.map((x: any) => this.truncateLabel(x[0])),
+        datasets: [{
+          label: "Nombre de groupes",
+          data: data.groupesParSujet.map((x: any) => x[1]),
+          backgroundColor: "#9B59B6"
+        }]
+      };
+    }
+
+    // Sujets parrainés par Entreprise
+    if (data.sujetsParraineParEntreprise) {
+      this.sujetsParraineParEntrepriseChart = {
+        labels: data.sujetsParraineParEntreprise.map((x: any) => this.truncateLabel(x[0])),
+        datasets: [{
+          label: "Nombre de sujets parrainés",
+          data: data.sujetsParraineParEntreprise.map((x: any) => x[1]),
+          backgroundColor: "#E67E22"
+        }]
+      };
+    }
+  }
+
+  initProfCharts(data: any) {
+    // Commits par Groupe
+    if (data.commitsParGroupe) {
+      this.commitsParGroupeChartData = {
+        labels: data.commitsParGroupe.map((x: any) => x[0]),
+        datasets: [{
+          label: "Nombre de commits",
+          data: data.commitsParGroupe.map((x: any) => x[1]),
+          backgroundColor: "#3498DB"
+        }]
+      };
+    }
+
+    // Données pour le tableau des commits par utilisateur
+    this.commitsParUtilisateurData = data.commitsParUtilisateurParGroupe || {};
   }
 
   // Méthodes utilitaires
@@ -204,34 +258,54 @@ export class AdminDashboardComponent implements OnInit {
       ]
     };
   }
+
   // Méthode d'export CSV
-exportToCSV(chartData: any, filename: string) {
-  if (!chartData || !chartData.labels || !chartData.datasets) {
-    console.error('Données du graphique non disponibles');
-    return;
+  exportToCSV(chartData: any, filename: string) {
+    if (!chartData || !chartData.labels || !chartData.datasets) {
+      console.error('Données du graphique non disponibles');
+      return;
+    }
+
+    const labels = chartData.labels;
+    const data = chartData.datasets[0].data;
+    
+    let csvContent = 'Label,Valeur\n';
+    
+    labels.forEach((label: string, index: number) => {
+      const value = data[index] || 0;
+      const escapedLabel = `"${label.replace(/"/g, '""')}"`;
+      csvContent += `${escapedLabel},${value}\n`;
+    });
+
+    this.downloadCSV(csvContent, filename);
   }
 
-  const labels = chartData.labels;
-  const data = chartData.datasets[0].data;
-  
-  let csvContent = 'Label,Valeur\n';
-  
-  labels.forEach((label: string, index: number) => {
-    const value = data[index] || 0;
-    const escapedLabel = `"${label.replace(/"/g, '""')}"`;
-    csvContent += `${escapedLabel},${value}\n`;
-  });
+  // Méthode pour exporter les données commits par utilisateur
+  exportCommitsParUtilisateur(groupeNom: string) {
+    const data = this.commitsParUtilisateurData[groupeNom] || [];
+    let csvContent = 'Utilisateur,Commits\n';
+    
+    data.forEach((item: any) => {
+      csvContent += `"${item.utilisateur}",${item.commits}\n`;
+    });
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  
-  link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-  link.style.visibility = 'hidden';
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+    this.downloadCSV(csvContent, `commits_utilisateurs_${groupeNom}`);
+  }
+
+  private downloadCSV(csvContent: string, filename: string) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Méthode utilitaire pour Object.keys dans le template
+  Object = Object;
 }

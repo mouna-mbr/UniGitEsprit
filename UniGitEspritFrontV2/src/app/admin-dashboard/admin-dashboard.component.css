@@ -364,3 +364,45 @@
   background: var(--light);
   border-radius: var(--border-radius-sm);
 }
+
+.commits-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.groupe-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.groupe-section h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  display: inline-block;
+}
+
+.commits-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.commits-table th,
+.commits-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.commits-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.export-btn.small {
+  padding: 4px 8px;
+  font-size: 12px;
+  margin-left: 10px;
+}

@@ -7,6 +7,8 @@ import { DemandeParainageService } from './demande-parainage.service';
 import { SujetService } from './sujet.service';
 import { GroupService } from './group.service';
 import { TacheService } from './tache.service';
+import { GitRepositoryService } from './git-repository.service';
+import { ClasseService } from './classe.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +22,9 @@ export class ApiService {
     private parrainageService: DemandeParainageService,
     private sujetService: SujetService,
     private groupService: GroupService,
-    private tacheService: TacheService
+    private tacheService: TacheService,
+    private gitRepositoryService: GitRepositoryService,
+    private classeService: ClasseService
   ) {}
 
   // ================== STATISTIQUES ADMIN ==================
@@ -33,7 +37,10 @@ export class ApiService {
       bdpByStatus: this.getBdpByStatus(),
       parrainageByStatus: this.getParrainageByStatus(),
       parrainageBySujet: this.getParrainageBySujet(),
-      usersByRole: this.getUsersByRole()
+      usersByRole: this.getUsersByRole(),
+      totalRepositories: this.getTotalRepositories(), // Nouveau
+      groupesParSujet: this.getGroupesParSujet(), // Nouveau
+      sujetsParraineParEntreprise: this.getSujetsParraineParEntreprise() // Nouveau
     });
   }
 
@@ -42,11 +49,116 @@ export class ApiService {
     return forkJoin({
       sujetsByGroups: this.getSujetsByGroups(profId),
       topGroupsByNote: this.getTopGroupsByNote(profId),
-      tachesByStatus: this.getTachesByStatus(profId)
+      tachesByStatus: this.getTachesByStatus(profId),
+      commitsParGroupe: this.getCommitsParGroupe(profId), // Nouveau
+      commitsParUtilisateurParGroupe: this.getCommitsParUtilisateurParGroupe(profId), // Nouveau
+      totalRepositories: this.getTotalRepositoriesProf(profId) // Nouveau pour prof
     });
   }
 
-  // ================== MÉTHODES PRIVÉES ADMIN ==================
+  // ================== NOUVELLES MÉTHODES ADMIN ==================
+  
+  private getTotalRepositories(): Observable<number> {
+    return this.groupService.getAllGroups().pipe(
+      map(groups => groups.filter(group => group.gitRepoUrl && group.gitRepoUrl.trim() !== '').length)
+    );
+  }
+
+  private getGroupesParSujet(): Observable<any[]> {
+    return this.sujetService.getAllSujets().pipe(
+      map(sujets => {
+        const groupesParSujet = sujets.reduce((acc: any, sujet) => {
+          const titre = sujet.titre || 'Sans titre';
+          acc[titre] = (sujet.groups || []).length;
+          return acc;
+        }, {});
+        return Object.entries(groupesParSujet);
+      })
+    );
+  }
+
+  private getSujetsParraineParEntreprise(): Observable<any[]> {
+    return this.parrainageService.getDemandes().pipe(
+      map(demandes => {
+        const sujetsParEntreprise = demandes.reduce((acc: any, demande: any) => {
+          if (demande.statut === 'ACCEPTED' && demande.entreprise) {
+            const entreprise = demande.entreprise.name || 'Entreprise inconnue';
+            const sujet = demande.sujet?.titre || 'Sujet inconnu';
+            
+            if (!acc[entreprise]) {
+              acc[entreprise] = new Set();
+            }
+            acc[entreprise].add(sujet);
+          }
+          return acc;
+        }, {});
+
+        // Convertir en tableau et compter
+        return Object.entries(sujetsParEntreprise).map(([entreprise, sujetsSet]) => {
+          return [entreprise, (sujetsSet as Set<string>).size];
+        });
+      })
+    );
+  }
+
+  // ================== NOUVELLES MÉTHODES PROFESSEUR ==================
+
+  private getCommitsParGroupe(profId: string): Observable<any[]> {
+    return this.groupService.getAllGroups().pipe(
+      map(groups => {
+        // Filtrer les groupes du professeur (si nécessaire)
+        const profGroups = groups.filter(group => 
+          group.enseignantId?.toString() === profId || !profId
+        );
+
+        // Simuler les données de commits (à remplacer par l'appel réel à GitRepositoryService)
+        return profGroups.map(group => [
+          group.nom,
+          Math.floor(Math.random() * 50) + 10 // Simulation - à remplacer
+        ]);
+      })
+    );
+  }
+
+  private getCommitsParUtilisateurParGroupe(profId: string): Observable<any> {
+    return this.groupService.getAllGroups().pipe(
+      map(groups => {
+        const profGroups = groups.filter(group => 
+          group.enseignantId?.toString() === profId || !profId
+        );
+
+        const result: any = {};
+        
+        profGroups.forEach(group => {
+          if (group.users && group.users.length > 0) {
+            result[group.nom] = group.users.map((userRole: any) => {
+              // Simulation des commits par utilisateur
+              return {
+                utilisateur: `User ${userRole.userId}`, // À remplacer par le vrai nom
+                commits: Math.floor(Math.random() * 20) + 1
+              };
+            });
+          }
+        });
+
+        return result;
+      })
+    );
+  }
+
+  private getTotalRepositoriesProf(profId: string): Observable<number> {
+    return this.groupService.getAllGroups().pipe(
+      map(groups => {
+        const profGroups = groups.filter(group => 
+          group.enseignantId?.toString() === profId
+        );
+        return profGroups.filter(group => group.gitRepoUrl && group.gitRepoUrl.trim() !== '').length;
+      })
+    );
+  }
+
+  // ================== MÉTHODES EXISTANTES (conservées) ==================
+  
   private getTotalUsers(): Observable<number> {
     return this.userService.getAllUsers().pipe(
       map(users => users.length)
@@ -108,7 +220,7 @@ export class ApiService {
     return this.parrainageService.getDemandes().pipe(
       map(demandes => {
         const sujets = demandes.reduce((acc: any, demande:any) => {
-          const sujet = demande.sujet || 'Non spécifié';
+          const sujet = demande.sujet?.titre || 'Non spécifié';
           acc[sujet] = (acc[sujet] || 0) + 1;
           return acc;
         }, {});
@@ -131,11 +243,9 @@ export class ApiService {
     );
   }
 
-  // ================== MÉTHODES PRIVÉES PROFESSEUR ==================
   private getSujetsByGroups(profId: string): Observable<any[]> {
     return this.sujetService.getAllSujets().pipe(
       map(sujets => {
-        // Filtrer les sujets par professeur si nécessaire
         const groupesCount = sujets.reduce((acc: any, sujet) => {
           const titre = sujet.titre || 'Sans titre';
           acc[titre] = (sujet.groups || []).length;
@@ -149,10 +259,9 @@ export class ApiService {
   private getTopGroupsByNote(profId: string): Observable<any[]> {
     return this.groupService.getAllGroups().pipe(
       map(groups => {
-        // Simuler des notes ou utiliser votre logique de notation
         const groupsWithNotes = groups.map(group => ({
           nom: group.nom,
-          note: Math.random() * 20 // À remplacer par votre logique de notation
+          note: Math.random() * 20
         }))
         .sort((a, b) => b.note - a.note)
         .slice(0, 3);
@@ -163,8 +272,6 @@ export class ApiService {
   }
 
   private getTachesByStatus(profId: string): Observable<any[]> {
-    // Cette méthode nécessite une logique plus complexe
-    // Simulons des données pour l'exemple
     const tachesStatus = [
       ['Terminé', 15],
       ['En cours', 8],
