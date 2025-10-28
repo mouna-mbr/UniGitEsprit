@@ -5,13 +5,13 @@
         <div class="breadcrumb">
           <a href="/groups" class="breadcrumb-link">
             <i class="fas fa-users"></i>
-            Groups
+            Groupes
           </a>
           <i class="fas fa-chevron-right breadcrumb-separator"></i>
-          <span class="breadcrumb-current">Edit Group</span>
+          <span class="breadcrumb-current">Modifier le Groupe</span>
         </div>
-        <h1>Edit Group</h1>
-        <p class="subtitle">Update group details</p>
+        <h1>Modifier le Groupe</h1>
+        <p class="subtitle">Mettre à jour les détails du groupe</p>
       </div>
     </div>
 
@@ -25,8 +25,8 @@
               <i class="fas fa-users"></i>
             </div>
             <div class="section-info">
-              <h3>Group Information</h3>
-              <p>General details of the group</p>
+              <h3>Informations du Groupe</h3>
+              <p>Détails généraux du groupe</p>
             </div>
           </div>
 
@@ -34,25 +34,25 @@
             <div class="form-group">
               <label for="nom" class="form-label">
                 <i class="fas fa-tag"></i>
-                Group Name *
+                Nom du Groupe *
               </label>
               <input
                 type="text"
                 id="nom"
                 formControlName="nom"
                 class="form-input"
-                placeholder="Enter group name"
+                placeholder="Entrez le nom du groupe"
                 [class.error]="groupForm.get('nom')?.invalid && groupForm.get('nom')?.touched"
               >
               <div class="error-message" *ngIf="groupForm.get('nom')?.invalid && groupForm.get('nom')?.touched">
-                Group name is required
+                Le nom du groupe est requis
               </div>
             </div>
 
             <div class="form-group">
               <label for="classeId" class="form-label">
                 <i class="fas fa-graduation-cap"></i>
-                Class *
+                Classe *
               </label>
               <select
                 id="classeId"
@@ -60,13 +60,13 @@
                 class="form-select"
                 [class.error]="groupForm.get('classeId')?.invalid && groupForm.get('classeId')?.touched"
               >
-                <option value="">Select class</option>
+                <option value="">Sélectionnez une classe</option>
                 <option *ngFor="let classItem of classes$ | async" [value]="classItem.id">
                   {{ classItem.nom }}
                 </option>
               </select>
               <div class="error-message" *ngIf="groupForm.get('classeId')?.invalid && groupForm.get('classeId')?.touched">
-                Class is required
+                La classe est requise
               </div>
             </div>
 
@@ -81,13 +81,13 @@
                 class="form-select"
                 [class.error]="groupForm.get('sujetId')?.invalid && groupForm.get('sujetId')?.touched"
               >
-                <option value="">Select sujet</option>
+                <option value="">Sélectionnez un sujet</option>
                 <option *ngFor="let sujet of sujets$ | async" [value]="sujet.id">
                   {{ sujet.titre }}
                 </option>
               </select>
               <div class="error-message" *ngIf="groupForm.get('sujetId')?.invalid && groupForm.get('sujetId')?.touched">
-                Sujet is required
+                Le sujet est requis
               </div>
             </div>
 
@@ -102,13 +102,13 @@
                 class="form-select"
                 [class.error]="groupForm.get('enseignantId')?.invalid && groupForm.get('enseignantId')?.touched"
               >
-                <option value="">Select enseignant</option>
+                <option value="">Sélectionnez un enseignant</option>
                 <option *ngFor="let user of users$ | async" [value]="user.id" [disabled]="!user.roles.includes(Role.PROFESSOR)">
                   {{ user.firstName }} {{ user.lastName }}
                 </option>
               </select>
               <div class="error-message" *ngIf="groupForm.get('enseignantId')?.invalid && groupForm.get('enseignantId')?.touched">
-                Enseignant is required
+                L'enseignant est requis
               </div>
             </div>
           </div>
@@ -120,15 +120,15 @@
               <i class="fas fa-user-friends"></i>
             </div>
             <div class="section-info">
-              <h3>Group Members</h3>
-              <p>Manage users with roles</p>
+              <h3>Membres du Groupe</h3>
+              <p>Gérer les utilisateurs avec leurs rôles</p>
             </div>
           </div>
 
           <div class="members-container">
             <div class="members-list">
               <div *ngFor="let user of groupForm.get('users')?.value; let i = index" class="member-tag">
-                <span>{{ getUserName(user.userId) }} (ID: {{ user.userId }}) - Role: {{ user.role }}</span>
+                <span>{{ getUserName(user.userId) }} (ID: {{ user.userId }}) - Rôle: {{ user.role }}</span>
                 <button type="button" class="remove-member" (click)="removeUser(i)">
                   <i class="fas fa-times"></i>
                 </button>
@@ -140,7 +140,7 @@
                 [ngModelOptions]="{standalone: true}"
                 class="form-select member-input"
               >
-                <option value="">Select user</option>
+                <option value="">Sélectionnez un utilisateur</option>
                 <option *ngFor="let user of users$ | async" [value]="user.id">
                   {{ user.firstName }} {{ user.lastName }} (ID: {{ user.id }})
                 </option>
@@ -150,14 +150,14 @@
                 [ngModelOptions]="{standalone: true}"
                 class="form-select member-input"
               >
-                <option value="">Select role</option>
-                <option value="owner">Owner</option>
-                <option value="guest">Guest</option>
-                <option value="developer">Developer</option>
+                <option value="">Sélectionnez un rôle</option>
+                <option value="owner">Propriétaire</option>
+                <option value="guest">Invité</option>
+                <option value="developer">Développeur</option>
               </select>
               <button type="button" class="btn-add-member" (click)="addUser()">
                 <i class="fas fa-plus"></i>
-                Add User
+                Ajouter un Utilisateur
               </button>
             </div>
           </div>
@@ -169,29 +169,29 @@
               <i class="fas fa-code-branch"></i>
             </div>
             <div class="section-info">
-              <h3>Git Repository</h3>
-              <p>Update repo details</p>
+              <h3>Dépôt Git</h3>
+              <p>Mettre à jour les détails du dépôt</p>
             </div>
           </div>
 
           <div class="form-group">
             <label for="gitRepoUrl" class="form-label">
               <i class="fas fa-link"></i>
-              Git Repo URL
+              URL du Dépôt Git
             </label>
             <input
               type="text"
               id="gitRepoUrl"
               formControlName="gitRepoUrl"
               class="form-input"
-              placeholder="Enter repo URL"
+              placeholder="Entrez l'URL du dépôt"
             >
           </div>
 
           <div class="form-group" *ngIf="!groupForm.get('gitRepoUrl')?.value">
             <label for="gitRepoName" class="form-label">
               <i class="fas fa-code-branch"></i>
-              Git Repo Name
+              Nom du Dépôt Git
             </label>
             <div class="repository-container">
               <input
@@ -199,11 +199,11 @@
                 id="gitRepoName"
                 formControlName="gitRepoName"
                 class="form-input repository-input"
-                placeholder="Enter repo name"
+                placeholder="Entrez le nom du dépôt"
               >
               <button type="button" class="btn-generate-repo" (click)="generateRepoName()">
                 <i class="fas fa-magic"></i>
-                Generate
+                Générer
               </button>
             </div>
           </div>
@@ -212,16 +212,14 @@
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>
-            Cancel
+            Annuler
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="groupForm.invalid">
             <i class="fas fa-save"></i>
-            Save Changes
+            Enregistrer les Modifications
           </button>
         </div>
       </form>
     </div>
   </div>
-
-  <div id="notification-container"></div>
 </div>

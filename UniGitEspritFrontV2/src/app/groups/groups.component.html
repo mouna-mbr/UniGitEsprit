@@ -1,33 +1,32 @@
 <main class="groups-main">
   <div class="action-bar">
     <div class="page-title">
-      <h1>Groups</h1>
+      <h1>Groupes</h1>
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
-        <div><p class="subtitle">Manage your student groups</p></div>
+        <div><p class="subtitle">Gérez vos groupes d'étudiants</p></div>
         <div class="action-buttons">
           
           <div class="w-full">
             <div class="flex items-center ">
               <input
                 type="text"
-                placeholder="Search group or class"
+                placeholder="Rechercher un groupe ou une classe"
                 [(ngModel)]="searchTerm"
                 class="search-input" 
                 (keyup.enter)="onSearch()"
-              />                <i class="fas fa-search search-icon"></i>
-
+              />
+              <i class="fas fa-search search-icon"></i>
             </div>
           
-            <!-- Loading state -->
-            <p *ngIf="searching" class="text-gray-500">Searching...</p>
+            <!-- État de chargement -->
+            <p *ngIf="searching" class="text-gray-500">Recherche en cours...</p>
           
-            <!-- Error message -->
+            <!-- Message d'erreur -->
             <p *ngIf="errorMessage" class="text-red-500">{{ errorMessage }}</p>
           
           </div>
           <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
-            <i class="fas fa-search search-icon"></i>search
-
+            <i class="fas fa-search search-icon"></i>Rechercher
           </button>
           <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
             ✕
@@ -43,22 +42,22 @@
             <div class="filter-dropdown" [class.show]="isFilterMenuOpen">
               <div class="filter-item" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
                 <i class="fas fa-list"></i>
-                <span>All Groups</span>
+                <span>Tous les Groupes</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'favorites'" (click)="setFilter('favorites')">
                 <i class="fas fa-heart"></i>
-                <span>Favorites</span>
+                <span>Favoris</span>
                 <span class="count" *ngIf="getFavoriteCount() > 0">({{ getFavoriteCount() }})</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'recent'" (click)="setFilter('recent')">
                 <i class="fas fa-clock"></i>
-                <span>Recent</span>
+                <span>Récents</span>
               </div>
             </div>
           </div>
           <button *ngIf="isProfessor || isAdmin" class="btn btn-primary" (click)="addGroup()">
             <i class="fas fa-plus"></i>
-            Add Group
+            Ajouter un Groupe
           </button>
         </div>
       </div>
@@ -68,13 +67,13 @@
   <div class="results-info" *ngIf="searchTerm || currentFilter !== 'all'">
     <p>
       <span class="results-count">{{ filteredGroups.length }}</span>
-      group(s) found
-      <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
-      <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
+      groupe(s) trouvé(s)
+      <span *ngIf="searchTerm"> pour "{{ searchTerm }}"</span>
+      <span *ngIf="currentFilter !== 'all'"> dans {{ getCurrentFilterName() }}</span>
     </p>
     <button class="clear-filters" (click)="searchTerm = ''; loadGroups()" *ngIf="searchTerm || currentFilter !== 'all'">
       <i class="fas fa-times"></i>
-      Clear Filters
+      Effacer les Filtres
     </button>
   </div>
 
@@ -95,11 +94,11 @@
           <div class="dropdown-menu" [class.show]="isMenuOpen(group.id)">
             <div class="menu-item" (click)="updateGroup(group.id, $event)">
               <i class="fas fa-edit"></i>
-              <span>Update Group</span>
+              <span>Modifier le Groupe</span>
             </div>
             <div class="menu-item danger" (click)="deleteGroup(group.id, $event)">
               <i class="fas fa-trash"></i>
-              <span>Delete Group</span>
+              <span>Supprimer le Groupe</span>
             </div>
           </div>
         </div>
@@ -117,13 +116,13 @@
           </div>
           <div class="stat">
             <i class="fas fa-users"></i>
-            <span>{{ group.users.length }} members</span>
+            <span>{{ group.users.length }} membre(s)</span>
           </div>
         </div>
       </div>
       <div class="card-footer">
         <button class="btn-consult" (click)="viewGroup(group.id)">
-          <span>View</span>
+          <span>Consulter</span>
           <i class="fas fa-arrow-right"></i>
         </button>
       </div>
@@ -134,11 +133,11 @@
     <div class="empty-icon">
       <i class="fas fa-users"></i>
     </div>
-    <h3>No groups found</h3>
-    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
-    <p *ngIf="currentFilter === 'favorites' && !searchTerm">You have no favorite groups yet</p>
+    <h3>Aucun groupe trouvé</h3>
+    <p *ngIf="searchTerm">Aucun résultat pour "{{ searchTerm }}"</p>
+    <p *ngIf="currentFilter === 'favorites' && !searchTerm">Vous n'avez pas encore de groupes favoris</p>
     <button class="btn btn-primary" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
-      View all groups
+      Voir tous les groupes
     </button>
   </div>
 
@@ -146,11 +145,9 @@
     <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
       <i class="fas fa-chevron-left"></i>
     </button>
-    <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
     <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
       <i class="fas fa-chevron-right"></i>
     </button>
   </div>
 </main>
-
-<div id="notification-container"></div>
