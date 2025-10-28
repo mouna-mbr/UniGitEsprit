@@ -1,86 +1,199 @@
 <!-- Dashboard Content -->
 <div class="dashboard-container">
 
-    <!-- ================== ADMIN DASHBOARD ================== -->
-    <div class="dashboard admin-dashboard">
-      <h2>Admin Dashboard</h2>
-  
-      <!-- KPI -->
-      <div class="kpi-row">
-        <div class="kpi">Total BDP: {{this.totalDemandeBdp}}</div>
-        <div class="kpi">Total Parrainage: {{this.totalDemandeParrainage}}</div>
+  <!-- ================== ADMIN DASHBOARD ================== -->
+  <div class="dashboard admin-dashboard" *ngIf="currentUser?.roles?.includes('ADMIN')">
+    <h2>Tableau de Bord Administrateur</h2>
+    
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="kpi-content">
+          <h3>{{totalUsers}}</h3>
+          <p>Utilisateurs Totaux</p>
+        </div>
       </div>
-  
-      <!-- Graphiques -->
-      <div class="charts">
-        <div class="chart-card">
-          <h3>BDP par Spécialité</h3>
-          <canvas *ngIf="bdpBySpecialiteChart"
-                  baseChart
-                  [data]="bdpBySpecialiteChart"
-                  [type]="'bar'">
-          </canvas>
+      
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <i class="fas fa-file-alt"></i>
         </div>
-  
-        <div class="chart-card">
-          <h3>BDP par Statut</h3>
-          <canvas *ngIf="bdpByStatusChart"
-                  baseChart
-                  [data]="bdpByStatusChart"
-                  [type]="'doughnut'">
-          </canvas>
+        <div class="kpi-content">
+          <h3>{{totalDemandeBdp}}</h3>
+          <p>Demandes BDP</p>
         </div>
-  
-        <div class="chart-card">
-          <h3>Parrainage par Statut</h3>
-          <canvas *ngIf="parrainageByStatusChart"
-                  baseChart
-                  [data]="parrainageByStatusChart"
-                  [type]="'doughnut'">
-          </canvas>
+      </div>
+      
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <i class="fas fa-handshake"></i>
         </div>
-  
-        <div class="chart-card">
-          <h3>Parrainage par Sujet</h3>
-          <canvas *ngIf="parrainageBySujetChart"
-                  baseChart
-                  [data]="parrainageBySujetChart"
-                  [type]="'bar'">
-          </canvas>
+        <div class="kpi-content">
+          <h3>{{totalDemandeParrainage}}</h3>
+          <p>Demandes Parrainage</p>
         </div>
       </div>
     </div>
-  
-     <!-- ================== PROF DASHBOARD ================== -->
-  <div class="dashboard prof-dashboard">
-    <h2>Prof Dashboard</h2>
 
-    <div class="charts">
-      <div class="chart-card">
-        <h3>Sujets par Groupes</h3>
-        <canvas baseChart 
-                [data]="sujetsByGroupsChart" 
-                [type]="'bar'">
-        </canvas>
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <div class="chart-card large">
+        <div class="chart-header">
+          <h3>BDP par Spécialité</h3>
+          <button class="export-btn" (click)="exportToCSV(bdpBySpecialiteChart, 'bdp_specialite')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas *ngIf="bdpBySpecialiteChart"
+                  baseChart
+                  [data]="bdpBySpecialiteChart"
+                  [options]="barChartOptions"
+                  type="bar">
+          </canvas>
+        </div>
       </div>
 
       <div class="chart-card">
-        <h3>Top 3 Groupes par Note</h3>
-        <canvas baseChart 
-                [data]="topGroupsByNoteChart" 
-                [type]="'bar'">
-        </canvas>
+        <div class="chart-header">
+          <h3>BDP par Statut</h3>
+          <button class="export-btn" (click)="exportToCSV(bdpByStatusChart, 'bdp_statut')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas *ngIf="bdpByStatusChart"
+                  baseChart
+                  [data]="bdpByStatusChart"
+                  [options]="doughnutChartOptions"
+                  type="doughnut">
+          </canvas>
+        </div>
       </div>
 
       <div class="chart-card">
-        <h3>Tâches par Statut</h3>
-        <canvas baseChart 
-                [data]="tachesByStatusChart" 
-                [type]="'doughnut'">
-        </canvas>
+        <div class="chart-header">
+          <h3>Parrainage par Statut</h3>
+          <button class="export-btn" (click)="exportToCSV(parrainageByStatusChart, 'parrainage_statut')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas *ngIf="parrainageByStatusChart"
+                  baseChart
+                  [data]="parrainageByStatusChart"
+                  [options]="doughnutChartOptions"
+                  type="doughnut">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-card large">
+        <div class="chart-header">
+          <h3>Utilisateurs par Rôle</h3>
+          <button class="export-btn" (click)="exportToCSV(usersByRoleChart, 'utilisateurs_role')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas *ngIf="usersByRoleChart"
+                  baseChart
+                  [data]="usersByRoleChart"
+                  [options]="doughnutChartOptions"
+                  type="doughnut">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-card large">
+        <div class="chart-header">
+          <h3>Parrainage par Sujet</h3>
+          <button class="export-btn" (click)="exportToCSV(parrainageBySujetChart, 'parrainage_sujet')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas *ngIf="parrainageBySujetChart"
+                  baseChart
+                  [data]="parrainageBySujetChart"
+                  [options]="barChartOptions"
+                  type="bar">
+          </canvas>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- ================== PROF DASHBOARD ================== -->
+  <div class="dashboard prof-dashboard" *ngIf="currentUser?.roles?.includes('PROF')">
+    <h2>Tableau de Bord Professeur</h2>
+
+    <div class="charts-grid">
+      <div class="chart-card large">
+        <div class="chart-header">
+          <h3>Sujets par Groupes</h3>
+          <button class="export-btn" (click)="exportToCSV(sujetsByGroupsChart, 'sujets_groupes')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart 
+                  [data]="sujetsByGroupsChart" 
+                  [options]="barChartOptions"
+                  type="bar">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Top 3 Groupes par Note</h3>
+          <button class="export-btn" (click)="exportToCSV(topGroupsByNoteChart, 'top_groupes_notes')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart 
+                  [data]="topGroupsByNoteChart" 
+                  [options]="barChartOptions"
+                  type="bar">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Tâches par Statut</h3>
+          <button class="export-btn" (click)="exportToCSV(tachesByStatusChart, 'taches_statut')">
+            <i class="fas fa-download"></i>
+            Export CSV
+          </button>
+        </div>
+        <div class="chart-container">
+          <canvas baseChart 
+                  [data]="tachesByStatusChart" 
+                  [options]="doughnutChartOptions"
+                  type="doughnut">
+          </canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message si aucun rôle détecté -->
+  <div *ngIf="!currentUser?.roles?.includes('ADMIN') && !currentUser?.roles?.includes('PROF')" class="no-access">
+    <h3>Accès non autorisé</h3>
+    <p>Vous n'avez pas les permissions nécessaires pour accéder à ce tableau de bord.</p>
+  </div>
+
 </div>
-  
