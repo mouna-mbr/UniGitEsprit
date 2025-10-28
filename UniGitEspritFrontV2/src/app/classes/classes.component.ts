@@ -5,13 +5,15 @@ import { ClasseResponse } from '../models/classe.model';
 import { Subject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { Role } from '../models/user.model';
+import { ToastrService } from 'ngx-toastr';
+
 @Component({
   selector: 'app-classes',
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.css']
 })
 export class ClassesComponent implements OnInit {
-  isProf : boolean | undefined = false;
+  isProf: boolean | undefined = false;
   classes: ClasseResponse[] = [];
   filteredClasses: ClasseResponse[] = [];
   paginatedClasses: ClasseResponse[] = [];
@@ -26,15 +28,23 @@ export class ClassesComponent implements OnInit {
   results: ClasseResponse[] = [];
   searching = false;
   errorMessage = '';
-  constructor(private classeService: ClasseService,private authService: AuthService, private router: Router) {}
+
+  constructor(
+    private classeService: ClasseService,
+    private authService: AuthService,
+    private router: Router,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit(): void {
     this.loadClasses();
     this.isProf = this.authService.getCurrentUser()?.roles.includes(Role.PROFESSOR);
   }
+
   onSearch(): void {
     if (!this.searchTerm.trim()) {
       this.results = [];
+      this.toastr.warning('Veuillez entrer un terme de recherche', 'Recherche vide');
       return;
     }
     this.searching = true;
@@ -44,11 +54,17 @@ export class ClassesComponent implements OnInit {
         this.paginatedClasses = res;
         this.results = res;
         this.searching = false;
+        if (res.length === 0) {
+          this.toastr.info(`Aucun résultat trouvé pour "${this.searchTerm}"`, 'Recherche');
+        } else {
+          this.toastr.success(`${res.length} classe(s) trouvée(s)`, 'Recherche réussie');
+        }
       },
       error: (err) => {
-        console.error('Search error:', err);
-        this.errorMessage = 'An error occurred while searching.';
+        console.error('Erreur de recherche:', err);
+        this.errorMessage = 'Une erreur est survenue lors de la recherche.';
         this.searching = false;
+        this.toastr.error('Erreur lors de la recherche', 'Erreur');
       }
     });
   }
@@ -57,14 +73,19 @@ export class ClassesComponent implements OnInit {
     this.searchTerm = '';
     this.results = [];
     this.loadClasses();
+    this.toastr.info('Recherche effacée', 'Information');
   }
+
   loadClasses(): void {
     this.classeService.getAllClasses().subscribe({
       next: (classes) => {
         this.classes = classes;
         this.applyFilter();
+        this.toastr.success(`${classes.length} classe(s) chargée(s)`, 'Chargement réussi');
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => {
+        this.toastr.error('Erreur lors du chargement des classes', 'Erreur');
+      }
     });
   }
 
@@ -101,11 +122,12 @@ export class ClassesComponent implements OnInit {
     this.isFilterMenuOpen = false;
     this.currentPage = 1;
     this.applyFilter();
+    this.toastr.info(`Filtre appliqué: ${this.getCurrentFilterName()}`, 'Filtre');
   }
 
   getCurrentFilterName(): string {
-    return this.currentFilter === 'all' ? 'All Classes' :
-           this.currentFilter === 'favorites' ? 'Favorites' : 'Recent';
+    return this.currentFilter === 'all' ? 'Toutes les Classes' :
+           this.currentFilter === 'favorites' ? 'Favoris' : 'Récentes';
   }
 
   getFavoriteCount(): number {
@@ -120,10 +142,14 @@ export class ClassesComponent implements OnInit {
         if (index !== -1) {
           this.classes[index] = updatedClasse;
           this.applyFilter();
-          this.showNotification('success', `Class ${updatedClasse.favori ? 'added to' : 'removed from'} favorites`);
+          if (updatedClasse.favori) {
+            this.toastr.success('Classe ajoutée aux favoris', 'Favori');
+          } else {
+            this.toastr.info('Classe retirée des favoris', 'Favori');
+          }
         }
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => this.toastr.error('Erreur lors de la modification des favoris', 'Erreur')
     });
   }
 
@@ -153,15 +179,20 @@ export class ClassesComponent implements OnInit {
 
   deleteClass(id: number, event: Event): void {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this class?')) {
+    const classe = this.classes.find(c => c.id === id);
+    const className = classe ? classe.nom : 'cette classe';
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${className}" ?`)) {
       this.classeService.deleteClasse(id).subscribe({
         next: () => {
           this.classes = this.classes.filter(c => c.id !== id);
           this.applyFilter();
-          this.showNotification('success', 'Class deleted successfully');
+          this.toastr.success(`"${className}" a été supprimée avec succès`, 'Suppression réussie');
         },
-        error: (error) => this.showNotification('error', error.message)
+        error: (error) => this.toastr.error('Erreur lors de la suppression de la classe', 'Erreur')
       });
+    } else {
+      this.toastr.info('Suppression annulée', 'Information');
     }
     this.openMenus.clear();
   }
@@ -181,23 +212,6 @@ export class ClassesComponent implements OnInit {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
       this.updatePagination();
-    }
-  }
-
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-      `;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
     }
   }
 }

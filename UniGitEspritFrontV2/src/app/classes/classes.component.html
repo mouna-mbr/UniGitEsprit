@@ -3,26 +3,22 @@
     <div class="page-title">
       <h1>Classes</h1>
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
-        <div><p class="subtitle">Manage your student classes</p></div>
+        <div><p class="subtitle">Gérez vos classes d'étudiants</p></div>
         <div class="action-buttons">
           <div class="w-full">
             <div class="flex items-center ">
               <input
                 type="text"
-                placeholder="Search group or class"
+                placeholder="Rechercher une classe"
                 [(ngModel)]="searchTerm"
                 class="search-input" 
                 (keyup.enter)="onSearch()"
-              />                <i class="fas fa-search search-icon"></i>
-
+              />
+              <i class="fas fa-search search-icon"></i>
             </div>
-          
-           
-          
           </div>
           <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
-            <i class="fas fa-search search-icon"></i>search
-
+            <i class="fas fa-search search-icon"></i>Rechercher
           </button>
           <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
             ✕
@@ -38,22 +34,22 @@
             <div class="filter-dropdown" [class.show]="isFilterMenuOpen">
               <div class="filter-item" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
                 <i class="fas fa-list"></i>
-                <span>All Classes</span>
+                <span>Toutes les Classes</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'favorites'" (click)="setFilter('favorites')">
                 <i class="fas fa-heart"></i>
-                <span>Favorites</span>
+                <span>Favoris</span>
                 <span class="count" *ngIf="getFavoriteCount() > 0">({{ getFavoriteCount() }})</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'recent'" (click)="setFilter('recent')">
                 <i class="fas fa-clock"></i>
-                <span>Recent</span>
+                <span>Récentes</span>
               </div>
             </div>
           </div>
           <button class="btn btn-primary" (click)="addClass()">
             <i class="fas fa-plus"></i>
-            Add Class
+            Ajouter une Classe
           </button>
         </div>
       </div>
@@ -63,13 +59,13 @@
   <div class="results-info" *ngIf="searchTerm || currentFilter !== 'all'">
     <p>
       <span class="results-count">{{ filteredClasses.length }}</span>
-      class(es) found
-      <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
-      <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
+      classe(s) trouvée(s)
+      <span *ngIf="searchTerm"> pour "{{ searchTerm }}"</span>
+      <span *ngIf="currentFilter !== 'all'"> dans {{ getCurrentFilterName() }}</span>
     </p>
     <button class="clear-filters" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
       <i class="fas fa-times"></i>
-      Clear Filters
+      Effacer les Filtres
     </button>
   </div>
 
@@ -90,11 +86,11 @@
           <div class="dropdown-menu" [class.show]="isMenuOpen(classe.id)">
             <div class="menu-item" (click)="updateClass(classe.id, $event)">
               <i class="fas fa-edit"></i>
-              <span>Update Class</span>
+              <span>Modifier la Classe</span>
             </div>
             <div class="menu-item danger" (click)="deleteClass(classe.id, $event)">
               <i class="fas fa-trash"></i>
-              <span>Delete Class</span>
+              <span>Supprimer la Classe</span>
             </div>
           </div>
         </div>
@@ -108,17 +104,17 @@
         <div class="class-stats">
           <div class="stat">
             <i class="fas fa-user-graduate"></i>
-            <span>{{ classe.etudiantIds?.length || 0 }} students</span>
+            <span>{{ classe.etudiantIds?.length || 0 }} étudiant(s)</span>
           </div>
           <div class="stat">
             <i class="fas fa-chalkboard-teacher"></i>
-            <span>{{ classe.enseignantIds?.length || 0 }} teachers</span>
+            <span>{{ classe.enseignantIds?.length || 0 }} enseignant(s)</span>
           </div>
         </div>
       </div>
       <div class="card-footer">
         <button class="btn-consult" (click)="viewClass(classe.id)">
-          <span>View</span>
+          <span>Consulter</span>
           <i class="fas fa-arrow-right"></i>
         </button>
       </div>
@@ -129,11 +125,11 @@
     <div class="empty-icon">
       <i class="fas fa-graduation-cap"></i>
     </div>
-    <h3>No classes found</h3>
-    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
-    <p *ngIf="currentFilter === 'favorites' && !searchTerm">You have no favorite classes yet</p>
+    <h3>Aucune classe trouvée</h3>
+    <p *ngIf="searchTerm">Aucun résultat pour "{{ searchTerm }}"</p>
+    <p *ngIf="currentFilter === 'favorites' && !searchTerm">Vous n'avez pas encore de classes favorites</p>
     <button class="btn btn-primary" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
-      View all classes
+      Voir toutes les classes
     </button>
   </div>
 
@@ -141,11 +137,9 @@
     <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
       <i class="fas fa-chevron-left"></i>
     </button>
-    <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
     <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
       <i class="fas fa-chevron-right"></i>
     </button>
   </div>
 </main>
-
-<div id="notification-container"></div>

@@ -3,8 +3,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { UserService } from '../services/user.service';
-import { ClasseResponse, ClasseCreate } from '../models/classe.model'; // CORRIGÉ
-import { UserResponse ,Role} from '../models/user.model';
+import { ClasseResponse, ClasseCreate } from '../models/classe.model';
+import { UserResponse, Role } from '../models/user.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-edit-classe',
@@ -14,22 +15,22 @@ import { UserResponse ,Role} from '../models/user.model';
 export class EditClasseComponent implements OnInit {
   classeForm: FormGroup;
   errorMessage: string | null = null;
-  users: UserResponse[] = []; // CORRIGÉ : UserResponse
+  users: UserResponse[] = [];
   isUsersLoaded = false;
   newStudentId: number | null = null;
   newTeacherId: number | null = null;
   newlyAddedIds: number[] = [];
   classe: ClasseResponse | null = null;
   classeId: number;
-  Role = Role; // Expose l'enum au template
-
+  Role = Role;
 
   constructor(
     private fb: FormBuilder,
     private classeService: ClasseService,
     private userService: UserService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {
     this.classeId = +this.route.snapshot.paramMap.get('id')!;
     this.classeForm = this.fb.group({
@@ -50,13 +51,14 @@ export class EditClasseComponent implements OnInit {
 
   loadUsers(): void {
     this.userService.getAllUsers().subscribe({
-      next: (users: UserResponse[]) => { // Type explicite
+      next: (users: UserResponse[]) => {
         this.users = users;
         this.isUsersLoaded = true;
+        this.toastr.success('Utilisateurs chargés avec succès', 'Chargement réussi');
       },
       error: (error) => {
         this.errorMessage = error.message;
-        this.showNotification('error', error.message);
+        this.toastr.error('Erreur lors du chargement des utilisateurs', 'Erreur');
       }
     });
   }
@@ -73,10 +75,11 @@ export class EditClasseComponent implements OnInit {
           etudiantIds: classe.etudiantIds || [],
           enseignantIds: classe.enseignantIds || []
         });
+        this.toastr.success('Classe chargée avec succès', 'Chargement réussi');
       },
       error: (error) => {
         this.errorMessage = error.message;
-        this.showNotification('error', error.message);
+        this.toastr.error('Erreur lors du chargement de la classe', 'Erreur');
       }
     });
   }
@@ -98,7 +101,12 @@ export class EditClasseComponent implements OnInit {
         this.newlyAddedIds.push(id);
         setTimeout(() => this.newlyAddedIds = this.newlyAddedIds.filter(x => x !== id), 2000);
         this.newStudentId = null;
+        this.toastr.success('Étudiant ajouté à la classe', 'Succès');
+      } else {
+        this.toastr.warning('Cet étudiant est déjà dans la classe', 'Attention');
       }
+    } else {
+      this.toastr.error('Veuillez sélectionner un étudiant valide', 'Erreur');
     }
   }
 
@@ -106,6 +114,7 @@ export class EditClasseComponent implements OnInit {
     const etudiantIds = [...(this.classeForm.get('etudiantIds')?.value || [])];
     etudiantIds.splice(index, 1);
     this.classeForm.get('etudiantIds')?.setValue(etudiantIds);
+    this.toastr.info('Étudiant retiré de la classe', 'Information');
   }
 
   addTeacher(): void {
@@ -120,7 +129,12 @@ export class EditClasseComponent implements OnInit {
         this.newlyAddedIds.push(id);
         setTimeout(() => this.newlyAddedIds = this.newlyAddedIds.filter(x => x !== id), 2000);
         this.newTeacherId = null;
+        this.toastr.success('Enseignant ajouté à la classe', 'Succès');
+      } else {
+        this.toastr.warning('Cet enseignant est déjà dans la classe', 'Attention');
       }
+    } else {
+      this.toastr.error('Veuillez sélectionner un enseignant valide', 'Erreur');
     }
   }
 
@@ -128,6 +142,7 @@ export class EditClasseComponent implements OnInit {
     const enseignantIds = [...(this.classeForm.get('enseignantIds')?.value || [])];
     enseignantIds.splice(index, 1);
     this.classeForm.get('enseignantIds')?.setValue(enseignantIds);
+    this.toastr.info('Enseignant retiré de la classe', 'Information');
   }
 
   isNewlyAdded(id: number): boolean {
@@ -139,36 +154,20 @@ export class EditClasseComponent implements OnInit {
       const updatedClasse: ClasseCreate = this.classeForm.value;
       this.classeService.updateClasse(this.classeId, updatedClasse).subscribe({
         next: () => {
-          this.showNotification('success', 'Classe mise à jour avec succès');
+          this.toastr.success('Classe mise à jour avec succès', 'Succès');
           this.router.navigate(['/classes']);
         },
         error: (error) => {
           this.errorMessage = error.message;
-          this.showNotification('error', error.message);
+          this.toastr.error('Erreur lors de la mise à jour de la classe', 'Erreur');
         }
       });
+    } else {
+      this.toastr.error('Veuillez corriger les erreurs du formulaire', 'Formulaire invalide');
     }
   }
 
   goBack(): void {
     this.router.navigate(['/classes']);
-  }
-
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (!container) return;
-
-    const notification = document.createElement('div');
-    notification.className = `notification ${type} show`;
-    notification.innerHTML = `
-      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-      ${message}
-    `;
-    container.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => notification.remove(), 300);
-    }, 3000);
   }
 }

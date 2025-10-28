@@ -23,7 +23,8 @@ export class ClassDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private classeService: ClasseService,
-    private userService: UserService
+    private userService: UserService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -36,8 +37,9 @@ export class ClassDetailsComponent implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (users) => {
         this.users = users;
+        this.toastr.success('Utilisateurs chargés avec succès', 'Chargement réussi');
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => this.toastr.error('Erreur lors du chargement des utilisateurs', 'Erreur')
     });
   }
 
@@ -46,17 +48,18 @@ export class ClassDetailsComponent implements OnInit {
     this.classeService.getClasseById(id).subscribe({
       next: (classe) => {
         this.classe = classe;
+        this.toastr.success('Classe chargée avec succès', 'Chargement réussi');
       },
       error: (error) => {
         this.errorMessage = error.message;
-        this.showNotification('error', error.message);
+        this.toastr.error('Erreur lors du chargement de la classe', 'Erreur');
       }
     });
   }
 
   getUserName(id: number): string {
     const user = this.users.find(u => u.id === id);
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+    return user ? `${user.firstName} ${user.lastName}` : 'Inconnu';
   }
 
   toggleFavorite(id: number, event: Event): void {
@@ -65,9 +68,13 @@ export class ClassDetailsComponent implements OnInit {
       this.classeService.toggleFavorite(id).subscribe({
         next: (updatedClasse) => {
           this.classe = updatedClasse;
-          this.showNotification('success', `Class ${updatedClasse.favori ? 'added to' : 'removed from'} favorites`);
+          if (updatedClasse.favori) {
+            this.toastr.success('Classe ajoutée aux favoris', 'Favori');
+          } else {
+            this.toastr.info('Classe retirée des favoris', 'Favori');
+          }
         },
-        error: (error) => this.showNotification('error', error.message)
+        error: (error) => this.toastr.error('Erreur lors de la modification des favoris', 'Erreur')
       });
     }
   }
@@ -95,14 +102,18 @@ export class ClassDetailsComponent implements OnInit {
 
   deleteClass(id: number, event: Event): void {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this class?')) {
+    const className = this.classe ? this.classe.nom : 'cette classe';
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${className}" ?`)) {
       this.classeService.deleteClasse(id).subscribe({
         next: () => {
-          this.showNotification('success', 'Class deleted successfully');
+          this.toastr.success('Classe supprimée avec succès', 'Suppression réussie');
           this.goBack();
         },
-        error: (error) => this.showNotification('error', error.message)
+        error: (error) => this.toastr.error('Erreur lors de la suppression de la classe', 'Erreur')
       });
+    } else {
+      this.toastr.info('Suppression annulée', 'Information');
     }
     this.openMenus.clear();
   }
@@ -116,23 +127,6 @@ export class ClassDetailsComponent implements OnInit {
   }
 
   onSearch(event: Event): void {
-    // Implement search logic if needed
-  }
-
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-      `;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+    // Implémentez la logique de recherche si nécessaire
   }
 }

@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { UserService } from '../services/user.service';
-import {  ClasseCreate } from '../models/classe.model';
-import { User ,Role } from '../models/user.model';
+import { ClasseCreate } from '../models/classe.model';
+import { User, Role } from '../models/user.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-add-classe',
@@ -16,16 +17,17 @@ export class AddClasseComponent implements OnInit {
   errorMessage: string | null = null;
   users: User[] = [];
   isUsersLoaded: boolean = false;
-  newStudentId: number | string | null = null; // Allow string for binding
-  newTeacherId: number | string | null = null; // Allow string for binding
-  newlyAddedIds: number[] = []; // Track newly added IDs
-  Role = Role; // Expose l'enum au template
+  newStudentId: number | string | null = null;
+  newTeacherId: number | string | null = null;
+  newlyAddedIds: number[] = [];
+  Role = Role;
 
   constructor(
     private fb: FormBuilder,
     private classeService: ClasseService,
     private userService: UserService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {
     this.classeForm = this.fb.group({
       nom: ['', Validators.required],
@@ -46,75 +48,80 @@ export class AddClasseComponent implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (users) => {
         this.users = users;
-        console.log('Users loaded:', users); // Debug log with full details
         this.isUsersLoaded = true;
+        this.toastr.success('Utilisateurs chargés avec succès', 'Chargement réussi');
       },
       error: (error) => {
         this.errorMessage = error.message;
-        this.showNotification('error', error.message);
+        this.toastr.error('Erreur lors du chargement des utilisateurs', 'Erreur');
       }
     });
   }
 
   getUserName(id: number): string {
     const user = this.users.find(u => u.id === Number(id));
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+    return user ? `${user.firstName} ${user.lastName}` : 'Inconnu';
   }
 
   addStudent(): void {
-    console.log('Add Student clicked, newStudentId:', this.newStudentId, 'Users:', this.users); // Enhanced debug
-    const numericId = Number(this.newStudentId); // Convert to number
+    const numericId = Number(this.newStudentId);
     const user = this.users.find(u => u.id === numericId);
-    console.log('User found for id', numericId, ':', user); // Debug specific user
-    if (this.newStudentId && user && user.roles?.includes(Role.STUDENT) ) {
+    
+    if (this.newStudentId && user && user.roles?.includes(Role.STUDENT)) {
       const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
       if (!etudiantIds.includes(numericId)) {
         etudiantIds.push(numericId);
         this.classeForm.get('etudiantIds')?.setValue(etudiantIds);
-        this.newlyAddedIds.push(numericId); // Mark as newly added
+        this.newlyAddedIds.push(numericId);
         setTimeout(() => {
-          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId); // Remove after 2 seconds
+          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId);
         }, 2000);
         this.newStudentId = null;
+        this.toastr.success('Étudiant ajouté à la classe', 'Succès');
+      } else {
+        this.toastr.warning('Cet étudiant est déjà dans la classe', 'Attention');
       }
     } else {
-      console.log('Add Student failed: No user with id', numericId, 'or role is not STUDENT, user:', user);
+      this.toastr.error('Veuillez sélectionner un étudiant valide', 'Erreur');
     }
   }
 
   removeStudent(index: number): void {
-    console.log('Remove Student clicked, index:', index); // Debug log
     const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
+    const removedStudent = etudiantIds[index];
     etudiantIds.splice(index, 1);
     this.classeForm.get('etudiantIds')?.setValue(etudiantIds);
+    this.toastr.info('Étudiant retiré de la classe', 'Information');
   }
 
   addTeacher(): void {
-    console.log('Add Teacher clicked, newTeacherId:', this.newTeacherId, 'Users:', this.users); // Enhanced debug
-    const numericId = Number(this.newTeacherId); // Convert to number
+    const numericId = Number(this.newTeacherId);
     const user = this.users.find(u => u.id === numericId);
-    console.log('User found for id', numericId, ':', user); // Debug specific user
+    
     if (this.newTeacherId && user && user.roles?.includes(Role.PROFESSOR)) {
       const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
       if (!enseignantIds.includes(numericId)) {
         enseignantIds.push(numericId);
         this.classeForm.get('enseignantIds')?.setValue(enseignantIds);
-        this.newlyAddedIds.push(numericId); // Mark as newly added
+        this.newlyAddedIds.push(numericId);
         setTimeout(() => {
-          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId); // Remove after 2 seconds
+          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId);
         }, 2000);
         this.newTeacherId = null;
+        this.toastr.success('Enseignant ajouté à la classe', 'Succès');
+      } else {
+        this.toastr.warning('Cet enseignant est déjà dans la classe', 'Attention');
       }
     } else {
-      console.log('Add Teacher failed: No user with id', numericId, 'or role is not PROFESSOR, user:', user);
+      this.toastr.error('Veuillez sélectionner un enseignant valide', 'Erreur');
     }
   }
 
   removeTeacher(index: number): void {
-    console.log('Remove Teacher clicked, index:', index); // Debug log
     const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
     enseignantIds.splice(index, 1);
     this.classeForm.get('enseignantIds')?.setValue(enseignantIds);
+    this.toastr.info('Enseignant retiré de la classe', 'Information');
   }
 
   isNewlyAdded(id: number): boolean {
@@ -122,43 +129,24 @@ export class AddClasseComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log('Submit clicked, form value:', this.classeForm.value); // Debug log
     if (this.classeForm.valid) {
       const classe: ClasseCreate = this.classeForm.value;
       this.classeService.addClasse(classe).subscribe({
         next: () => {
-          this.showNotification('success', 'Class added successfully');
+          this.toastr.success('Classe créée avec succès', 'Succès');
           this.router.navigate(['/classes']);
         },
         error: (error) => {
           this.errorMessage = error.message;
-          this.showNotification('error', error.message);
+          this.toastr.error('Erreur lors de la création de la classe', 'Erreur');
         }
       });
     } else {
-      console.log('Form is invalid:', this.classeForm.errors);
+      this.toastr.error('Veuillez remplir tous les champs obligatoires', 'Formulaire invalide');
     }
   }
 
   goBack(): void {
-    console.log('Back clicked'); // Debug log
     this.router.navigate(['/classes']);
-  }
-
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-      `;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
   }
 }
