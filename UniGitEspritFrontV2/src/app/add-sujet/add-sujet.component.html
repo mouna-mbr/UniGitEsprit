@@ -8,10 +8,10 @@
             Sujets
           </a>
           <i class="fas fa-chevron-right breadcrumb-separator"></i>
-          <span class="breadcrumb-current">Add Sujet</span>
+          <span class="breadcrumb-current">Ajouter un Sujet</span>
         </div>
-        <h1>Add New Sujet</h1>
-        <p class="subtitle">Create a new sujet</p>
+        <h1>Ajouter un Nouveau Sujet</h1>
+        <p class="subtitle">Créer un nouveau sujet</p>
       </div>
     </div>
 
@@ -25,8 +25,8 @@
               <i class="fas fa-book"></i>
             </div>
             <div class="section-info">
-              <h3>Sujet Information</h3>
-              <p>General details of the sujet</p>
+              <h3>Informations du Sujet</h3>
+              <p>Détails généraux du sujet</p>
             </div>
           </div>
 
@@ -41,11 +41,11 @@
                 id="titre"
                 formControlName="titre"
                 class="form-input"
-                placeholder="Enter sujet title"
+                placeholder="Entrez le titre du sujet"
                 [class.error]="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched"
               >
               <div class="error-message" *ngIf="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched">
-                Titre is required
+                Le titre est requis
               </div>
             </div>
 
@@ -58,62 +58,56 @@
                 id="description"
                 formControlName="description"
                 class="form-textarea"
-                placeholder="Enter sujet description"
+                placeholder="Entrez la description du sujet"
                 rows="5"
               ></textarea>
             </div>
           </div>
         
-<!-- Technologies Section -->
-<div class="form-group">
-  <label class="form-label">Technologies</label>
+          <!-- Section Technologies -->
+          <div class="form-group">
+            <label class="form-label">Technologies</label>
 
-  <!-- ✅ Chips: show selected technologies -->
-  <!-- Each selected technology appears as a blue "chip" with a small remove (×) button -->
-  <div class="chips-container">
-    <span *ngFor="let tech of selectedTechnologies" class="chip">
-      {{ tech }}
-      <!-- When clicking ×, the technology is removed from selectedTechnologies -->
-      <button type="button" class="remove-btn" (click)="removeTechnology(tech)">×</button>
-    </span>
-  </div>
+            <!-- ✅ Puces : afficher les technologies sélectionnées -->
+            <div class="chips-container">
+              <span *ngFor="let tech of selectedTechnologies" class="chip">
+                {{ tech }}
+                <button type="button" class="remove-btn" (click)="removeTechnology(tech)">×</button>
+              </span>
+            </div>
 
-  <!-- ✅ Input + Dropdown for technology search -->
-  <div class="autocomplete-container">
-    <!-- Input connected to the FormControl 'techControl' -->
-    <!-- As user types, filteredTechnologies updates automatically via valueChanges -->
-    <!-- Pressing Enter adds the technology manually -->
-    <input
-      type="text"
-      class="form-textarea"
-      placeholder="Type to search technologies..."
-      [formControl]="techControl"
-      (keydown.enter)="addTechnology(techControl.value || '')"
-    />
+            <!-- ✅ Champ de saisie + Liste déroulante pour la recherche de technologies -->
+            <div class="autocomplete-container">
+              <input
+                type="text"
+                class="form-textarea"
+                placeholder="Tapez pour rechercher des technologies..."
+                [formControl]="techControl"
+                (keydown.enter)="addTechnology(techControl.value || '')"
+              />
 
-    <!-- ✅ Dropdown (appears only if there are matching results AND the user typed something) -->
-    <!-- Each <li> shows a suggestion from filteredTechnologies -->
-    <!-- Clicking a suggestion calls addTechnology(tech) -->
-    <ul class="autocomplete-list" *ngIf="(filteredTechnologies | async)?.length && techControl.value">
-      <li
-        *ngFor="let tech of (filteredTechnologies | async)"
-        (click)="addTechnology(tech)"
-        class="autocomplete-item"
-      >
-        {{ tech }}
-      </li>
-    </ul>
-  </div>
-</div>
+              <!-- ✅ Liste déroulante (apparaît uniquement s'il y a des résultats correspondants ET si l'utilisateur a tapé quelque chose) -->
+              <ul class="autocomplete-list" *ngIf="(filteredTechnologies | async)?.length && techControl.value">
+                <li
+                  *ngFor="let tech of (filteredTechnologies | async)"
+                  (click)="addTechnology(tech)"
+                  class="autocomplete-item"
+                >
+                  {{ tech }}
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
+        
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>
-            Back
+            Retour
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="sujetForm.invalid">
             <i class="fas fa-plus"></i>
-            Add Sujet
+            Ajouter le Sujet
           </button>
         </div>
       </form>

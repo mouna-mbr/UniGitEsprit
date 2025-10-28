@@ -2,16 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { SujetService } from '../services/sujet.service';
 import { SujetResponse } from '../models/sujet.model';
-import { UserService } from '../services/user.service'; // Import UserService
-import { UserResponse,Role } from '../models/user.model'; // Import User interface if defined
+import { UserService } from '../services/user.service';
+import { UserResponse, Role } from '../models/user.model';
 import { Subject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-
+import { ToastrService } from 'ngx-toastr'; // Import Toastr
 
 @Component({
   selector: 'app-sujets',
   templateUrl: './sujets.component.html',
-  styleUrls: ['./sujets.component.css'] // Reusing class CSS for consistency
+  styleUrls: ['./sujets.component.css']
 })
 export class SujetsComponent implements OnInit {
   isAdmin: boolean | undefined = false;
@@ -26,16 +26,18 @@ export class SujetsComponent implements OnInit {
   currentPage = 1;
   pageSize = 6;
   totalPages = 1;
-  users: UserResponse[] = []; // Add users array to store user data
+  users: UserResponse[] = [];
   private searchSubject = new Subject<string>();
   results: SujetResponse[] = [];
   searching = false;
   errorMessage = '';
+
   constructor(
     private sujetService: SujetService,
     private router: Router,
     private authService: AuthService,
-    private userService: UserService // Inject UserService
+    private userService: UserService,
+    private toastr: ToastrService // Inject Toastr
   ) {}
 
   ngOnInit(): void {
@@ -46,9 +48,14 @@ export class SujetsComponent implements OnInit {
     this.isAdmin = currentUser?.roles.includes(Role.ADMIN) || false;
     this.isProfessor = currentUser?.roles.includes(Role.PROFESSOR) || false;
   }
+
   onSearch(): void {
     if (!this.searchTerm.trim()) {
       this.results = [];
+      this.toastr.warning('Veuillez entrer un terme de recherche', 'Recherche vide', {
+        timeOut: 3000,
+        positionClass: 'toast-top-right'
+      });
       return;
     }
     this.searching = true;
@@ -58,11 +65,26 @@ export class SujetsComponent implements OnInit {
         this.paginatedSujets = res;
         this.results = res;
         this.searching = false;
+        if (res.length === 0) {
+          this.toastr.info(`Aucun résultat trouvé pour "${this.searchTerm}"`, 'Recherche', {
+            timeOut: 4000,
+            positionClass: 'toast-top-right'
+          });
+        } else {
+          this.toastr.success(`${res.length} sujet(s) trouvé(s)`, 'Recherche réussie', {
+            timeOut: 3000,
+            positionClass: 'toast-top-right'
+          });
+        }
       },
       error: (err) => {
-        console.error('Search error:', err);
-        this.errorMessage = 'An error occurred while searching.';
+        console.error('Erreur de recherche:', err);
+        this.errorMessage = 'Une erreur est survenue lors de la recherche.';
         this.searching = false;
+        this.toastr.error('Erreur lors de la recherche', 'Erreur', {
+          timeOut: 5000,
+          positionClass: 'toast-top-right'
+        });
       }
     });
   }
@@ -71,6 +93,10 @@ export class SujetsComponent implements OnInit {
     this.searchTerm = '';
     this.results = [];
     this.loadSujets();
+    this.toastr.info('Recherche effacée', 'Information', {
+      timeOut: 2000,
+      positionClass: 'toast-top-right'
+    });
   }
 
   loadUsers(): void {
@@ -78,7 +104,7 @@ export class SujetsComponent implements OnInit {
       next: (users) => {
         this.users = users;
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => this.toastr.error(error.message, 'Erreur de chargement')
     });
   }
 
@@ -87,8 +113,12 @@ export class SujetsComponent implements OnInit {
       next: (sujets) => {
         this.sujets = sujets;
         this.applyFilter();
+        this.toastr.success(`${sujets.length} sujet(s) chargé(s)`, 'Chargement réussi', {
+          timeOut: 3000,
+          positionClass: 'toast-top-right'
+        });
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => this.toastr.error(error.message, 'Erreur de chargement')
     });
   }
 
@@ -125,11 +155,15 @@ export class SujetsComponent implements OnInit {
     this.isFilterMenuOpen = false;
     this.currentPage = 1;
     this.applyFilter();
+    this.toastr.info(`Filtre appliqué: ${this.getCurrentFilterName()}`, 'Filtre', {
+      timeOut: 3000,
+      positionClass: 'toast-top-right'
+    });
   }
 
   getCurrentFilterName(): string {
-    return this.currentFilter === 'all' ? 'All Sujets' :
-           this.currentFilter === 'favorites' ? 'Favorites' : 'Recent';
+    return this.currentFilter === 'all' ? 'Tous les sujets' :
+           this.currentFilter === 'favorites' ? 'Favoris' : 'Récents';
   }
 
   getFavoriteCount(): number {
@@ -144,10 +178,20 @@ export class SujetsComponent implements OnInit {
         if (index !== -1) {
           this.sujets[index] = updatedSujet;
           this.applyFilter();
-          this.showNotification('success', `Sujet ${updatedSujet.favori ? 'added to' : 'removed from'} favorites`);
+          if (updatedSujet.favori) {
+            this.toastr.success('Sujet ajouté aux favoris', 'Favori', {
+              timeOut: 3000,
+              positionClass: 'toast-top-right'
+            });
+          } else {
+            this.toastr.info('Sujet retiré des favoris', 'Favori', {
+              timeOut: 3000,
+              positionClass: 'toast-top-right'
+            });
+          }
         }
       },
-      error: (error) => this.showNotification('error', error.message)
+      error: (error) => this.toastr.error(error.message, 'Erreur')
     });
   }
 
@@ -177,14 +221,25 @@ export class SujetsComponent implements OnInit {
 
   deleteSujet(id: number, event: Event): void {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this sujet?')) {
+    const sujet = this.sujets.find(s => s.id === id);
+    const sujetName = sujet ? sujet.titre : 'ce sujet';
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${sujetName}" ?`)) {
       this.sujetService.deleteSujet(id).subscribe({
         next: () => {
           this.sujets = this.sujets.filter(s => s.id !== id);
           this.applyFilter();
-          this.showNotification('success', 'Sujet deleted successfully');
+          this.toastr.success(`"${sujetName}" a été supprimé avec succès`, 'Suppression réussie', {
+            timeOut: 4000,
+            positionClass: 'toast-top-right'
+          });
         },
-        error: (error) => this.showNotification('error', error.message)
+        error: (error) => this.toastr.error(error.message, 'Erreur de suppression')
+      });
+    } else {
+      this.toastr.info('Suppression annulée', 'Information', {
+        timeOut: 2000,
+        positionClass: 'toast-top-right'
       });
     }
     this.openMenus.clear();
@@ -208,25 +263,8 @@ export class SujetsComponent implements OnInit {
     }
   }
 
-  getUserName(id: number): string { // Add getUserName method
+  getUserName(id: number): string {
     const user = this.users.find(u => u.id === id);
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
-  }
-
-  showNotification(type: 'success' | 'error' | 'info', message: string): void {
-    const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-      `;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+    return user ? `${user.firstName} ${user.lastName}` : 'Inconnu';
   }
 }

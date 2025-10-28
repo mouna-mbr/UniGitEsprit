@@ -1,5 +1,5 @@
 <div class="app-container" *ngIf="isLoaded">
-  <!-- Edit Sujet Content -->
+  <!-- Contenu Modification Sujet -->
   <div class="content">
     <div class="content-header">
       <div class="page-info">
@@ -9,27 +9,27 @@
             Sujets
           </a>
           <i class="fas fa-chevron-right breadcrumb-separator"></i>
-          <span class="breadcrumb-current">Edit Sujet</span>
+          <span class="breadcrumb-current">Modifier le Sujet</span>
         </div>
-        <h1>Edit Sujet</h1>
-        <p class="subtitle">Update sujet details</p>
+        <h1>Modifier le Sujet</h1>
+        <p class="subtitle">Mettre à jour les détails du sujet</p>
       </div>
     </div>
 
-    <!-- Form Container -->
+    <!-- Conteneur du Formulaire -->
     <div class="form-container">
       <form [formGroup]="sujetForm" (ngSubmit)="onSubmit()" class="add-class-form">
         <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-        <!-- Sujet Information Section -->
+        <!-- Section Informations du Sujet -->
         <div class="form-section">
           <div class="section-header">
             <div class="section-icon">
               <i class="fas fa-book"></i>
             </div>
             <div class="section-info">
-              <h3>Sujet Information</h3>
-              <p>General details of the sujet</p>
+              <h3>Informations du Sujet</h3>
+              <p>Détails généraux du sujet</p>
             </div>
           </div>
 
@@ -44,11 +44,11 @@
                 id="titre"
                 formControlName="titre"
                 class="form-input"
-                placeholder="Enter sujet title"
+                placeholder="Entrez le titre du sujet"
                 [class.error]="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched"
               >
               <div class="error-message" *ngIf="sujetForm.get('titre')?.invalid && sujetForm.get('titre')?.touched">
-                Titre is required
+                Le titre est requis
               </div>
             </div>
 
@@ -61,27 +61,25 @@
                 id="description"
                 formControlName="description"
                 class="form-textarea"
-                placeholder="Enter sujet description"
+                placeholder="Entrez la description du sujet"
                 rows="5"
               ></textarea>
             </div>
           </div>
         </div>
 
-        <!-- Form Actions -->
+        <!-- Actions du Formulaire -->
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>
-            Cancel
+            Annuler
           </button>
           <button type="submit" class="btn btn-primary" [disabled]="sujetForm.invalid">
             <i class="fas fa-save"></i>
-            Save Changes
+            Enregistrer les modifications
           </button>
         </div>
       </form>
     </div>
   </div>
-
-  <!-- Notification Container -->
 </div>

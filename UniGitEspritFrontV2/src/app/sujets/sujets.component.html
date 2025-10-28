@@ -3,21 +3,21 @@
     <div class="page-title">
       <h1>Sujets</h1>
       <div style="display: flex; justify-content: space-between; margin-bottom: 20px">
-        <div><p class="subtitle">Manage your sujets</p></div>
+        <div><p class="subtitle">Gérez vos sujets</p></div>
         
         <div class="action-buttons">
           <div class="flex items-center ">
             <input
               type="text"
-              placeholder="Search group or class"
+              placeholder="Rechercher un sujet"
               [(ngModel)]="searchTerm"
               class="search-input" 
               (keyup.enter)="onSearch()"
-            />                <i class="fas fa-search search-icon"></i>
-            
+            />
+            <i class="fas fa-search search-icon"></i>
           </div>
-          <button (click)="onSearch()" class="bg-black-600 text-black px-4 py-2 btn btn-primary">
-            <i class="fas fa-search search-icon"></i>search
+          <button (click)="onSearch()" class="bg-black-600  px-4 py-2 btn btn-primary">
+            <i class="fas fa-search search-icon"></i>Rechercher
           </button>
           <button *ngIf="searchTerm" (click)="clearSearch()" class="text-gray-500 btn btn-primary">
             ✕
@@ -33,22 +33,22 @@
             <div class="filter-dropdown" [class.show]="isFilterMenuOpen">
               <div class="filter-item" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
                 <i class="fas fa-list"></i>
-                <span>All Sujets</span>
+                <span>Tous les sujets</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'favorites'" (click)="setFilter('favorites')">
                 <i class="fas fa-heart"></i>
-                <span>Favorites</span>
+                <span>Favoris</span>
                 <span class="count" *ngIf="getFavoriteCount() > 0">({{ getFavoriteCount() }})</span>
               </div>
               <div class="filter-item" [class.active]="currentFilter === 'recent'" (click)="setFilter('recent')">
                 <i class="fas fa-clock"></i>
-                <span>Recent</span>
+                <span>Récents</span>
               </div>
             </div>
           </div>
           <button class="btn btn-primary" *ngIf="isProfessor || isAdmin" (click)="addSujet()">
             <i class="fas fa-plus"></i>
-            Add Sujet
+            Ajouter un sujet
           </button>
         </div>
       </div>
@@ -58,13 +58,13 @@
   <div class="results-info" *ngIf="searchTerm || currentFilter !== 'all'">
     <p>
       <span class="results-count">{{ filteredSujets.length }}</span>
-      sujet(s) found
-      <span *ngIf="searchTerm"> for "{{ searchTerm }}"</span>
-      <span *ngIf="currentFilter !== 'all'"> in {{ getCurrentFilterName() }}</span>
+      sujet(s) trouvé(s)
+      <span *ngIf="searchTerm"> pour "{{ searchTerm }}"</span>
+      <span *ngIf="currentFilter !== 'all'"> dans {{ getCurrentFilterName() }}</span>
     </p>
     <button class="clear-filters" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
       <i class="fas fa-times"></i>
-      Clear Filters
+      Effacer les filtres
     </button>
   </div>
 
@@ -85,11 +85,11 @@
           <div class="dropdown-menu" [class.show]="isMenuOpen(sujet.id)">
             <div class="menu-item" (click)="updateSujet(sujet.id, $event)">
               <i class="fas fa-edit"></i>
-              <span>Update Sujet</span>
+              <span>Modifier le sujet</span>
             </div>
             <div class="menu-item danger" (click)="deleteSujet(sujet.id, $event)">
               <i class="fas fa-trash"></i>
-              <span>Delete Sujet</span>
+              <span>Supprimer le sujet</span>
             </div>
           </div>
         </div>
@@ -103,13 +103,13 @@
         <div class="class-stats">
           <div class="stat">
             <i class="fas fa-user"></i>
-            <span>Proposed by: {{ getUserName(sujet.proposeParId) }}</span>
+            <span>Proposé par: {{ getUserName(sujet.proposeParId) }}</span>
           </div>
         </div>
       </div>
       <div class="card-footer">
         <button class="btn-consult" (click)="viewSujet(sujet.id)">
-          <span>View</span>
+          <span>Consulter</span>
           <i class="fas fa-arrow-right"></i>
         </button>
       </div>
@@ -120,11 +120,11 @@
     <div class="empty-icon">
       <i class="fas fa-book"></i>
     </div>
-    <h3>No sujets found</h3>
-    <p *ngIf="searchTerm">No results for "{{ searchTerm }}"</p>
-    <p *ngIf="currentFilter === 'favorites' && !searchTerm">You have no favorite sujets yet</p>
+    <h3>Aucun sujet trouvé</h3>
+    <p *ngIf="searchTerm">Aucun résultat pour "{{ searchTerm }}"</p>
+    <p *ngIf="currentFilter === 'favorites' && !searchTerm">Vous n'avez pas encore de sujets favoris</p>
     <button class="btn btn-primary" (click)="searchTerm = ''; setFilter('all')" *ngIf="searchTerm || currentFilter !== 'all'">
-      View all sujets
+      Voir tous les sujets
     </button>
   </div>
 
@@ -132,11 +132,11 @@
     <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
       <i class="fas fa-chevron-left"></i>
     </button>
-    <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
+    <span class="pagination-info">Page {{ currentPage }} sur {{ totalPages }}</span>
     <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
       <i class="fas fa-chevron-right"></i>
     </button>
   </div>
 </main>
 
-<div id="notification-container"></div>
+<!-- Toastr notifications will appear automatically -->
