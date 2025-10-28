@@ -3,7 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { UserService } from '../services/user.service';
-import { User, ClasseResponse, ClasseCreate } from '../models/classe.model';
+import { ClasseResponse, ClasseCreate } from '../models/classe.model'; // CORRIGÉ
+import { UserResponse ,Role} from '../models/user.model';
 
 @Component({
   selector: 'app-edit-classe',
@@ -13,13 +14,15 @@ import { User, ClasseResponse, ClasseCreate } from '../models/classe.model';
 export class EditClasseComponent implements OnInit {
   classeForm: FormGroup;
   errorMessage: string | null = null;
-  users: User[] = [];
-  isUsersLoaded: boolean = false;
-  newStudentId: number | string | null = null;
-  newTeacherId: number | string | null = null;
+  users: UserResponse[] = []; // CORRIGÉ : UserResponse
+  isUsersLoaded = false;
+  newStudentId: number | null = null;
+  newTeacherId: number | null = null;
   newlyAddedIds: number[] = [];
   classe: ClasseResponse | null = null;
   classeId: number;
+  Role = Role; // Expose l'enum au template
+
 
   constructor(
     private fb: FormBuilder,
@@ -47,7 +50,7 @@ export class EditClasseComponent implements OnInit {
 
   loadUsers(): void {
     this.userService.getAllUsers().subscribe({
-      next: (users) => {
+      next: (users: UserResponse[]) => { // Type explicite
         this.users = users;
         this.isUsersLoaded = true;
       },
@@ -79,52 +82,50 @@ export class EditClasseComponent implements OnInit {
   }
 
   getUserName(id: number): string {
-    const user = this.users.find(u => u.id === Number(id));
-    return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+    const user = this.users.find(u => u.id === id);
+    return user ? `${user.firstName} ${user.lastName}` : 'Inconnu';
   }
 
   addStudent(): void {
-    const numericId = Number(this.newStudentId);
-    const user = this.users.find(u => u.id === numericId);
-    if (this.newStudentId && user && user.role?.includes('STUDENT')) {
-      const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
-      if (!etudiantIds.includes(numericId)) {
-        etudiantIds.push(numericId);
+    const id = Number(this.newStudentId);
+    const user = this.users.find(u => u.id === id);
+
+    if (this.newStudentId && user && user.roles.includes(Role.STUDENT)) {
+      const etudiantIds = [...(this.classeForm.get('etudiantIds')?.value || [])];
+      if (!etudiantIds.includes(id)) {
+        etudiantIds.push(id);
         this.classeForm.get('etudiantIds')?.setValue(etudiantIds);
-        this.newlyAddedIds.push(numericId);
-        setTimeout(() => {
-          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId);
-        }, 2000);
+        this.newlyAddedIds.push(id);
+        setTimeout(() => this.newlyAddedIds = this.newlyAddedIds.filter(x => x !== id), 2000);
         this.newStudentId = null;
       }
     }
   }
 
   removeStudent(index: number): void {
-    const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
+    const etudiantIds = [...(this.classeForm.get('etudiantIds')?.value || [])];
     etudiantIds.splice(index, 1);
     this.classeForm.get('etudiantIds')?.setValue(etudiantIds);
   }
 
   addTeacher(): void {
-    const numericId = Number(this.newTeacherId);
-    const user = this.users.find(u => u.id === numericId);
-    if (this.newTeacherId && user && user.role?.includes( 'PROFESSOR')) {
-      const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
-      if (!enseignantIds.includes(numericId)) {
-        enseignantIds.push(numericId);
+    const id = Number(this.newTeacherId);
+    const user = this.users.find(u => u.id === id);
+
+    if (this.newTeacherId && user && user.roles.includes(Role.PROFESSOR)) {
+      const enseignantIds = [...(this.classeForm.get('enseignantIds')?.value || [])];
+      if (!enseignantIds.includes(id)) {
+        enseignantIds.push(id);
         this.classeForm.get('enseignantIds')?.setValue(enseignantIds);
-        this.newlyAddedIds.push(numericId);
-        setTimeout(() => {
-          this.newlyAddedIds = this.newlyAddedIds.filter(id => id !== numericId);
-        }, 2000);
+        this.newlyAddedIds.push(id);
+        setTimeout(() => this.newlyAddedIds = this.newlyAddedIds.filter(x => x !== id), 2000);
         this.newTeacherId = null;
       }
     }
   }
 
   removeTeacher(index: number): void {
-    const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
+    const enseignantIds = [...(this.classeForm.get('enseignantIds')?.value || [])];
     enseignantIds.splice(index, 1);
     this.classeForm.get('enseignantIds')?.setValue(enseignantIds);
   }
@@ -138,7 +139,7 @@ export class EditClasseComponent implements OnInit {
       const updatedClasse: ClasseCreate = this.classeForm.value;
       this.classeService.updateClasse(this.classeId, updatedClasse).subscribe({
         next: () => {
-          this.showNotification('success', 'Class updated successfully');
+          this.showNotification('success', 'Classe mise à jour avec succès');
           this.router.navigate(['/classes']);
         },
         error: (error) => {
@@ -155,15 +156,19 @@ export class EditClasseComponent implements OnInit {
 
   showNotification(type: 'success' | 'error' | 'info', message: string): void {
     const container = document.getElementById('notification-container');
-    if (container) {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type} show`;
-      notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
-      container.appendChild(notification);
-      setTimeout(() => {
-        notification.className = `notification ${type}`;
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
+    if (!container) return;
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type} show`;
+    notification.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+      ${message}
+    `;
+    container.appendChild(notification);
+
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
   }
 }

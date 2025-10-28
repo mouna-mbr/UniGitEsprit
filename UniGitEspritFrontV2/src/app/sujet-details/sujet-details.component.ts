@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SujetService } from '../services/sujet.service';
 import { UserService } from '../services/user.service';
 import { SujetResponse } from '../models/sujet.model';
-import { UserResponse } from '../models/user.model';
+import { UserResponse ,Role } from '../models/user.model';
 import { DemandeParainageService } from '../services/demande-parainage.service';
 import { DemandeParainageRequest } from '../models/demande.model';
 import { AuthService } from '../services/auth.service';
@@ -48,11 +48,12 @@ export class SujetDetailsComponent implements OnInit {
       },
       error: (error) => this.showNotification('error', error.message)
     });
-    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
-    this.isRefEntreprise = this.authService.getCurrentUser()?.role.includes('REFERENT_ENTREPRISE');
-    this.isOwner = this.authService.getCurrentUser()?.identifiant === this.sujet?.proposeParId;
-
+  
+    const currentUser = this.authService.getCurrentUser();
+    this.isAdmin = currentUser?.roles.includes(Role.ADMIN) || false;
+    this.isProfessor = currentUser?.roles.includes(Role.PROFESSOR) || false;
+    this.isRefEntreprise = currentUser?.roles.includes(Role.REFERENT_ENTREPRISE) || false;
+    this.isOwner = currentUser?.identifiant === this.sujet?.proposeParId;
   }
 
   loadSujet(): void {

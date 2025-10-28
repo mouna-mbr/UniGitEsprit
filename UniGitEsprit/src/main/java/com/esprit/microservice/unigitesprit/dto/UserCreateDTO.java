@@ -2,6 +2,7 @@ package com.esprit.microservice.unigitesprit.dto;
 import com.esprit.microservice.unigitesprit.enumeration.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.HashSet;
@@ -14,8 +15,8 @@ public class UserCreateDTO {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotNull(message = "Role is required")
-    private HashSet<Role> role;
+    @NotEmpty(message = "Au moins un rôle est requis")
+    private Set<Role> roles = new HashSet<>(); // Initialiser pour éviter null
 
     @NotBlank(message = "Identifiant is required")
     private String identifiant;
@@ -23,59 +24,48 @@ public class UserCreateDTO {
     @NotBlank(message = "Password is required")
     private String password;
 
-    private String classe; // Optional
+    private String classe;
 
-    private String specialite; // Optional
+    private String specialite;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
-    public @NotBlank(message = "Last name is required") String getLastName() {
-        return lastName;
-    }
-
-    public HashSet<Role> getRole() {
-        return role;
-    }
-
-    public @NotBlank(message = "Identifiant is required") String getIdentifiant() {
-        return identifiant;
-    }
-
-    public @NotBlank(message = "Password is required") String getPassword() {
-        return password;
-    }
-
-    public String getClasse() {
-        return classe;
-    }
-
-    public String getSpecialite() {
-        return specialite;
-    }
-
-    public @NotBlank(message = "Email is required") @Email(message = "Invalid email format") String getEmail() {
-        return email;
-    }
-
-    public String getGitUsername() {
-        return gitUsername;
-    }
-
-    public String getGitAccessToken() {
-        return gitAccessToken;
-    }
-
-    // Git fields optional, no validation needed
     private String gitUsername;
-
     private String gitAccessToken;
 
-    // Constructors, Getters, Setters
-    public UserCreateDTO() {}
-
-    // Getters and Setters (omitted for brevity; add them similarly to entity)
+    // CORRECTION: Getters et Setters corrects
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    // CORRECTION: getRoles() et setRoles() au pluriel
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles != null ? roles : new HashSet<>();
+    }
+
+    public String getIdentifiant() { return identifiant; }
+    public void setIdentifiant(String identifiant) { this.identifiant = identifiant; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getClasse() { return classe; }
+    public void setClasse(String classe) { this.classe = classe; }
+
+    public String getSpecialite() { return specialite; }
+    public void setSpecialite(String specialite) { this.specialite = specialite; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getGitUsername() { return gitUsername; }
+    public void setGitUsername(String gitUsername) { this.gitUsername = gitUsername; }
+
+    public String getGitAccessToken() { return gitAccessToken; }
+    public void setGitAccessToken(String gitAccessToken) { this.gitAccessToken = gitAccessToken; }
 }

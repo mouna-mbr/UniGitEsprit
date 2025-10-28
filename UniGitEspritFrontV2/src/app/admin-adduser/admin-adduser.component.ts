@@ -1,8 +1,9 @@
+// admin-adduser.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
-import { User, UserResponse } from '../models/user.model';
 import { ClasseService } from '../services/classe.service';
+import { User, UserResponse, Role } from '../models/user.model';
 import { ClasseResponse } from '../models/classe.model';
 import { ToastrService } from 'ngx-toastr';
 
@@ -13,353 +14,287 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class AdminAdduserComponent implements OnInit {
   buttonText = 'Add User';
-  userForm!: FormGroup;
-  showaddUserForm = false;
-  selectedUser: UserResponse | null = null;
-  showPassword = false;
+  showForm = false;
+  isCsvMode = false;
   isSubmitting = false;
-  showSpecialtyField = false;
-  isComputerScienceFourthYearOrHigher = false;
-  selectedFile: File | null = null;
-  isCsvMode: boolean = false;
-  csvData: any[] = [];
-  availableRoles = [
-    'ADMIN',
-    'STUDENT',
-    'PROFESSOR',
-    'REFERENT_ESPRIT',
-    'REFERENT_ENTREPRISE',
-    'COORDINATEUR_PI'
-  ];
-  userRoles: string[] = [];
+  Role = Role; // Expose l'enum au template
+  showPassword = false;
+  userForm!: FormGroup;
   classOptions: ClasseResponse[] = [];
+  users: UserResponse[] = [];
+  selectedUser: UserResponse | null = null;
+  userRoles: Role[] = [];
+
+  availableRoles = Object.values(Role); // utiliser l'enum pour options
+
+  selectedFile: File | null = null;
+  csvData: any[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private classService: ClasseService,
     private userService: UserService,
+    private classeService: ClasseService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.loadUsers();
+    this.initForm();
     this.loadClasses();
+    this.loadUsers();
   }
 
-  loadClasses(): void {
-    this.classService.getAllClasses().subscribe({
-      next: (classes) => {
-        this.classOptions = classes;
-        console.log(this.classOptions);
-      },
-      error: (error) => {
-        this.toastr.error('Erreur lors du chargement des classes.', 'Erreur');
-        console.error('error', error.message);
-      }
-    });
-  }
-
-  initializeForm(): void {
+  private initForm(): void {
     this.userForm = this.fb.group({
-      nom: ['', [Validators.required]],
-      prenom: ['', [Validators.required]],
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      role: [[''], [Validators.required]],
+      roles: [[], Validators.required],
       classe: [''],
-      specialite: [''],
       identifiant: ['', [Validators.required, Validators.pattern(/^\d{3}[A-Z]{3}\d{4}$/)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       gitUsername: [''],
-      gitAccessToken: ['']
+      gitAccessToken: [''],
+    });
+
+    // Initialize with default role
+    this.userRoles = [Role.STUDENT];
+    this.userForm.get('roles')?.setValue(this.userRoles);
+
+    this.userForm.get('roles')?.valueChanges.subscribe(() => {
+      this.updateClasseValidation();
     });
   }
 
-  showUserForm() {
-    this.showaddUserForm = !this.showaddUserForm;
-    this.initializeForm();
-    if (this.showaddUserForm) {
-      this.buttonText = 'Consulter Liste des Utilisateurs';
+  toggleForm(): void {
+    this.showForm = !this.showForm;
+    this.buttonText = this.showForm ? 'Consulter la liste' : 'Add User';
+    if (!this.showForm) this.resetForm();
+    else this.isCsvMode = false;
+  }
+
+  addRole(event: any): void {
+    const roleValue = event.target.value;
+    if (roleValue && !this.userRoles.includes(roleValue as Role)) {
+      this.userRoles = [...this.userRoles, roleValue as Role];
+      this.userForm.get('roles')?.setValue(this.userRoles);
+    }
+    event.target.value = '';
+  }
+
+  removeRole(role: Role): void {
+    this.userRoles = this.userRoles.filter(r => r !== role);
+    this.userForm.get('roles')?.setValue(this.userRoles);
+    
+    // Ensure we always have at least one role
+    if (this.userRoles.length === 0) {
+      this.userRoles = [Role.STUDENT];
+      this.userForm.get('roles')?.setValue(this.userRoles);
+    }
+  }
+
+  updateClasseValidation(): void {
+    const roles = this.userForm.get('roles')?.value || [];
+    const classeCtrl = this.userForm.get('classe');
+    if (roles.includes(Role.STUDENT)) {
+      classeCtrl?.setValidators(Validators.required);
     } else {
-      this.buttonText = 'Add User';
+      classeCtrl?.clearValidators();
+      classeCtrl?.setValue('');
     }
-  }
-
-  toggleMode(): void {
-    this.isCsvMode = !this.isCsvMode;
-    this.selectedFile = null;
-    this.csvData = [];
-    if (document.getElementById('csvFile')) {
-      (document.getElementById('csvFile') as HTMLInputElement).value = '';
-    }
-  }
-
-  onRoleChange(): void {
-    const role = this.userForm.get('role')?.value;
-    const classeControl = this.userForm.get('classe');
-    const specialiteControl = this.userForm.get('specialite');
-    if (role === 'STUDENT') {
-      classeControl?.setValidators([Validators.required]);
-      this.onClassChange();
-    } else {
-      classeControl?.clearValidators();
-      specialiteControl?.clearValidators();
-      classeControl?.setValue('');
-      specialiteControl?.setValue('');
-      this.showSpecialtyField = false;
-      this.isComputerScienceFourthYearOrHigher = false;
-    }
-    classeControl?.updateValueAndValidity();
-    specialiteControl?.updateValueAndValidity();
-  }
-
-  onClassChange(): void {
-    const classe = this.userForm.get('classe');
-    const specialiteControl = this.userForm.get('specialite');
-    // Logique pour gérer les spécialités selon la classe sélectionnée
-  }
-
-  formatIdentifiant(event: any): void {
-    let value = event.target.value.replace(/[^0-9A-Za-z]/g, '');
-    value = value.toUpperCase();
-    if (value.length > 3 && value.length <= 6) {
-      const digits = value.substring(0, 3).replace(/[^0-9]/g, '');
-      const letters = value.substring(3).replace(/[^A-Z]/g, '');
-      value = digits + letters;
-    } else if (value.length > 6) {
-      const digits1 = value.substring(0, 3).replace(/[^0-9]/g, '');
-      const letters = value.substring(3, 6).replace(/[^A-Z]/g, '');
-      const digits2 = value.substring(6, 10).replace(/[^0-9]/g, '');
-      value = digits1 + letters + digits2;
-    }
-    event.target.value = value;
-    this.userForm.get('identifiant')?.setValue(value);
-  }
-
-  togglePassword(): void {
-    this.showPassword = !this.showPassword;
+    classeCtrl?.updateValueAndValidity();
   }
 
   onSubmit(): void {
-    if (this.userForm.valid) {
-      this.isSubmitting = true;
-      const userData: User = {
-        firstName: this.userForm.get('prenom')?.value,
-        lastName: this.userForm.get('nom')?.value,
-        role: Array.isArray(this.userForm.get('role')?.value)
-          ? this.userForm.get('role')?.value
-          : [this.userForm.get('role')?.value],
-        identifiant: this.userForm.get('identifiant')?.value,
-        password: this.userForm.get('password')?.value,
-        classe: this.userForm.get('classe')?.value || undefined,
-        specialite: this.userForm.get('specialite')?.value || undefined,
-        email: this.userForm.get('email')?.value,
-        gitUsername: this.userForm.get('gitUsername')?.value || undefined,
-        gitAccessToken: this.userForm.get('gitAccessToken')?.value || undefined
-      };
-      this.userService.addUser(userData).subscribe({
-        next: (response) => {
-          this.isSubmitting = false;
-          this.toastr.success('Utilisateur ajouté avec succès !', 'Succès');
-          this.userForm.reset();
-          this.showSpecialtyField = false;
-          this.isComputerScienceFourthYearOrHigher = false;
-          this.loadUsers();
-        },
-        error: (error) => {
-          this.isSubmitting = false;
-          console.error('Erreur lors de l\'ajout de l\'utilisateur :', error);
-          if (error.status === 409) {
-            const errorMessage = (error.error as any)?.message || 'Un utilisateur avec cet identifiant ou cet email existe déjà.';
-            this.toastr.error(errorMessage, 'Erreur');
-          } else if (error.status === 400) {
-            this.toastr.error(error.message || 'Les données fournies sont invalides.', 'Erreur');
-          } else {
-            this.toastr.error(error.message || 'Échec de l\'ajout de l\'utilisateur. Veuillez réessayer.', 'Erreur');
-          }
-        }
-      });
-    } else {
-      Object.keys(this.userForm.controls).forEach((key) => {
-        this.userForm.get(key)?.markAsTouched();
-      });
-      this.toastr.error('Veuillez remplir correctement tous les champs requis.', 'Formulaire invalide');
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      this.toastr.error('Veuillez corriger les erreurs.', 'Formulaire invalide');
+      return;
     }
+
+    this.isSubmitting = true;
+
+    const formValue = this.userForm.value;
+    
+    // Ensure roles are properly set and never empty
+    const roles = this.userRoles.length > 0 ? this.userRoles : [Role.STUDENT];
+    
+    const payload: User = {
+      firstName: formValue.firstName,
+      lastName: formValue.lastName,
+      email: formValue.email,
+      roles: roles,
+      identifiant: formValue.identifiant,
+      password: formValue.password,
+      classe: formValue.classe || null,
+      gitUsername: formValue.gitUsername || null,
+      gitAccessToken: formValue.gitAccessToken || null,
+    };
+
+    console.log('Final payload sent to backend:', payload);
+    console.log('Roles being sent:', payload.roles);
+    
+    this.userService.addUser(payload).subscribe({
+      next: () => {
+        this.toastr.success('Utilisateur ajouté avec succès !');
+        this.resetForm();
+        this.loadUsers();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Erreur backend complète:', err);
+        this.toastr.error(err.message || 'Erreur lors de la création');
+        this.isSubmitting = false;
+      },
+    });
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
+  openEdit(user: UserResponse): void {
+    this.selectedUser = { ...user };
+    this.userRoles = [...user.roles];
+    this.userForm.patchValue({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      roles: this.userRoles,
+      classe: user.classe,
+      identifiant: user.identifiant,
+      gitUsername: user.gitUsername,
+      gitAccessToken: user.gitAccessToken,
+    });
+    this.showForm = true;
+    this.isCsvMode = false;
+    this.updateClasseValidation();
+  }
+
+  saveEdit(): void {
+    if (!this.selectedUser || this.userForm.invalid) return;
+
+    this.isSubmitting = true;
+
+    const payload: Partial<User> = {
+      firstName: this.userForm.get('firstName')?.value,
+      lastName: this.userForm.get('lastName')?.value,
+      email: this.userForm.get('email')?.value,
+      roles: this.userForm.get('roles')?.value,
+      classe: this.userForm.get('classe')?.value || null,
+      gitUsername: this.userForm.get('gitUsername')?.value || null,
+      gitAccessToken: this.userForm.get('gitAccessToken')?.value || null,
+    };
+
+    this.userService.updateUser(this.selectedUser.identifiant, payload).subscribe({
+      next: () => {
+        this.toastr.success('Utilisateur mis à jour !');
+        this.toggleForm();
+        this.loadUsers();
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors de la mise à jour:', err);
+        this.toastr.error(err.message || 'Échec de la mise à jour');
+        this.isSubmitting = false;
+      },
+    });
+  }
+
+  delete(user: UserResponse): void {
+    if (!confirm(`Supprimer ${user.firstName} ${user.lastName} ?`)) return;
+
+    this.userService.deleteUser(user.identifiant).subscribe({
+      next: () => {
+        this.toastr.success('Utilisateur supprimé avec succès');
+        this.loadUsers();
+      },
+      error: (err) => {
+        console.error('Erreur lors de la suppression:', err);
+        this.toastr.error(err.message || 'Échec de la suppression');
+      },
+    });
+  }
+
+  toggleCsv(): void {
+    this.isCsvMode = !this.isCsvMode;
+    this.selectedFile = null;
+    this.csvData = [];
+  }
+
+  onFileSelected(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    if (input.files?.length) {
       this.selectedFile = input.files[0];
       this.previewCsv();
-    } else {
-      this.selectedFile = null;
-      this.csvData = [];
     }
   }
 
   previewCsv(): void {
     if (!this.selectedFile) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const text = e.target?.result as string;
-      const rows = text.split('\n').map(row => row.split(','));
-      const headers = rows[0];
-      this.csvData = rows.slice(1).map(row => ({
-        firstName: row[headers.indexOf('firstName')] || '',
-        lastName: row[headers.indexOf('lastName')] || '',
-        email: row[headers.indexOf('email')] || '',
-        role: row[headers.indexOf('role')] || '',
-        identifiant: row[headers.indexOf('identifiant')] || '',
-        password: row[headers.indexOf('password')] || '',
-        classe: row[headers.indexOf('classe')] || '',
-        specialite: row[headers.indexOf('specialite')] || '',
-        gitUsername: row[headers.indexOf('gitUsername')] || '',
-        gitAccessToken: row[headers.indexOf('gitAccessToken')] || ''
-      }));
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return;
+
+      const headers = lines[0].split(',').map(h => h.trim());
+      this.csvData = lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim());
+        const obj: any = {};
+        headers.forEach((h, i) => {
+          if (h === 'roles') {
+            obj[h] = values[i] ? values[i].split(';')
+              .map(r => Role[r as keyof typeof Role])
+              .filter(Boolean) : [];
+          } else {
+            obj[h] = values[i] || '';
+          }
+        });
+        return obj;
+      });
     };
     reader.readAsText(this.selectedFile);
   }
 
-  onUploadCsv(): void {
-    if (!this.selectedFile) {
-      this.toastr.error('Veuillez sélectionner un fichier CSV à charger.', 'Erreur');
-      return;
-    }
+  uploadCsv(): void {
+    if (!this.selectedFile) return;
     this.isSubmitting = true;
     this.userService.addUsersFromCsv(this.selectedFile).subscribe({
-      next: () => {
+      next: (report) => {
         this.isSubmitting = false;
-        this.toastr.success('Utilisateurs ajoutés avec succès via CSV.', 'Succès');
-        this.selectedFile = null;
-        this.csvData = [];
-        (document.getElementById('csvFile') as HTMLInputElement).value = '';
+        this.toastr.success(`${report.successCount} utilisateurs ajoutés, ${report.errors.length} erreurs`);
         this.loadUsers();
+        this.toggleCsv();
       },
-      error: (error) => {
+      error: (err) => {
         this.isSubmitting = false;
-        if (error.status === 409) {
-          this.toastr.error(error.message || 'Un ou plusieurs utilisateurs existent déjà (identifiant ou email déjà utilisé).', 'Erreur');
-        } else if (error.status === 400) {
-          this.toastr.error(error.message || 'Le fichier CSV contient des données invalides.', 'Erreur');
-        } else {
-          this.toastr.error(error.message || 'Échec du chargement des utilisateurs. Vérifiez le fichier CSV et réessayez.', 'Erreur');
-        }
-      }
+        console.error('Erreur lors de l\'import CSV:', err);
+        this.toastr.error(err.message || 'Import échoué');
+      },
     });
   }
 
-  goBack(): void {
-    window.history.back();
+  private resetForm(): void {
+    this.userForm.reset();
+    this.userRoles = [Role.STUDENT]; // Reset with default role
+    this.userForm.get('roles')?.setValue(this.userRoles);
+    this.selectedUser = null;
+    this.isCsvMode = false;
+    this.updateClasseValidation();
   }
 
-  users: UserResponse[] = [];
-  showModal = false;
+  loadClasses() {
+    this.classeService.getAllClasses().subscribe({
+      next: (c) => this.classOptions = c,
+      error: (err) => console.error('Erreur chargement classes:', err)
+    });
+  }
 
   loadUsers() {
     this.userService.getAllUsers().subscribe({
-      next: (data) => {
-        this.users = data;
-        console.log(data);
-      },
-      error: (error) => {
-        this.toastr.error(error.message || 'Erreur lors du chargement des utilisateurs.', 'Erreur');
-        console.error(error);
-      }
+      next: (u) => this.users = u,
+      error: (err) => console.error('Erreur chargement utilisateurs:', err)
     });
   }
 
-  openEditModal(user: UserResponse) {
-    this.selectedUser = { ...user };
-    this.userRoles = [...user.role];
-    this.userForm.patchValue({
-      nom: this.selectedUser.lastName,
-      prenom: this.selectedUser.firstName,
-      email: this.selectedUser.email,
-      identifiant: this.selectedUser.identifiant,
-      role: this.userRoles
-    });
-    this.showModal = true;
-  }
-
-  closeModal() {
-    this.showModal = false;
-    this.selectedUser = null;
-  }
-
-  addRole(event: any) {
-    const role = event.target.value;
-    if (role && !this.userRoles.includes(role)) {
-      this.userRoles.push(role);
-      this.userForm.get('role')?.setValue(this.userRoles);
-    }
-    event.target.value = '';
-  }
-
-  removeRole(role: string) {
-    this.userRoles = this.userRoles.filter(r => r !== role);
-    this.userForm.get('role')?.setValue(this.userRoles);
-  }
-
-  saveUser() {
-    if (this.userForm.valid) {
-      const userData: User = {
-        firstName: this.userForm.get('prenom')?.value,
-        lastName: this.userForm.get('nom')?.value,
-        email: this.userForm.get('email')?.value,
-        identifiant: this.userForm.get('identifiant')?.value,
-        role: this.userRoles
-      };
-      if (this.selectedUser) {
-        this.userService.updateUser(userData.identifiant, userData).subscribe({
-          next: () => {
-            this.toastr.success('Utilisateur modifié avec succès !', 'Succès');
-            this.closeModal();
-            this.loadUsers();
-          },
-          error: (error) => {
-            if (error.status === 409) {
-              this.toastr.error(error.message || 'Cet email est déjà utilisé par un autre utilisateur.', 'Erreur');
-            } else if (error.status === 404) {
-              this.toastr.error('Utilisateur non trouvé.', 'Erreur');
-            } else {
-              this.toastr.error(error.message || 'Échec de la modification de l\'utilisateur.', 'Erreur');
-            }
-          }
-        });
-      }
-    } else {
-      this.toastr.error('Veuillez remplir correctement tous les champs requis.', 'Formulaire invalide');
-    }
-  }
-
-  deleteUser(user: UserResponse) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-      this.userService.deleteUser(user.identifiant).subscribe({
-        next: () => {
-          this.toastr.success('Utilisateur supprimé avec succès.', 'Succès');
-          this.loadUsers();
-        },
-        error: (error) => {
-          if (error.status === 404) {
-            this.toastr.error('Utilisateur non trouvé.', 'Erreur');
-          } else {
-            this.toastr.error(error.message || 'Échec de la suppression de l\'utilisateur.', 'Erreur');
-          }
-        }
-      });
-    }
-  }
-
-  toggleRole(role: string, event: Event) {
-    const isChecked = (event.target as HTMLInputElement).checked;
-    if (isChecked) {
-      if (!this.userRoles.includes(role)) {
-        this.userRoles.push(role);
-      }
-    } else {
-      this.userRoles = this.userRoles.filter(r => r !== role);
-    }
-    this.userForm.get('role')?.setValue(this.userRoles);
+  // Helper method to toggle password visibility
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

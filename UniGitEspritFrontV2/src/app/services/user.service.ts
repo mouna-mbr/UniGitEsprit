@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { User, UserResponse } from '../models/user.model';
+import { catchError, tap } from 'rxjs/operators';
+import { AuthResponse, User, UserResponse ,Role} from '../models/user.model';
+import { CsvImportReport } from '../models/csv.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,10 +19,8 @@ export class UserService {
     );
   }
 
-  updateUser(id: string, user: User): Observable<UserResponse> {
-    return this.http.put<UserResponse>(`${this.apiUrl}/${id}`, user).pipe(
-      catchError(this.handleError)
-    );
+  updateUser(identifiant: string, user: Partial<User>): Observable<UserResponse> {
+    return this.http.put<UserResponse>(`${this.apiUrl}/${identifiant}`, user);
   }
 
   getAllUsers(): Observable<UserResponse[]> {
@@ -35,12 +34,34 @@ export class UserService {
       catchError(this.handleError)
     );
   }
-
   addUser(user: User): Observable<UserResponse> {
-    return this.http.post<UserResponse>(this.apiUrl, user).pipe(
+    const token = localStorage.getItem('token');
+    
+    // Créer un payload très explicite
+    const payload = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      roles: user.roles.map(role => role.toString()), // S'assurer que ce sont des strings
+      identifiant: user.identifiant,
+      password: user.password,
+      classe: user.classe || null,
+      gitUsername: user.gitUsername || null,
+      gitAccessToken: user.gitAccessToken || null,
+    };
+  
+    console.log('Payload JSON:', JSON.stringify(payload));
+  
+    return this.http.post<UserResponse>(this.apiUrl, payload, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }).pipe(
       catchError(this.handleError)
     );
   }
+  
 
   addUsersBulk(users: User[]): Observable<UserResponse[]> {
     return this.http.post<UserResponse[]>(`${this.apiUrl}/bulk`, users).pipe(
@@ -48,19 +69,23 @@ export class UserService {
     );
   }
 
-  addUsersFromCsv(file: File): Observable<void> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<void>(`${this.apiUrl}/csv`, formData).pipe(
-      catchError(this.handleError)
-    );
-  }
+// src/app/services/user.service.ts
+addUsersFromCsv(file: File): Observable<CsvImportReport> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return this.http.post<CsvImportReport>(`${this.apiUrl}/csv`, formData);
+}
 
-  login(identifiant: string, password: string): Observable<UserResponse> {
-    return this.http.post<UserResponse>(`${this.apiUrl}/login`, { identifiant, password }).pipe(
-      catchError(this.handleError)
+login(username: string, password: string): Observable<AuthResponse> {
+  return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { username, password })
+    .pipe(
+      tap((res: AuthResponse) => {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        localStorage.setItem('roles', JSON.stringify(res.user.roles)); // ← Stocker les rôles
+      })
     );
-  }
+}
 
   updateGitCredentials(userId: number, updateData: { gitUsername: string; gitAccessToken: string }): Observable<UserResponse> {
     return this.http.put<UserResponse>(`${this.apiUrl}/${userId}/git-credentials`, updateData).pipe(

@@ -1,11 +1,14 @@
 package com.esprit.microservice.unigitesprit.security;
 
 import com.esprit.microservice.unigitesprit.enumeration.Role;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,37 +18,52 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// JwtRequestFilter.java
 @Component
+@RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil; // Injecté
 
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        String auth = req.getHeader("Authorization");
-        if (auth != null && auth.startsWith("Bearer ")) {
-            String token = auth.substring(7);
-            try {
-                String username = jwtUtil.extractUsername(token);
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    Set<Role> roles = jwtUtil.extractRoles(token);
-                    Set<GrantedAuthority> auths = roles.stream()
-                            .map(r -> new SimpleGrantedAuthority(r.name()))
-                            .collect(Collectors.toSet());
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(username, null, auths);
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            } catch (JwtException ex) {
-                // invalid token -> ignore and let security handle later (401)
-            }
+        final String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
         }
-        chain.doFilter(req, res);
+
+        String token = header.substring(7).trim();
+
+        if (!token.matches("^[^.]+\\.[^.]+\\.[^.]+$")) {
+            logger.warn("Token JWT invalide (format)");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        try {
+            String username = jwtUtil.extractUsername(token);
+            Set<Role> roles = jwtUtil.extractRoles(token);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                        .collect(Collectors.toList());
+
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(username, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        } catch (Exception e) {
+            logger.warn("JWT invalide : " + e.getMessage());
+        }
+
+        chain.doFilter(request, response);
     }
 }

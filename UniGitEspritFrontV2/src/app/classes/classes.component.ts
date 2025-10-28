@@ -4,7 +4,7 @@ import { ClasseService } from '../services/classe.service';
 import { ClasseResponse } from '../models/classe.model';
 import { Subject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-
+import { Role } from '../models/user.model';
 @Component({
   selector: 'app-classes',
   templateUrl: './classes.component.html',
@@ -30,7 +30,7 @@ export class ClassesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadClasses();
-    this.isProf = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+    this.isProf = this.authService.getCurrentUser()?.roles.includes(Role.PROFESSOR);
   }
   onSearch(): void {
     if (!this.searchTerm.trim()) {

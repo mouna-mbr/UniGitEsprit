@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
+import { Role } from '../models/user.model';
 
 @Component({
   selector: 'app-demandes',
@@ -31,8 +32,8 @@ export class DemandesComponent implements OnInit{
   constructor(private demandeService: DemandesService,private authService: AuthService ,private router: Router) {}
 ngOnInit(): void {
  this.loadDemandes();
-this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-this.isCpi = this.authService.getCurrentUser()?.role.includes('COORDINATEUR_PI');
+this.isAdmin = this.authService.getCurrentUser()?.roles.includes(Role.ADMIN);
+this.isCpi = this.authService.getCurrentUser()?.roles.includes(Role.COORDINATEUR_PI);
 }
 onSearch(): void {
   if (!this.searchTerm.trim()) {

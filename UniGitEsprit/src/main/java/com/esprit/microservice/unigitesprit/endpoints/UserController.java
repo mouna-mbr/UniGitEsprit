@@ -1,15 +1,9 @@
 package com.esprit.microservice.unigitesprit.endpoints;
 
-import com.esprit.microservice.unigitesprit.dto.UserCreateDTO;
-import com.esprit.microservice.unigitesprit.dto.UserLoginDTO;
-import com.esprit.microservice.unigitesprit.dto.UserResponseDTO;
-import com.esprit.microservice.unigitesprit.dto.UserUpdateGitDTO;
-import com.esprit.microservice.unigitesprit.entities.User;
+import com.esprit.microservice.unigitesprit.dto.*;
 import com.esprit.microservice.unigitesprit.services.interfaces.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,93 +14,82 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "http://localhost:4200")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
+    // GET: Liste tous les utilisateurs
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<UserResponseDTO> responses = userService.getAllUsers();
-        return new ResponseEntity<>(responses, HttpStatus.OK);
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable String id, @RequestBody User user) {
-        try {
-            UserResponseDTO response = userService.updateUser(id, user);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(null, e.getStatusCode());
-        }
-    }
-
+    // POST: Ajouter un utilisateur
     @PostMapping
-    public ResponseEntity<UserResponseDTO> addUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
-        try {
-            UserResponseDTO response = userService.addUser(userCreateDTO);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(null, e.getStatusCode());
-        }
+    public ResponseEntity<UserResponseDTO> addUser(@Valid @RequestBody UserCreateDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.addUser(dto));
     }
 
+    // POST: Ajouter plusieurs utilisateurs
     @PostMapping("/bulk")
-    public ResponseEntity<List<UserResponseDTO>> addUsersBulk(@Valid @RequestBody List<UserCreateDTO> userCreateDTOs) {
-        try {
-            List<UserResponseDTO> responses = userService.addUsersBulk(userCreateDTOs);
-            return new ResponseEntity<>(responses, HttpStatus.CREATED);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(null, e.getStatusCode());
-        }
+    public ResponseEntity<List<UserResponseDTO>> addUsersBulk(@Valid @RequestBody List<UserCreateDTO> dtos) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.addUsersBulk(dtos));
     }
 
+    // POST: Importer via CSV → Retourne un rapport
     @PostMapping("/csv")
-    public ResponseEntity<Void> addUsersFromCsv(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<CsvImportReport> addUsersFromCsv(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(
+                    new CsvImportReport(0, 0, List.of(new CsvError(0, "Fichier vide")))
+            );
+        }
+
         try {
-            userService.addUsersFromCsv(file);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            CsvImportReport report = userService.addUsersFromCsv(file);
+            return ResponseEntity.ok(report);
         } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(e.getStatusCode());
+            // Erreur de validation ou lecture CSV
+            CsvError error = new CsvError(0, e.getReason());
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(new CsvImportReport(0, 0, List.of(error)));
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<UserResponseDTO> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        try {
-            UserResponseDTO response = userService.login(userLoginDTO);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(null, e.getStatusCode());
-        }
+    // PUT: Mettre à jour un utilisateur
+    @PutMapping("/{identifiant}")
+    public ResponseEntity<UserResponseDTO> updateUser(
+            @PathVariable String identifiant,
+            @Valid @RequestBody UserUpdateDTO dto) {
+        return ResponseEntity.ok(userService.updateUser(identifiant, dto));
     }
 
+    // PUT: Mettre à jour les identifiants Git
     @PutMapping("/{id}/git-credentials")
-    public ResponseEntity<UserResponseDTO> updateGitCredentials(@PathVariable Long id, @Valid @RequestBody UserUpdateGitDTO updateGitDTO) {
-        try {
-            UserResponseDTO response = userService.updateGitCredentials(id, updateGitDTO);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(null, e.getStatusCode());
-        }
+    public ResponseEntity<UserResponseDTO> updateGit(
+            @PathVariable Long id,
+            @Valid @RequestBody UserUpdateGitDTO dto) {
+        return ResponseEntity.ok(userService.updateGitCredentials(id, dto));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
-        try {
-            // Appelle le service pour supprimer l'utilisateur avec les dépendances
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
-        } catch (EntityNotFoundException e) {
-            // Si l'utilisateur n'existe pas
-            return ResponseEntity.notFound().build();
-        } catch (DataIntegrityViolationException e) {
-            // Si l'utilisateur a encore des dépendances non supprimées
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        } catch (Exception e) {
-            // Erreurs générales
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    // POST: Login
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDTO> login(@Valid @RequestBody UserLoginDTO dto) {
+        return ResponseEntity.ok(userService.login(dto));
     }
 
+    // DELETE: Supprimer un utilisateur
+    @DeleteMapping("/{identifiant}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String identifiant) {
+        userService.deleteUser(identifiant);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Gestion globale des erreurs
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handle(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+    }
 }

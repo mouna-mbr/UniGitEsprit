@@ -6,7 +6,7 @@ import { TacheService } from '../services/tache.service';
 import { ValidationService } from '../services/validation.service';
 import { ValidationDTO } from '../models/validation.model';
 import { UserService } from '../services/user.service';
-import { UserResponse } from '../models/user.model';
+import { UserResponse ,Role } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
 import { GitRepositoryService } from '../services/git-repository.service';
 import { GitRepositoryDTO, GitCommitRequest, GitCommitDTO } from '../models/git-repository.model';
@@ -91,9 +91,9 @@ currentValidationId!: number;
         this.currentEtape = null;
       }
     });
-
-    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+    const currentUser = this.authService.getCurrentUser();
+    this.isAdmin = currentUser?.roles.includes(Role.ADMIN) || false;
+    this.isProfessor = currentUser?.roles.includes(Role.PROFESSOR) || false;
   }
 
   navigate(route: string) {

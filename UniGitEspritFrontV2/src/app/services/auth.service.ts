@@ -24,15 +24,20 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  login(username: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { username, password })
-      .pipe(
-        tap((res: AuthResponse) => {
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('user', JSON.stringify(res.user));
-        })
-      );
-  }
+// auth.service.ts
+login(username: string, password: string): Observable<AuthResponse> {
+  return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { username, password })
+    .pipe(
+      tap((res: AuthResponse) => {
+        // NETTOYER TOUT
+        localStorage.clear();
+
+        // SAUVEGARDER UNIQUEMENT LE BON TOKEN
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+      })
+    );
+}
 
   logout(): void {
     localStorage.removeItem('token');

@@ -5,7 +5,7 @@ import { GroupResponse } from '../models/group.model';
 import { UserService } from '../services/user.service';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-
+import { Role } from '../models/user.model';
 @Component({
   selector: 'app-groups',
   templateUrl: './groups.component.html',
@@ -45,8 +45,8 @@ export class GroupsComponent implements OnInit {
       next: (data) => this.groups = data,
       error: (err) => console.error('Search failed', err)
     });
-    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSEUR');
+    this.isAdmin = this.authService.getCurrentUser()?.roles.includes(Role.ADMIN);
+    this.isProfessor = this.authService.getCurrentUser()?.roles.includes(Role.PROFESSOR);
   }
   onSearch(): void {
     if (!this.searchTerm.trim()) {
@@ -77,7 +77,7 @@ export class GroupsComponent implements OnInit {
   loadGroups(): void {
     const currentUser = this.authService.getCurrentUser();
 
-    if (currentUser !== null && currentUser.role.includes('STUDENT')) {
+    if (currentUser !== null && currentUser.roles.includes(Role.STUDENT)) {
       this.groupService.getGroupsByUser(currentUser.identifiant).subscribe({
         next: (groups) => {
           this.groups = groups;

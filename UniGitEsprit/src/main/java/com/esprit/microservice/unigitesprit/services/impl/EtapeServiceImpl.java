@@ -40,13 +40,13 @@ public class EtapeServiceImpl {
         }
         return group.getUsers().stream()
                 .map(UserGroup::getUser)
-                .filter(user -> user.getRole().contains(Role.STUDENT))
+                .filter(user -> user.getRoles().contains(Role.STUDENT))
                 .map(user -> {
                     UserResponseDTO dto = new UserResponseDTO();
                     dto.setId(user.getId());
                     dto.setFirstName(user.getFirstName());
                     dto.setLastName(user.getLastName());
-                    dto.setRole(user.getRole());
+                    dto.setRole(user.getRoles());
                     dto.setIdentifiant(user.getIdentifiant());
                     dto.setClasse(user.getClasse());
                     dto.setSpecialite(user.getSpecialite());

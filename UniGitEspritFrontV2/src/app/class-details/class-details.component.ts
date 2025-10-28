@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { UserService } from '../services/user.service';
-import { ClasseResponse, User } from '../models/classe.model';
+import { ClasseResponse } from '../models/classe.model';
+import { User } from '../models/user.model';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-class-details',

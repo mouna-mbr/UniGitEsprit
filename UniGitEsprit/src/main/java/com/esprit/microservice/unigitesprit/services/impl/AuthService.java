@@ -6,6 +6,7 @@ import com.esprit.microservice.unigitesprit.dto.UserResponseDTO;
 import com.esprit.microservice.unigitesprit.entities.User;
 import com.esprit.microservice.unigitesprit.repository.UserRepository;
 import com.esprit.microservice.unigitesprit.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,25 +16,26 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired private UserRepository userRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private JwtUtil jwtUtil;
 
-    public AuthResponse login(String username, String password) {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-        User user = userRepository.findByIdentifiant(username)
-                .orElseThrow();
+    public AuthResponse login(String identifiant, String password) {
+        User user = userRepository.findByIdentifiant(identifiant)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new RuntimeException("Mot de passe incorrect");
         }
-        String token = jwtUtil.generateToken(user.getIdentifiant(), user.getRole());
-        UserResponseDTO responseDTO = mapToUserResponseDTO(user);
-        return new AuthResponse(token,responseDTO );
+
+        String token = jwtUtil.generateToken(user.getIdentifiant(), user.getRoles());
+        UserResponseDTO dto = mapToUserResponseDTO(user);
+
+        return new AuthResponse(token, dto);
     }
 
     private UserResponseDTO mapToUserResponseDTO(User user) {
@@ -41,7 +43,7 @@ public class AuthService {
         dto.setId(user.getId());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
-        dto.setRole(user.getRole());
+        dto.setRole(user.getRoles()); // ← setRole ou setRoles ?
         dto.setIdentifiant(user.getIdentifiant());
         dto.setClasse(user.getClasse());
         dto.setSpecialite(user.getSpecialite());
@@ -51,5 +53,4 @@ public class AuthService {
         dto.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
         return dto;
     }
-
 }

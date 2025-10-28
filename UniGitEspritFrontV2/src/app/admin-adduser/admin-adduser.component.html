@@ -1,434 +1,205 @@
 <div class="p-6">
-  <h2 class="text-2xl">User Management</h2>
-  <button class="btn btn-primary" (click)="showUserForm()">
-    <i class="fas fa-plus d-flex align-items-center gap-2"></i>
-    {{buttonText}}
-  </button>
-  <div *ngIf="showaddUserForm === false">
-  <table>
-    <thead class="table-header">
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Creation Date</th>
-        <th>Class</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="table-row" *ngFor="let user of users">
-        <td>{{ user.lastName }} {{ user.firstName }}</td>
-        <td>{{ user.email }}</td>
-        <td>
-        <div *ngFor="let role of user.role">{{ user.role }}</div>
-        </td>
-        <td>{{ user.createdAt }}</td>
-        <td>{{ user.classe }}</td>
-        <td>
-          <button class="btn-edit" (click)="openEditModal(user)">Edit</button>
-          <button class="btn-delete" (click)="deleteUser(user)">Delete</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
 
-  <!-- Editt -->
-  <div class="modal-bg" *ngIf="showModal" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>{{ selectedUser ? 'Edit User' : 'Add User' }}</h2>
-  
-      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
-        <!-- Last Name -->
-        <div class="form-group">
-          <label for="nom">Last Name</label>
-          <input id="nom" type="text" formControlName="nom" />
-        </div>
-  
-        <!-- First Name -->
-        <div class="form-group">
-          <label for="prenom">First Name</label>
-          <input id="prenom" type="text" formControlName="prenom" />
-        </div>
-  
-        <!-- Email -->
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" />
-        </div>
-  
-        <!-- Roles -->
-        <div class="form-group">
-          <label>Roles</label>
-  
-          <!-- Chips for selected roles -->
-          <div class="chips-container">
-            <span class="chip" *ngFor="let role of userRoles">
-              {{ role }}
-              <span class="remove" (click)="removeRole(role)">×</span>
-            </span>
-          </div>
-  
-          <!-- Dropdown for available roles -->
-          <select (change)="addRole($event)">
-            <option value="">-- Select a role --</option>
-            <option *ngFor="let role of availableRoles" [value]="role" [disabled]="userRoles.includes(role)">
-              {{ role }}
-            </option>
-          </select>
-        </div>
-  
-        <!-- Identifier -->
-        <div class="form-group">
-          <label for="identifiant">Identifier</label>
-          <input id="identifiant" type="text" formControlName="identifiant" maxlength="10" />
-        </div>
-
-  
-        <button type="submit" class="btn-save" >
-          {{ selectedUser ? 'Save Changes' : 'Add User' }}
-        </button>
-      </form>
-    </div>
+  <!-- Header + bouton principal -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-2xl font-bold">Gestion des utilisateurs</h2>
+    <button class="btn btn-primary flex items-center gap-2" (click)="toggleForm()">
+      <i class="fas fa-plus"></i> {{ buttonText }}
+    </button>
   </div>
-  
-  
-  
-</div>
-</div>
-<div *ngIf="showaddUserForm === true">
-  <!-- Toggle Button -->
-    <div class="form-actions toggle-mode">
-      <button type="button" class="btn btn-primary" (click)="toggleMode()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20Z"/>
-        </svg>
-        {{ isCsvMode ? 'Switch to Single User Form' : 'Switch to CSV Upload' }}
+
+  <!-- ==================== LISTE ==================== -->
+  <div *ngIf="!showForm">
+    <table class="min-w-full border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left">Nom complet</th>
+          <th class="px-4 py-2 text-left">Email</th>
+          <th class="px-4 py-2 text-left">Rôles</th>
+          <th class="px-4 py-2 text-left">Créé le</th>
+          <th class="px-4 py-2 text-left">Classe</th>
+          <th class="px-4 py-2 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users" class="border-b">
+          <td class="px-4 py-2">{{ u.lastName }} {{ u.firstName }}</td>
+          <td class="px-4 py-2">{{ u.email }}</td>
+          <td class="px-4 py-2">
+            <span *ngFor="let r of u.roles; let last = last">
+              {{ r }}{{ last ? '' : ', ' }}
+            </span>
+          </td>
+          <td class="px-4 py-2">{{ u.createdAt | date:'short' }}</td>
+          <td class="px-4 py-2">{{ u.classe || '-' }}</td>
+          <td class="px-4 py-2">
+            <button class="btn btn-sm btn-warning mr-2" (click)="openEdit(u)">Edit</button>
+            <button class="btn btn-sm btn-danger" (click)="delete(u)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== FORMULAIRE / CSV ==================== -->
+  <div *ngIf="showForm" class="mt-6">
+
+    <!-- Toggle CSV / Form -->
+    <div class="mb-4">
+      <button class="btn btn-outline" (click)="toggleCsv()">
+        {{ isCsvMode ? 'Passer au formulaire' : 'Passer au CSV' }}
       </button>
     </div>
-<main class="form-main">
-  
-  <div class="form-container">
-    
-    <div class="form-header">
-      <h1 class="form-title">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H11V21H5V3H13V9H21ZM14 13V15H16V18H18V15H20V13H18V11H16V13H14Z"/>
-        </svg>
-        Add Users
-      </h1>
-      <p class="form-subtitle">Create a new user account or upload multiple users via CSV</p>
-    </div>
 
-
-
-    <!-- Error/Success Messages
-    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
-    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
- -->
-    <!-- Single User Form -->
+    <!-- ------------------- FORMULAIRE UNIQUE ------------------- -->
     <div *ngIf="!isCsvMode">
-      <h2 class="section-title">Add Single User</h2>
-      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="add-group-form">
-        <!-- Last Name -->
-        <div class="form-group">
-          <label for="nom" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
-            </svg>
-            Last Name
-          </label>
-          <input
-            type="text"
-            id="nom"
-            formControlName="nom"
-            class="form-input"
-            placeholder="Enter last name"
-          >
-          <div *ngIf="userForm.get('nom')?.invalid && userForm.get('nom')?.touched" class="error-message">
-            Last name is required.
-          </div>
-        </div>
+      <form [formGroup]="userForm" (ngSubmit)="selectedUser ? saveEdit() : onSubmit()" class="space-y-4">
 
-        <!-- First Name -->
-        <div class="form-group">
-          <label for="prenom" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
-            </svg>
-            First Name
-          </label>
-          <input
-            type="text"
-            id="prenom"
-            formControlName="prenom"
-            class="form-input"
-            placeholder="Enter first name"
-          >
-          <div *ngIf="userForm.get('prenom')?.invalid && userForm.get('prenom')?.touched" class="error-message">
-            First name is required.
+        <!-- Nom / Prénom -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-medium">Nom <span class="text-danger">*</span></label>
+            <input formControlName="lastName" class="input w-full" placeholder="Nom">
+            <div *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" class="text-danger text-sm">
+              Nom requis.
+            </div>
+          </div>
+          <div>
+            <label class="block font-medium">Prénom <span class="text-danger">*</span></label>
+            <input formControlName="firstName" class="input w-full" placeholder="Prénom">
+            <div *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" class="text-danger text-sm">
+              Prénom requis.
+            </div>
           </div>
         </div>
 
         <!-- Email -->
-        <div class="form-group">
-          <label for="email" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
-            </svg>
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-input"
-            placeholder="example@email.com"
-          >
-          <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="error-message">
-            <span *ngIf="userForm.get('email')?.errors?.['required']">Email is required.</span>
-            <span *ngIf="userForm.get('email')?.errors?.['email']">Invalid email format.</span>
+        <div>
+          <label class="block font-medium">Email <span class="text-danger">*</span></label>
+          <input type="email" formControlName="email" class="input w-full" placeholder="email@exemple.com">
+          <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-danger text-sm">
+            Email invalide.
           </div>
         </div>
 
-        <!-- Role -->
-        <div class="form-group">
-          <label for="role" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
-            </svg>
-            Role
-          </label>
-          <select
-            id="role"
-            formControlName="role"
-            class="form-select"
-            (change)="onRoleChange()"
-          >
-            <option value="">Select a role</option>
-            <option value="ADMIN">Administrator</option>
-            <option value="STUDENT">Student</option>
-            <option value="PROFESSOR">Professor</option>
+        <!-- Rôles -->
+        <div>
+          <label class="block font-medium">Rôles <span class="text-danger">*</span></label>
+          <div class="flex flex-wrap gap-2 mb-2">
+            <span *ngFor="let r of userRoles" class="chip">
+              {{ r }}
+              <button type="button" (click)="removeRole(r)" class="ml-1 text-xs">×</button>
+            </span>
+          </div>
+          <select (change)="addRole($event)" class="select w-full">
+            <option value="">-- Choisir un rôle --</option>
+            <option *ngFor="let r of availableRoles" [value]="r" [disabled]="userRoles.includes(r)">
+              {{ r }}
+            </option>
           </select>
-          <div *ngIf="userForm.get('role')?.invalid && userForm.get('role')?.touched" class="error-message">
-            Role is required.
+          <div *ngIf="userForm.get('roles')?.invalid && userForm.get('roles')?.touched" class="text-danger text-sm">
+            Au moins un rôle requis.
           </div>
         </div>
 
-        <!-- Student-specific fields -->
-        <div *ngIf="userForm.get('role')?.value === 'STUDENT'">
-          <!-- Class -->
-          <div class="form-group">
-            <label for="classe" class="form-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18ZM12 3L1 9L12 15L21 11V17H23V9L12 3Z"/>
-              </svg>
-              Class
-            </label>
-            <select
-              id="classe"
-              formControlName="classe"
-              class="form-select"
-              (change)="onClassChange()"
-            >
-            <option *ngFor="let opt of classOptions" [value]="opt">{{ opt.nom }}</option>
-
-            </select>
-            <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" class="error-message">
-              Class is required for students.
-            </div>
-          </div>
-
-          <!-- Specialty -->
-          
-        </div>
-
-        <!-- Identifier -->
-        <div class="form-group">
-          <label for="identifiant" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
-            </svg>
-            Identifier
-          </label>
-          <input
-            type="text"
-            id="identifiant"
-            formControlName="identifiant"
-            class="form-input"
-            placeholder="123ABC4567"
-            maxlength="10"
-            (input)="formatIdentifiant($event)"
-          >
-          <div class="input-helper">Format: 3 digits + 3 uppercase letters + 4 digits (e.g., 123ABC4567)</div>
-          <div *ngIf="userForm.get('identifiant')?.invalid && userForm.get('identifiant')?.touched" class="error-message">
-            <span *ngIf="userForm.get('identifiant')?.errors?.['required']">Identifier is required.</span>
-            <span *ngIf="userForm.get('identifiant')?.errors?.['pattern']">Invalid format: 3 digits + 3 letters + 4 digits.</span>
+        <!-- Classe (si STUDENT) -->
+        <div *ngIf="userRoles.includes(Role.STUDENT)">
+          <label class="block font-medium">Classe <span class="text-danger">*</span></label>
+          <select formControlName="classe" class="select w-full">
+            <option value="">-- Sélectionner --</option>
+            <option *ngFor="let c of classOptions" [value]="c.nom">{{ c.nom }}</option>
+          </select>
+          <div *ngIf="userForm.get('classe')?.invalid && userForm.get('classe')?.touched" class="text-danger text-sm">
+            Classe requise pour étudiant.
           </div>
         </div>
 
-        <!-- Password -->
-        <div class="form-group">
-          <label for="password" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 8H17V6C17 3.24 14.76 1 12 1S7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM9 6C9 4.34 10.34 3 12 3S15 4.34 15 6V8H9V6ZM18 20H6V10H18V20ZM12 17C13.1 17 14 16.1 14 15S13.1 13 12 13S10 13.9 10 15S10.9 17 12 17Z"/>
-            </svg>
-            Password
-          </label>
-          <div class="password-container">
-            <input
-              [type]="showPassword ? 'text' : 'password'"
-              id="password"
-              formControlName="password"
-              class="form-input"
-              placeholder="Enter password"
-            >
-            <button
-              type="button"
-              class="password-toggle"
-              (click)="togglePassword()"
-            >
-              <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5S21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12S9.24 7 12 7S17 9.24 17 12S14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12S10.34 15 12 15S15 13.66 15 12S13.66 9 12 9Z"/>
-              </svg>
-              <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 7C9.24 7 7 9.24 7 12C7 12.65 7.13 13.26 7.36 13.82L9.8 11.38C9.93 10.59 10.59 9.93 11.38 9.8L13.82 7.36C13.26 7.13 12.65 7 12 7ZM2 4.27L4.28 6.55L4.73 7C3.08 8.3 1.78 10 1 12C2.73 16.39 7 19.5 12 19.5C13.55 19.5 15.03 19.2 16.38 18.66L16.81 19.09L19.73 22L21 20.73L3.27 3L2 4.27ZM7.53 9.8L9.08 11.35C9.03 11.56 9 11.78 9 12C9 13.66 10.34 15 12 15C12.22 15 12.44 14.97 12.65 14.92L14.2 16.47C13.53 16.8 12.79 17 12 17C9.24 17 7 14.76 7 12C7 11.21 7.2 10.47 7.53 9.8ZM11.84 9.02L14.99 12.17L15.01 12.01C15.01 10.35 13.67 9.01 12.01 9.01L11.84 9.02Z"/>
-              </svg>
+        <!-- Identifiant -->
+        <div>
+          <label class="block font-medium">Identifiant <span class="text-danger">*</span></label>
+          <input formControlName="identifiant" class="input w-full" placeholder="123ABC4567">
+          <div *ngIf="userForm.get('identifiant')?.invalid && userForm.get('identifiant')?.touched" class="text-danger text-sm">
+            Format: 123ABC4567
+          </div>
+        </div>
+
+        <!-- Mot de passe (création uniquement) -->
+        <div *ngIf="!selectedUser">
+          <label class="block font-medium">Mot de passe <span class="text-danger">*</span></label>
+          <div class="relative">
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                   class="input w-full pr-10" placeholder="••••••">
+            <button type="button" class="absolute right-2 top-2" (click)="showPassword = !showPassword">
+              <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
             </button>
           </div>
-          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="error-message">
-            <span *ngIf="userForm.get('password')?.errors?.['required']">Password is required.</span>
-            <span *ngIf="userForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters long.</span>
+          <div *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-danger text-sm">
+            Minimum 6 caractères.
           </div>
         </div>
 
-        <!-- Git Username -->
-        <div class="form-group">
-          <label for="gitUsername" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 19C9.24 19 7 16.76 7 14C7 11.24 9.24 9 12 9C14.76 9 17 11.24 17 14C17 16.76 14.76 19 12 19Z"/>
-            </svg>
-            Git Username
-          </label>
-          <input
-            type="text"
-            id="gitUsername"
-            formControlName="gitUsername"
-            class="form-input"
-            placeholder="Enter Git username (optional)"
-          >
+        <!-- Git -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-medium">Git Username</label>
+            <input formControlName="gitUsername" class="input w-full">
+          </div>
+          <div>
+            <label class="block font-medium">Git Token</label>
+            <input formControlName="gitAccessToken" class="input w-full">
+          </div>
         </div>
 
-        <!-- Git Access Token -->
-        <div class="form-group">
-          <label for="gitAccessToken" class="form-label">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
-            </svg>
-            Git Access Token
-          </label>
-          <input
-            type="text"
-            id="gitAccessToken"
-            formControlName="gitAccessToken"
-            class="form-input"
-            placeholder="Enter Git access token (optional)"
-          >
-        </div>
-
-        <!-- Single User Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="goBack()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
-            </svg>
-            Back
-          </button>
-          <button type="submit" class="btn btn-primary" [disabled]="userForm.invalid || isSubmitting">
-            <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-            </svg>
-            <svg *ngIf="isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="spin">
-              <path d="M12 4V2C6.48 2 2 6.48 2 12H4C4 7.58 7.58 4 12 4Z"/>
-            </svg>
-            {{ isSubmitting ? 'Adding...' : 'Add User' }}
+        <!-- Boutons -->
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-secondary" (click)="toggleForm()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || userForm.invalid">
+            {{ isSubmitting ? 'Envoi…' : (selectedUser ? 'Mettre à jour' : 'Créer') }}
           </button>
         </div>
       </form>
     </div>
 
-    <!-- Bulk Upload Section -->
-    <div *ngIf="isCsvMode">
-      <h2 class="section-title">Add Users via CSV</h2>
-      <div class="form-group">
-        <label for="csvFile" class="form-label">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM9 13H7V15H9V17H7V19H9V20H6V12H9V13ZM16 17H14V15H16V13H14V12H17V18H14V17Z"/>
-          </svg>
-          Upload CSV File
-        </label>
-        <input
-          type="file"
-          id="csvFile"
-          accept=".csv"
-          class="form-input"
-          (change)="onFileSelected($event)"
-        >
-        <div class="input-helper">CSV format: firstName,lastName,email,role,identifiant,password,classe,specialite,gitUsername,gitAccessToken</div>
-      </div>
-      
-      <!-- CSV Preview Table -->
-      <div *ngIf="csvData.length > 0" class="table-container">
-        <h3>CSV Preview</h3>
-        <table class="csv-table">
-          <thead>
+    <!-- ------------------- CSV ------------------- -->
+    <div *ngIf="isCsvMode" class="space-y-4">
+      <h3 class="text-xl font-semibold">Import CSV</h3>
+
+      <input type="file" accept=".csv" (change)="onFileSelected($event)" class="input">
+
+      <p class="text-sm text-gray-600">
+        Colonnes : <code>firstName,lastName,email,roles,identifiant,password,classe,gitUsername,gitAccessToken</code><br>
+        Rôles séparés par <code>;</code> (ex: <code>STUDENT;PROFESSOR</code>)
+      </p>
+
+      <!-- Preview -->
+      <div *ngIf="csvData.length" class="overflow-x-auto">
+        <table class="min-w-full border text-xs">
+          <thead class="bg-gray-100">
             <tr>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Identifier</th>
-              <th>Password</th>
-              <th>Class</th>
-              <th>Specialty</th>
-              <th>Git Username</th>
-              <th>Git Access Token</th>
+              <th class="px-2 py-1">Prénom</th>
+              <th class="px-2 py-1">Nom</th>
+              <th class="px-2 py-1">Email</th>
+              <th class="px-2 py-1">Rôles</th>
+              <th class="px-2 py-1">Identifiant</th>
+              <th class="px-2 py-1">Classe</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let row of csvData">
-              <td>{{ row.firstName }}</td>
-              <td>{{ row.lastName }}</td>
-              <td>{{ row.email }}</td>
-              <td>{{ row.role }}</td>
-              <td>{{ row.identifiant }}</td>
-              <td>{{ row.password }}</td>
-              <td>{{ row.classe }}</td>
-              <td>{{ row.specialite }}</td>
-              <td>{{ row.gitUsername }}</td>
-              <td>{{ row.gitAccessToken }}</td>
+              <td class="px-2 py-1">{{ row.firstName }}</td>
+              <td class="px-2 py-1">{{ row.lastName }}</td>
+              <td class="px-2 py-1">{{ row.email }}</td>
+              <td class="px-2 py-1">{{ row.roles?.join(', ') }}</td>
+              <td class="px-2 py-1">{{ row.identifiant }}</td>
+              <td class="px-2 py-1">{{ row.classe }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="form-actions">
-        <button
-          type="button"
-          class="btn btn-primary"
-          (click)="onUploadCsv()"
-          [disabled]="!selectedFile || isSubmitting"
-        >
-          <svg *ngIf="!isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-          </svg>
-          <svg *ngIf="isSubmitting" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="spin">
-            <path d="M12 4V2C6.48 2 2 6.48 2 12H4C4 7.58 7.58 4 12 4Z"/>
-          </svg>
-          {{ isSubmitting ? 'Uploading...' : 'Upload CSV' }}
-        </button>
-      </div>
+      <button class="btn btn-primary" (click)="uploadCsv()" [disabled]="!selectedFile || isSubmitting">
+        {{ isSubmitting ? 'Import…' : 'Importer' }}
+      </button>
     </div>
   </div>
-</main>
 </div>

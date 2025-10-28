@@ -9,7 +9,7 @@ import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 import { ClasseResponse } from '../models/classe.model';
 import { SujetResponse } from '../models/sujet.model';
-import { UserResponse, UserRole } from '../models/user.model';
+import { UserResponse, UserRole , Role} from '../models/user.model';
 import { GroupCreate } from '../models/group.model';
 
 @Component({
@@ -25,6 +25,8 @@ export class AddGroupComponent implements OnInit {
   errorMessage: string = '';
   newUserId: number | null = null;
   newUserRole: string = '';
+  Role = Role; // Expose l'enum au template
+
 
   constructor(
     private fb: FormBuilder,

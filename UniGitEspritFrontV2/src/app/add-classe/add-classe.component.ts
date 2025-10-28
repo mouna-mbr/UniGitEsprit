@@ -3,7 +3,8 @@ import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { UserService } from '../services/user.service';
-import { User, ClasseCreate } from '../models/classe.model';
+import {  ClasseCreate } from '../models/classe.model';
+import { User ,Role } from '../models/user.model';
 
 @Component({
   selector: 'app-add-classe',
@@ -18,6 +19,7 @@ export class AddClasseComponent implements OnInit {
   newStudentId: number | string | null = null; // Allow string for binding
   newTeacherId: number | string | null = null; // Allow string for binding
   newlyAddedIds: number[] = []; // Track newly added IDs
+  Role = Role; // Expose l'enum au template
 
   constructor(
     private fb: FormBuilder,
@@ -64,7 +66,7 @@ export class AddClasseComponent implements OnInit {
     const numericId = Number(this.newStudentId); // Convert to number
     const user = this.users.find(u => u.id === numericId);
     console.log('User found for id', numericId, ':', user); // Debug specific user
-    if (this.newStudentId && user && user.role?.includes('STUDENT') ) {
+    if (this.newStudentId && user && user.roles?.includes(Role.STUDENT) ) {
       const etudiantIds = this.classeForm.get('etudiantIds')?.value || [];
       if (!etudiantIds.includes(numericId)) {
         etudiantIds.push(numericId);
@@ -92,7 +94,7 @@ export class AddClasseComponent implements OnInit {
     const numericId = Number(this.newTeacherId); // Convert to number
     const user = this.users.find(u => u.id === numericId);
     console.log('User found for id', numericId, ':', user); // Debug specific user
-    if (this.newTeacherId && user && user.role?.includes('PROFESSOR')) {
+    if (this.newTeacherId && user && user.roles?.includes(Role.PROFESSOR)) {
       const enseignantIds = this.classeForm.get('enseignantIds')?.value || [];
       if (!enseignantIds.includes(numericId)) {
         enseignantIds.push(numericId);

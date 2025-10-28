@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { SujetService } from '../services/sujet.service';
 import { SujetResponse } from '../models/sujet.model';
 import { UserService } from '../services/user.service'; // Import UserService
-import { UserResponse } from '../models/user.model'; // Import User interface if defined
+import { UserResponse,Role } from '../models/user.model'; // Import User interface if defined
 import { Subject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+
 
 @Component({
   selector: 'app-sujets',
@@ -40,8 +41,10 @@ export class SujetsComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     this.loadSujets();
-    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+  
+    const currentUser = this.authService.getCurrentUser();
+    this.isAdmin = currentUser?.roles.includes(Role.ADMIN) || false;
+    this.isProfessor = currentUser?.roles.includes(Role.PROFESSOR) || false;
   }
   onSearch(): void {
     if (!this.searchTerm.trim()) {

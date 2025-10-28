@@ -3,6 +3,7 @@ import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
+import { Role } from '../models/user.model';
 
 @Component({
   selector: 'app-signin',
@@ -76,10 +77,10 @@ export class SigninComponent implements AfterViewInit {
           localStorage.setItem('auth-token', response.token);
   
           const user = response.user;
-          console.log('User roles:', user.role);
+          console.log('User roles:', user.roles);
   
           // ✅ Redirection based on user roles and Git fields
-          if (user.role && user.role.includes('ADMIN')) {
+          if (user.roles && user.roles.includes(Role.ADMIN)) {
             console.log('Navigating to /adduser');
             this.router.navigate(['/adduser']).then(success => {
               console.log('Navigation to /adduser success:', success);

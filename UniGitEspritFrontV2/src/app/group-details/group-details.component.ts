@@ -17,6 +17,7 @@ import { PipelineDTO, EtapeDTO, EtapeStatus } from '../models/pipeline.model';
 import { GitCommitDTO, GitCommitRequest } from '../models/git-repository.model';
 import { DemandesService } from '../services/demandes.service';
 import { DemandeBDPDTO, DemandeBDPRequest } from '../models/demande.model';
+import {Role} from '../models/user.model' 
 
 @Component({
   selector: 'app-group-details',
@@ -41,7 +42,7 @@ export class GroupDetailsComponent implements OnInit {
   contributors: { name: string; rank: string; commits: number; gitUsername: string }[] = [];
   repositories: { name: string; url: string }[] = [];
   newMember: UserResponse = {
-    id: 0, firstName: '', lastName: '', role: ['STUDENT'], identifiant: '',
+    id: 0, firstName: '', lastName: '', roles: [Role.STUDENT], identifiant: '',
     classe: undefined, specialite: '', email: '', gitUsername: '', gitAccessToken: '',
     password: '', createdAt: ''
   };
@@ -79,8 +80,8 @@ export class GroupDetailsComponent implements OnInit {
     this.newPipeline.groupId = this.groupId;
     this.currentUser = this.authService.getCurrentUser();
     this.loadGroupDetails();
-    this.isAdmin = this.authService.getCurrentUser()?.role.includes('ADMIN');
-    this.isProfessor = this.authService.getCurrentUser()?.role.includes('PROFESSOR');
+    this.isAdmin = this.authService.getCurrentUser()?.roles.includes(Role.ADMIN);
+    this.isProfessor = this.authService.getCurrentUser()?.roles.includes(Role.PROFESSOR);
   }
 
   loadGroupDetails() {
@@ -128,26 +129,25 @@ export class GroupDetailsComponent implements OnInit {
   }
 
   mapMembersFromGroup() {
-    if (!this.currentGroup) {
+    if (!this.currentGroup?.users?.length) {
       this.members = [];
       return;
     }
 
-    this.members = this.currentGroup.users.map(userRole => {
+    this.members = this.currentGroup.users.map((userRole: UserRoleResponse) => {
       const user = this.allUsers.find(u => u.id === userRole.userId);
       return {
         id: userRole.userId,
-        firstName: user ? user.firstName : '',
-        lastName: user ? user.lastName : '',
-        role: userRole.role || (user ? user.role : 'STUDENT'),
-        identifiant: user ? (user as any).identifiant : '',
-        classe: user ? (user as any).classe : '',
-        specialite: user ? (user as any).specialite : '',
-        email: user ? user.email : '',
-        gitUsername: user ? user.gitUsername || '' : '',
-        gitAccessToken: user ? user.gitAccessToken || '' : '',
-        password: user ? user.password || '' : '',
-        createdAt: user ? user.createdAt || '' : ''
+        firstName: user?.firstName || 'Inconnu',
+        lastName: user?.lastName || '',
+        roles: userRole.role || (user?.roles || ['STUDENT']),
+        identifiant: user?.identifiant || '',
+        classe: user?.classe,
+        specialite: user?.specialite,
+        email: user?.email || '',
+        gitUsername: user?.gitUsername || '',
+        gitAccessToken: user?.gitAccessToken || '',
+        createdAt: user?.createdAt || ''
       } as UserResponse;
     });
   }
@@ -335,7 +335,7 @@ export class GroupDetailsComponent implements OnInit {
   closeAddMemberModal() { this.showAddMemberModal = false; }
 
   addMemberToGroup() {
-    if (!this.newMember.email || !this.isValidEmail(this.newMember.email) || !this.newMember.role) {
+    if (!this.newMember.email || !this.isValidEmail(this.newMember.email) || !this.newMember.roles) {
       alert('Please enter a valid email and select a role.');
       return;
     }
@@ -346,7 +346,7 @@ export class GroupDetailsComponent implements OnInit {
       this.isLoading = false;
       return;
     }
-    this.groupService.addMember(this.groupId, { userId: existing.id, role: this.newMember.role }).subscribe({
+    this.groupService.addMember(this.groupId, { userId: existing.id, role: this.newMember.roles }).subscribe({
       next: (updatedGroup) => { this.currentGroup = updatedGroup; this.mapMembersFromGroup(); this.closeAddMemberModal(); this.isLoading = false; },
       error: (err) => { console.error('Error adding member:', err); this.isLoading = false; }
     });
@@ -354,7 +354,7 @@ export class GroupDetailsComponent implements OnInit {
 
   openEditMemberModal(member: UserResponse) {
     this.memberToEdit = { ...member };
-    this.newRoleForMember = member.role;
+    this.newRoleForMember = member.roles;
     this.showEditMemberModal = true;
   }
 

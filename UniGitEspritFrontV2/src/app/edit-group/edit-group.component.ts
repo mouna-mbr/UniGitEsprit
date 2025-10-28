@@ -8,7 +8,7 @@ import { GroupService } from '../services/group.service';
 import { UserService } from '../services/user.service';
 import { ClasseResponse } from '../models/classe.model';
 import { SujetResponse } from '../models/sujet.model';
-import { UserResponse, UserRole } from '../models/user.model';
+import { UserResponse, UserRole , Role } from '../models/user.model';
 import { GroupCreate, GroupResponse } from '../models/group.model';
 
 @Component({
@@ -23,6 +23,7 @@ export class EditGroupComponent implements OnInit {
   users$!: Observable<UserResponse[]>;
   errorMessage: string = '';
   newUserId: number | null = null;
+  Role = Role; // Expose l'enum au template
   newUserRole: string = '';
   group: GroupResponse | null = null;
   groupId: number;
