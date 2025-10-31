@@ -175,7 +175,7 @@ public class GroupServiceImpl implements GroupService {
             gitHubRepoService.addCollaborator(
                     repoUrl,
                     enseignant.getGitUsername(),
-                    "admin"
+                    "push"
             );
 
             for (UserGroup ug : userGroups) {

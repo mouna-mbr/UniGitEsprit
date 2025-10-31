@@ -140,6 +140,7 @@ public class GitService implements GitServiceInterface {
         try {
             String apiUrl = convertToApiUrl(repoUrl);
             HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "token " + githubToken);
             headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -161,6 +162,7 @@ public class GitService implements GitServiceInterface {
         try {
             String apiUrl = convertToApiUrl(repoUrl) + "/branches";
             HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "token " + githubToken);
             headers.set("Accept", "application/vnd.github.v3+json"); // GitHub API standard
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
