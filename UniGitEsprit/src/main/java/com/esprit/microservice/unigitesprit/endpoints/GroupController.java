@@ -70,9 +70,9 @@ public class GroupController {
         }
     }
 
-    @PostMapping("/{id}/toggle-favorite")
-    public ResponseEntity<GroupResponseDTO> toggleFavorite(@PathVariable Long id) {
-        return ResponseEntity.ok(groupService.toggleFavorite(id));
+    @PostMapping("/{id}/toggle-favorite/{userId}")
+    public ResponseEntity<GroupResponseDTO> toggleFavorite(@PathVariable Long id ,@PathVariable Long userId) {
+        return ResponseEntity.ok(groupService.toggleFavorite(userId,id));
     }
     // Ajouter un membre
     @PostMapping("/{groupId}/members")

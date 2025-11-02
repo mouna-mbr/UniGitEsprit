@@ -1,8 +1,10 @@
 package com.esprit.microservice.unigitesprit.repository;
 
 
+import com.esprit.microservice.unigitesprit.dto.EntrepriseDto;
 import com.esprit.microservice.unigitesprit.entities.DemandeBDP;
 import com.esprit.microservice.unigitesprit.entities.DemandeParainage;
+import com.esprit.microservice.unigitesprit.entities.Entreprise;
 import com.esprit.microservice.unigitesprit.enumeration.DemandeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +29,5 @@ public interface DemandeParainageRepository extends JpaRepository<DemandeParaina
             """)
     List<DemandeParainage> findBySearch(@Param("query") String query);
 
+    List<DemandeParainage> findBySujet_Id(Long entrepriseId);
 }

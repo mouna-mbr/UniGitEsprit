@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ClasseService } from '../services/classe.service';
 import { ClasseResponse } from '../models/classe.model';
+import { GroupService } from '../services/group.service';
+import { GroupResponse } from '../models/group.model';
 
 @Component({
   selector: 'app-favorite-classes',
@@ -9,9 +11,9 @@ import { ClasseResponse } from '../models/classe.model';
   styleUrls: ['./favorite-classes.component.css']
 })
 export class FavoriteClassesComponent implements OnInit {
-  classes: ClasseResponse[] = [];
-  filteredClasses: ClasseResponse[] = [];
-  paginatedClasses: ClasseResponse[] = [];
+  groups: GroupResponse[] = [];
+  filteredGroups: GroupResponse[] = [];
+  paginatedGroups: GroupResponse[] = [];
   searchTerm = '';
   currentFilter: 'all' | 'favorites' | 'recent' = 'favorites';
   isFilterMenuOpen = false;
@@ -20,16 +22,16 @@ export class FavoriteClassesComponent implements OnInit {
   pageSize = 6;
   totalPages = 1;
 
-  constructor(private classeService: ClasseService, private router: Router) {}
+  constructor(private groupService: GroupService, private router: Router) {}
 
   ngOnInit(): void {
     this.loadClasses();
   }
 
   loadClasses(): void {
-    this.classeService.getAllClasses().subscribe({
-      next: (classes) => {
-        this.classes = classes;
+    this.groupService.getAllGroups().subscribe({
+      next: (allgroups) => {
+        this.groups = allgroups;
         this.applyFilter();
       },
       error: (error) => this.showNotification('error', error.message)
@@ -37,25 +39,24 @@ export class FavoriteClassesComponent implements OnInit {
   }
 
   applyFilter(): void {
-    let filtered = this.classes.filter(classe => classe.favori); // Start with only favorites
+    let filtered = this.groups.filter(group => group.favori); 
     if (this.currentFilter === 'recent') {
       filtered = filtered.sort((a, b) => b.id - a.id);
     }
     if (this.searchTerm) {
-      filtered = filtered.filter(classe =>
-        classe.nom.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        classe.anneeUniversitaire.toLowerCase().includes(this.searchTerm.toLowerCase())
+      filtered = filtered.filter(group =>
+        group.nom.toLowerCase().includes(this.searchTerm.toLowerCase()) 
       );
     }
-    this.filteredClasses = filtered;
+  this.filteredGroups = filtered;
     this.updatePagination();
   }
 
   updatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredClasses.length / this.pageSize);
+    this.totalPages = Math.ceil(this.filteredGroups.length / this.pageSize);
     this.currentPage = Math.min(this.currentPage, this.totalPages || 1);
     const start = (this.currentPage - 1) * this.pageSize;
-    this.paginatedClasses = this.filteredClasses.slice(start, start + this.pageSize);
+    this.paginatedGroups = this.filteredGroups.slice(start, start + this.pageSize);
   }
 
   onFilter(): void {
@@ -70,23 +71,23 @@ export class FavoriteClassesComponent implements OnInit {
   }
 
   getCurrentFilterName(): string {
-    return this.currentFilter === 'all' ? 'All Classes' :
+    return this.currentFilter === 'all' ? 'All Groups' :
            this.currentFilter === 'favorites' ? 'Favorites' : 'Recent';
   }
 
   getFavoriteCount(): number {
-    return this.classes.filter(classe => classe.favori).length;
+    return this.groups.filter(group => group.favori).length;
   }
 
   toggleFavorite(id: number, event: Event): void {
     event.stopPropagation();
-    this.classeService.toggleFavorite(id).subscribe({
+    this.groupService.toggleFavorite(id).subscribe({
       next: (updatedClasse) => {
-        const index = this.classes.findIndex(c => c.id === id);
+        const index = this.groups.findIndex(c => c.id === id);
         if (index !== -1) {
-          this.classes[index] = updatedClasse;
+          this.groups[index] = updatedClasse;
           this.applyFilter();
-          this.showNotification('success', `Class ${updatedClasse.favori ? 'added to' : 'removed from'} favorites`);
+          this.showNotification('success', `Group ${updatedClasse.favori ? 'added to' : 'removed from'} favorites`);
         }
       },
       error: (error) => this.showNotification('error', error.message)
@@ -115,12 +116,12 @@ export class FavoriteClassesComponent implements OnInit {
 
   deleteClass(id: number, event: Event): void {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this class?')) {
-      this.classeService.deleteClasse(id).subscribe({
+    if (confirm('Are you sure you want to delete this Group?')) {
+      this.groupService.deleteGroup(id).subscribe({
         next: () => {
-          this.classes = this.classes.filter(c => c.id !== id);
+          this.groups = this.groups.filter(c => c.id !== id);
           this.applyFilter();
-          this.showNotification('success', 'Class deleted successfully');
+          this.showNotification('success', 'Group deleted successfully');
         },
         error: (error) => this.showNotification('error', error.message)
       });
@@ -129,11 +130,11 @@ export class FavoriteClassesComponent implements OnInit {
   }
 
   viewClass(id: number): void {
-    this.router.navigate([`/classes/${id}`]);
+    this.router.navigate([`/groupdetails/${id}`]);
   }
 
   viewAllClasses(): void {
-    this.router.navigate(['/classes']);
+    this.router.navigate(['/groupes']);
   }
 
   previousPage(): void {

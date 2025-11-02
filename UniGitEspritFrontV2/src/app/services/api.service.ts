@@ -27,24 +27,22 @@ export class ApiService {
     private classeService: ClasseService
   ) {}
 
-  // ================== STATISTIQUES ADMIN ==================
   getAdminStats(): Observable<any> {
     return forkJoin({
       totalUsers: this.getTotalUsers(),
       totalDemandeBdp: this.getTotalDemandeBdp(),
       totalDemandeParrainage: this.getTotalDemandeParrainage(),
-      bdpBySpecialite: this.getBdpBySpecialite(),
+      bdpBySpecialite: this.getBdpBySujet(),
       bdpByStatus: this.getBdpByStatus(),
       parrainageByStatus: this.getParrainageByStatus(),
       parrainageBySujet: this.getParrainageBySujet(),
       usersByRole: this.getUsersByRole(),
-      totalRepositories: this.getTotalRepositories(), // Nouveau
-      groupesParSujet: this.getGroupesParSujet(), // Nouveau
-      sujetsParraineParEntreprise: this.getSujetsParraineParEntreprise() // Nouveau
+      totalRepositories: this.getTotalRepositories(), 
+      groupesParSujet: this.getGroupesParSujet(),
+      sujetsParraineParEntreprise: this.getSujetsParraineParEntreprise() 
     });
   }
 
-  // ================== STATISTIQUES PROFESSEUR ==================
   getProfStats(profId: string): Observable<any> {
     return forkJoin({
       sujetsByGroups: this.getSujetsByGroups(profId),
@@ -173,15 +171,18 @@ export class ApiService {
 
   private getTotalDemandeParrainage(): Observable<number> {
     return this.parrainageService.getDemandes().pipe(
-      map(demandes => demandes.length)
+      map(demandes => demandes.entreprise)
     );
   }
 
-  private getBdpBySpecialite(): Observable<any[]> {
+  private getBdpBySujet(): Observable<any[]> {
     return this.demandeService.getDemandes().pipe(
       map(demandes => {
         const specialites = demandes.reduce((acc: any, demande:any) => {
-          const spec = demande.specialite || 'Non spécifiée';
+          const spec = demande.sujet || 'Non spécifiée';
+          console.log(demandes);
+
+          console.log(spec);
           acc[spec] = (acc[spec] || 0) + 1;
           return acc;
         }, {});
@@ -272,15 +273,21 @@ export class ApiService {
   }
 
   private getTachesByStatus(profId: string): Observable<any[]> {
-    const tachesStatus = [
-      ['Terminé', 15],
-      ['En cours', 8],
-      ['En attente', 5],
-      ['Bloqué', 2]
-    ];
-    return new Observable(observer => {
-      observer.next(tachesStatus);
-      observer.complete();
-    });
+    return this.tacheService.getTachesStats().pipe(
+      map(stats => {
+        const tachesStatus = Object.entries(stats).map(([status, count]) => {
+          let label = '';
+          switch (status) {
+            case 'DONE': label = 'Terminé'; break;
+            case 'IN_PROGRESS': label = 'En cours'; break;
+            case 'TO_DO': label = 'À faire'; break;
+            default: label = status;
+          }
+          return [label, count];
+        });
+        return tachesStatus;
+      })
+    );
   }
+  
 }

@@ -159,6 +159,7 @@ public class PipelineServiceImpl {
                 etape.setDeadline(dto.getDeadline());
                 etape.setPipeline(pipeline);
             }
+            etapeRepository.save(etape);
             return etape;
         }).collect(Collectors.toList());
 

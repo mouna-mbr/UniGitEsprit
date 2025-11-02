@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,16 @@ public class TacheServiceImpl {
 
     @Autowired
     private UserRepository userRepository;
+    public Map<String, Long> getTacheStatsByStatus() {
+        List<Tache> taches = tacheRepository.findAll();
+
+        // Regrouper par status et compter
+        return taches.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.getStatus().name(), // nom du statut : TO_DO, DONE, IN_PROGRESS
+                        Collectors.counting()
+                ));
+    }
 
     public List<TacheDTO> getTachesByEtape(Long etapeId) {
         Etape etape = etapeRepository.findById(etapeId)

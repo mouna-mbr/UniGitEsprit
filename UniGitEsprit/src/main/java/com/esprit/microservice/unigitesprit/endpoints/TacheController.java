@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+
 @CrossOrigin(origins = "http://localhost:4200")
 
 @RestController
@@ -16,6 +18,16 @@ import java.util.List;
 public class TacheController {
     @Autowired
     private TacheServiceImpl tacheService;
+
+    @GetMapping("/taches/statistiques")
+    public ResponseEntity<Map<String, Long>> getTachesStats() {
+        try {
+            Map<String, Long> stats = tacheService.getTacheStatsByStatus();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     @GetMapping("/{id}/taches")
     //@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSOR', 'STUDENT')")

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GroupResponse, GroupCreate } from '../models/group.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,7 @@ import { GroupResponse, GroupCreate } from '../models/group.model';
 export class GroupService {
   private apiUrl = 'http://localhost:8081/uniGitEsprit/api/groups';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   addGroup(group: GroupCreate): Observable<GroupResponse> {
     return this.http.post<GroupResponse>(this.apiUrl, group);
@@ -36,7 +37,9 @@ export class GroupService {
   }
 
   toggleFavorite(id: number): Observable<GroupResponse> {
-    return this.http.post<GroupResponse>(`${this.apiUrl}/${id}/toggle-favorite`, {});
+    const userId = this.authService.getCurrentUser()?.id;
+    console.log(this.authService.getCurrentUser()?.id);
+    return this.http.post<GroupResponse>(`${this.apiUrl}/${id}/toggle-favorite/${userId}`, {});
   }
   getGroupByPipelineId(pipelineId: number): Observable<GroupResponse> {
     return this.http.get<GroupResponse>(`${this.apiUrl}/by-pipeline/${pipelineId}`);

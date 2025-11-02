@@ -28,4 +28,6 @@ public interface DemandeBDPRepository extends JpaRepository<DemandeBDP,Long> {
 
 @Query("select count(*) from DemandeBDP ")
     Object getTotal();
+
+    DemandeBDP findByGroupId(Long id);
 }

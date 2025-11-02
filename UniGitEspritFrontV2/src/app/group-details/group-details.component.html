@@ -94,7 +94,6 @@
       </div>
     </div>
 
-    <!-- Members Section -->
     <div class="card members-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-users"></i> Team Members</h2>
@@ -120,9 +119,9 @@
             <span class="role-badge developer">{{ member.roles }}</span>
           </div>
           <div class="table-cell">
-            <button class="btn-action" *ngIf="isProfessor || isAdmin" (click)="openEditMemberModal(member)">
+            <!-- <button class="btn-action" *ngIf="isProfessor || isAdmin" (click)="openEditMemberModal(member)">
               <i class="fas fa-edit"></i>
-            </button>
+            </button> -->
             <button class="btn-action" *ngIf="isProfessor || isAdmin" (click)="removeMember(member)">
               <i class="fas fa-trash"></i>
             </button>
@@ -131,7 +130,6 @@
       </div>
     </div>
 
-    <!-- Top Contributors -->
     <div class="card contributors-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-trophy"></i> Top Contributors</h2>

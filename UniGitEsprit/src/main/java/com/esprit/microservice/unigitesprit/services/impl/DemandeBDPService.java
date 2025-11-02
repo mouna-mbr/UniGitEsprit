@@ -31,6 +31,8 @@ public class DemandeBDPService {
     private GroupRepository groupRepository;
     @Autowired
     private NotificationService mailService;
+    @Autowired
+    private DemandeBDPRepository demandeBDPRepository;
 
     private DemandeBDPDTO toDto(DemandeBDP entity) {
         DemandeBDPDTO demandes =new DemandeBDPDTO();
@@ -58,10 +60,14 @@ private UserResponseDTO userToDto(User entity){
         return dto;
 }
     private DemandeBDP toEntity(DemandeBDPDTO dto) {
-        DemandeBDP entity =new DemandeBDP();
-        entity.setStatus(dto.getStatus());
-        entity.setUser(userRepository.findById(dto.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("user not found")));
-        entity.setGroup(groupRepository.findById(dto.getGroup().getId()).orElseThrow(() -> new EntityNotFoundException("Group not found")));
+        DemandeBDP entity = demandeBDPRepository.findByGroupId(dto.getGroup().getId());
+        if(entity == null) {
+             entity = new DemandeBDP();
+            entity.setStatus(dto.getStatus());
+            entity.setUser(userRepository.findById(dto.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("user not found")));
+            entity.setGroup(groupRepository.findById(dto.getGroup().getId()).orElseThrow(() -> new EntityNotFoundException("Group not found")));
+            repository.save(entity);
+        }
         return entity;
     }
     public List<DemandeBDPDTO> findAll() {
@@ -89,7 +95,7 @@ private UserResponseDTO userToDto(User entity){
                 System.out.println(e.getMessage());
             }
         }
-        return toDto(repository.save(demande));
+        return toDto(demande);
     }
 
     public DemandeBDPDTO updateStatus(Long id, DemandeStatus newStatus) {

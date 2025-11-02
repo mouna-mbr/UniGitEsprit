@@ -32,4 +32,7 @@ export class SidebarComponent {
     this.authService.logout();
     this.router.navigate(['/signin']);
   }
+  getProfile(): void {
+    this.router.navigate(['/profile']);
+  }
 }

@@ -16,7 +16,7 @@ public interface GroupService {
     GroupResponseDTO getGroupById(Long id);
     GroupResponseDTO updateGroup(Long id, GroupCreateDTO groupCreateDTO);
     void deleteGroup(Long id);
-    GroupResponseDTO toggleFavorite(Long id);
+    GroupResponseDTO toggleFavorite(Long userId,Long id);
      GroupResponseDTO getGroupByPipelineId(Long pipelineId) ;
     GroupResponseDTO addMemberToGroup(Long groupId, UserRoleResponseDTO request);
     GroupResponseDTO removeMemberFromGroup(Long groupId, Long userId);

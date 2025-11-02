@@ -1,8 +1,8 @@
 <aside class="sidebar">
   <nav class="nav-menu">
-    <div class="nav-item active">
+    <div class="nav-item active" *ngIf="!isStudent && !isReferent">
       <i class="fas fa-chart-line"></i>
-      <span routerLink="/dashbord" *ngIf="!isStudent">Dashboard</span>
+      <span routerLink="/dashbord" >Dashboard</span>
     </div>
     <div class="nav-item" routerLink="/groupes">
       <i class="fas fa-users"></i>
@@ -12,7 +12,7 @@
       <i class="fas fa fa-user"></i>
       <span>Utilisateurs</span>
     </div>
-    <div class="nav-item" routerLink="/classes" *ngIf="!isStudent">
+    <div class="nav-item" routerLink="/classes" *ngIf="!isStudent && !isReferent">
       <i class="fas fa-chalkboard-teacher"></i>
       <span>Classes</span>
     </div>
@@ -20,27 +20,30 @@
       <i class="fas fa fa-folder"></i>
       <span>Sujets</span>
     </div>
-    <div class="nav-item" *ngIf="isprof || isAdmin">
-      <i class="fas fa-code-branch" routerLink="/MergeRequest"></i>
-      <span>Merge Request</span>
-    </div>
+    <!-- <div class="nav-item" *ngIf="isprof || isAdmin"> -->
+      <!-- <i class="fas fa-code-branch" routerLink="/MergeRequest"></i> -->
+      <!-- <span>Merge Request</span> -->
+    <!-- </div> -->
     <div class="nav-item" routerLink="/demandesGroup" *ngIf="isprof || isAdmin || isCpi">
       <i class="fas fa fa-trophy"></i>
       <span>Demandes Bdp</span>
     </div>
-    <div class="nav-item" routerLink="/demandesSujet" *ngIf="isAdmin || isCpi">
+    <div class="nav-item" routerLink="/demandesSujet" *ngIf="isAdmin || isCpi || isReferent">
       <i class="fas fa-building"></i>
       <span>Demandes de parrainage</span>
     </div>
-    <div class="nav-item" routerLink="/favoritesClasses">
+    <div class="nav-item" routerLink="/favoritesClasses" *ngIf="!isStudent">
       <i class="fas fa-star"></i>
       <span>Favoris</span>
     </div>
     
-    <!-- Logout Button -->
     <div class="nav-item logout-item" (click)="logout()">
       <i class="fas fa-sign-out-alt"></i>
       <span>Déconnexion</span>
+    </div>
+    <div class="nav-item logout-item" (click)="getProfile()">
+      <i class="fa fa-user-circle"></i>
+      <span>Profile</span>
     </div>
   </nav>
 </aside>

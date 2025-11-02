@@ -106,9 +106,10 @@ export class GroupsComponent implements OnInit {
   loadGroups(): void {
     const currentUser = this.authService.getCurrentUser();
 
-    if (currentUser !== null && currentUser.roles.includes(Role.STUDENT)) {
+    if (currentUser !== null && !(currentUser.roles.includes(Role.ADMIN)||currentUser.roles.includes(Role.COORDINATEUR_PI)||currentUser.roles.includes(Role.REFERENT_ENTREPRISE))) {
       this.groupService.getGroupsByUser(currentUser.identifiant).subscribe({
         next: (groups) => {
+          console.log(groups);
           this.groups = groups;
           this.applyFilter();
           this.toastr.success(`${groups.length} groupe(s) chargé(s)`, 'Chargement réussi', {
@@ -125,6 +126,8 @@ export class GroupsComponent implements OnInit {
     } else {
       this.groupService.getAllGroups().subscribe({
         next: (groups) => {
+          console.log(groups);
+
           this.groups = groups;
           this.applyFilter();
           this.toastr.success(`${groups.length} groupe(s) chargé(s)`, 'Chargement réussi', {

@@ -11,7 +11,10 @@ export class TacheService {
   private apiUrl = 'http://localhost:8081/uniGitEsprit/api/etapes';
 
   constructor(private http: HttpClient) {}
-
+  getTachesStats(): Observable<{ [key: string]: number }> {
+    return this.http.get<{ [key: string]: number }>(`${this.apiUrl}/taches/statistiques`);
+  }
+  
   getTachesByEtapeId(etapeId: number): Observable<TacheDTO[]> {
     return this.http.get<TacheDTO[]>(`${this.apiUrl}/${etapeId}/taches`);
   }

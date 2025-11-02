@@ -27,6 +27,8 @@ public class DemandeParainageServiceImpl implements DemandeParainageService {
 private DemandeParainageRepository repository;
     @Autowired
     private SujetRepository sujetRepository;
+    @Autowired
+    private DemandeParainageRepository demandeParainageRepository;
 
     private DemandeParainageDto toDto(DemandeParainage entity) {
         DemandeParainageDto demandes =new DemandeParainageDto();
@@ -67,12 +69,17 @@ private DemandeParainageRepository repository;
         return dto;
     }
     private DemandeParainage toEntity(DemandeParainageDto dto) {
-        DemandeParainage entity =new DemandeParainage();
-        entity.setStatus(dto.getStatus());
-        entity.setUser(userRepository.findById(dto.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("user not found")));
-        entity.setEntreprise(entity.getUser().getEntreprise());
-        entity.setSujet(sujetRepository.findById(dto.getSujet().getId()).orElseThrow(() -> new EntityNotFoundException("Sujet not found")));
-        return entity;
+        List<DemandeParainage> demande = demandeParainageRepository.findBySujet_Id(dto.getSujet().getId());
+        if (demande.isEmpty()) {
+            DemandeParainage entity = new DemandeParainage();
+            entity.setStatus(dto.getStatus());
+            entity.setUser(userRepository.findById(dto.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("user not found")));
+            entity.setEntreprise(entity.getUser().getEntreprise());
+            entity.setSujet(sujetRepository.findById(dto.getSujet().getId()).orElseThrow(() -> new EntityNotFoundException("Sujet not found")));
+            return demandeParainageRepository.save(entity);
+        }else{
+        return null;}
+
     }
     public List<DemandeParainageDto> findAll() {
         return repository.findAll()
@@ -90,16 +97,19 @@ private DemandeParainageRepository repository;
 
     public DemandeParainageDto createDemande(DemandeParainageDto dto) {
         DemandeParainage demande = toEntity(dto);
-        demande.setStatus(DemandeStatus.PENDING);
-        List<User> users = userRepository.findByRolesContaining(Role.ADMIN);
-        for (User user : users) {
-            try {
-                mailService.notifyDemandeParrainage(user.getEmail(),demande.getUser().getFirstName());
-            }catch (Exception e){
-                System.out.println(e.getMessage());
+        if (demande != null) {
+            demande.setStatus(DemandeStatus.PENDING);
+            List<User> users = userRepository.findByRolesContaining(Role.ADMIN);
+            for (User user : users) {
+                try {
+                    mailService.notifyDemandeParrainage(user.getEmail(), demande.getUser().getFirstName());
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             }
+            return toDto(demande);
         }
-        return toDto(repository.save(demande));
+        return null;
     }
 
     public DemandeParainageDto updateStatus(Long id, String newStatus) {

@@ -1,6 +1,0 @@
-firstName,lastName,email,role,identifiant,password,classe,specialite,gitUsername,gitAccessToken
-Johcccccn,Doe,johnwwww.doe@example.com,STUDENT,123AwBC4567,securwepass123,4th year,TWIN,johndoe,ghp_token123
-Janccce,Smwith,janeww.smith@example.com,PROFESSOR,456wDEF7890,passw456,,,janesmith,ghp_token456
-Alcccccice,Johnson,aliceww.johnson@example.com,STUDENT,789wGHI0123,aliwcepass789,3A,,alicej,
-Bob,Williams,bob.williamwwws@example.com,ADMIN,32w1JKL5678,admwinpass321,,,bobwill,ghp_token789
-Emma,Brown,emma.brown@exawwmple.com,STUDENT,654MwNO9876,emmapawss654,5th year,Data Science,emmab,ghp_token654

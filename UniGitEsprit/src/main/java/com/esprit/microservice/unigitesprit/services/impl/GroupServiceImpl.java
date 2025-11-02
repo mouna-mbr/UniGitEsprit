@@ -15,10 +15,7 @@ import jakarta.validation.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,7 +29,11 @@ public class GroupServiceImpl implements GroupService {
     GitServiceInterface gitHubRepoService;
     @Autowired
     private ClasseRepository classeRepository;
-@Autowired
+
+    @Autowired
+   FavorisRepository favorisRepository;
+
+    @Autowired
    private NotificationService mailService;
     @Autowired
     private SujetRepository sujetRepository;
@@ -80,16 +81,31 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupResponseDTO> getAllGroups() {
-        return groupRepository.findAll().stream()
+        List<GroupResponseDTO> groups = groupRepository.findAll().stream()
                 .map(this::mapToGroupResponseDTO)
+                .collect(Collectors.toList());
+        return groups.stream()
+                .peek(group -> {
+                    List<Favoris> isFavoris = favorisRepository.findByGroupId(group.getId());
+                    if (isFavoris.isEmpty()) {
+                        group.setIsFavori(false);
+                    }else{
+                    group.setIsFavori(true);}
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<GroupResponseDTO> getGroupsByUser(String identifiant) {
         Long id =userRepository.findByIdentifiant(identifiant).get().getId();
-        return groupRepository.findGroupsByUserId(id).stream()
+        List<GroupResponseDTO> groups =  groupRepository.findGroupsByUserId(id).stream()
                 .map(this::mapToGroupResponseDTO)
+                .collect(Collectors.toList());
+        return groups.stream()
+                .peek(group -> {
+                    boolean isFavoris = favorisRepository.existsByUserIdAndGroupId(id, group.getId());
+                    group.setIsFavori(isFavoris);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -119,12 +135,22 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public GroupResponseDTO toggleFavorite(Long id) {
+    public GroupResponseDTO toggleFavorite(Long userId,Long id) {
         Group group = groupRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
-        group.setFavori(!group.isFavori());
-        Group updatedGroup = groupRepository.save(group);
-        return mapToGroupResponseDTO(updatedGroup);
+        Optional<Favoris> fav = favorisRepository.findByUserIdAndGroupId(userId,id);
+        if (fav.isPresent()){
+            favorisRepository.delete(fav.get());
+        }else {
+            Favoris favoris = new Favoris();
+            favoris.setGroup(groupRepository.findById(id).get());
+            favoris.setUser(userRepository.findById(userId).get());
+            favorisRepository.save(favoris);
+        }
+
+//        group.setFavori(!group.isFavori());
+//        Group updatedGroup = groupRepository.save(group);
+        return mapToGroupResponseDTO(group);
     }
 
     private void validate(GroupCreateDTO groupCreateDTO) {
@@ -333,6 +359,7 @@ public class GroupServiceImpl implements GroupService {
 
         return dto;
     }
+
 
         @Override
         public GroupResponseDTO addMemberToGroup(Long groupId, UserRoleResponseDTO request) {

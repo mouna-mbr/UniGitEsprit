@@ -86,7 +86,8 @@ export class SujetDetailsComponent implements OnInit {
       this.DemandeParainageService.createDemande(demande).subscribe({
         next: () => {
           this.showNotification('success', 'Sujet applied successfully');
-          this.goBack();
+          this.router.navigate(['/demandesSujet']);
+
         },
         error: (error) => this.showNotification('error', error.message)
       });
