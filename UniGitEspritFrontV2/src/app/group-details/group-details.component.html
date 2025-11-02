@@ -1,6 +1,4 @@
-<!-- Group Detail Content -->
 <main class="group-detail-main">
-  <!-- Group Header -->
   <div class="group-header">
     <div class="group-info">
       <h1 class="group-title">{{ currentGroup.nom || 'Unnamed Group' }}</h1>
@@ -16,15 +14,12 @@
     </div>
   </div>
 
-  <!-- Loading State -->
   <div class="loading-container" *ngIf="isLoading">
     <div class="loading-spinner"></div>
     <p>Loading...</p>
   </div>
 
-  <!-- Content Grid -->
   <div class="content-grid" *ngIf="!isLoading">
-    <!-- Project Pipeline -->
     <div class="card pipeline-card" *ngIf="hasPipeline && currentPipeline">
       <div class="card-header">
         <h2 class="card-title">
@@ -70,7 +65,6 @@
       </div>
     </div>
 
-    <!-- Empty Pipeline -->
     <div class="card pipeline-card empty-pipeline" *ngIf="!hasPipeline">
       <div class="card-header">
         <h2 class="card-title">
@@ -94,7 +88,6 @@
       </div>
     </div>
 
-    <!-- Members Section -->
     <div class="card members-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-users"></i> Team Members</h2>
@@ -131,7 +124,6 @@
       </div>
     </div>
 
-    <!-- Top Contributors -->
     <div class="card contributors-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-trophy"></i> Top Contributors</h2>
@@ -164,7 +156,6 @@
       </ng-template>
     </div>
 
-    <!-- Repositories -->
     <div class="card repositories-card">
       <div class="card-header">
         <h2 class="card-title"><i class="fas fa-code-branch"></i> Repositories</h2>
@@ -193,7 +184,6 @@
   </div>
 </main>
 
-<!-- Pipeline Modal -->
 <div class="modal-overlay" *ngIf="showPipelineModal">
   <div class="modal-container">
     <div class="modal-header">
@@ -241,7 +231,6 @@
   </div>
 </div>
 
-<!-- Add Member Modal -->
 <div class="modal-overlay" *ngIf="showAddMemberModal">
   <div class="modal-container">
     <div class="modal-header">
@@ -270,7 +259,6 @@
   </div>
 </div>
 
-<!-- Edit Member Modal -->
 <div class="modal-overlay" *ngIf="showEditMemberModal">
   <div class="modal-container">
     <div class="modal-header">

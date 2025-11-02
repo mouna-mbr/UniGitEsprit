@@ -1,4 +1,3 @@
-// git-group.component.ts
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { GitRepositoryService } from "../services/git-repository.service";
@@ -21,24 +20,18 @@ export class GitGroupComponent implements OnInit, OnDestroy {
   fileContent = "";
   readmeContent = "";
 
-  // Navigation breadcrumbs
   pathBreadcrumbs: { name: string; path: string }[] = [];
 
-  // Active tab
   activeTab: "code" | "commits" | "branches" = "code";
 
-  // Loading states
   isLoading = false;
   isLoadingFile = false;
   isLoadingCommits = false;
 
-  // Error states
   error: string | null = null;
 
-  // Repository URL from route or input
   repoUrl = "";
 
-  // Subscriptions
   private subscriptions = new Subscription();
 
   constructor(
@@ -47,7 +40,6 @@ export class GitGroupComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Get repository URL from route params or query params
     this.route.queryParams.subscribe((params) => {
       if (params["repoUrl"]) {
         this.repoUrl = params["repoUrl"];
@@ -66,7 +58,6 @@ export class GitGroupComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
 
-    // Load repository info
     const repoSub = this.gitService.getRepository(this.repoUrl).subscribe({
       next: (repo) => {
         this.repository = repo;
@@ -108,7 +99,6 @@ export class GitGroupComponent implements OnInit, OnDestroy {
     const filesSub = this.gitService.getContents(this.repoUrl, path, this.currentBranch).subscribe({
       next: (files) => {
         this.files = files.sort((a, b) => {
-          // Directories first, then files
           if (a.type !== b.type) {
             return a.type === "dir" ? -1 : 1;
           }
@@ -371,7 +361,6 @@ export class GitGroupComponent implements OnInit, OnDestroy {
   }
 
   renderMarkdown(content: string): string {
-    // Simple markdown rendering - vous pouvez utiliser une bibliothèque comme marked.js
     return content
       .replace(/^### (.*$)/gim, "<h3>$1</h3>")
       .replace(/^## (.*$)/gim, "<h2>$1</h2>")
@@ -383,6 +372,5 @@ export class GitGroupComponent implements OnInit, OnDestroy {
       .replace(/\n/gim, "<br>");
   }
 
-  // Propriété pour window
   window = window;
 }

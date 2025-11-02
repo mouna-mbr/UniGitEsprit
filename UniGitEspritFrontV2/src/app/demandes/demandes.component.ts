@@ -67,7 +67,6 @@ loadDemandes() {
     },
     error: (err) => {
       console.error('Error fetching demands:', err);
-      // Fallback data in case the API is unavailable
       this.demands = [];
     }
   });
@@ -77,7 +76,6 @@ handleAccept(id: number) {
     .subscribe({
       next: (updated) => {
         console.log('Status updated', updated);
-        // Optionally refresh your list here:
         this.loadDemandes();
       },
       error: (err) => {
@@ -92,7 +90,6 @@ handleAccept(id: number) {
     .subscribe({
       next: (updated) => {
         console.log('Status updated', updated);
-        // Optionally refresh your list here:
         this.loadDemandes();
       },
       error: (err) => {

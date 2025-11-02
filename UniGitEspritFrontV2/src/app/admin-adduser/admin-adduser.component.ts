@@ -1,4 +1,3 @@
-// admin-adduser.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../services/user.service';
@@ -56,7 +55,6 @@ export class AdminAdduserComponent implements OnInit {
       gitAccessToken: [''],
     });
 
-    // Initialize with default role
     this.userRoles = [Role.STUDENT];
     this.userForm.get('roles')?.setValue(this.userRoles);
 
@@ -70,7 +68,7 @@ export class AdminAdduserComponent implements OnInit {
     this.buttonText = this.showForm ? 'Consulter la liste' : 'Add User';
     if (!this.showForm) {
       this.resetForm();
-      this.selectedUser = null; // Reset selected user when closing form
+      this.selectedUser = null; 
     } else {
       this.isCsvMode = false;
     }
@@ -89,7 +87,6 @@ export class AdminAdduserComponent implements OnInit {
     this.userRoles = this.userRoles.filter(r => r !== role);
     this.userForm.get('roles')?.setValue(this.userRoles);
     
-    // Ensure we always have at least one role
     if (this.userRoles.length === 0) {
       this.userRoles = [Role.STUDENT];
       this.userForm.get('roles')?.setValue(this.userRoles);
@@ -119,7 +116,6 @@ export class AdminAdduserComponent implements OnInit {
 
     const formValue = this.userForm.value;
     
-    // Ensure roles are properly set and never empty
     const roles = this.userRoles.length > 0 ? this.userRoles : [Role.STUDENT];
     
     const payload: User = {
@@ -138,7 +134,6 @@ export class AdminAdduserComponent implements OnInit {
     
     this.userService.addUser(payload).subscribe({
       next: (newUser) => {
-        // Si c'est un étudiant ET une classe est spécifiée, mettre à jour la classe
         if (roles.includes(Role.STUDENT) && formValue.classe) {
           this.updateClassWithNewStudent(newUser.id, formValue.classe);
         } else {
@@ -156,9 +151,7 @@ export class AdminAdduserComponent implements OnInit {
     });
   }
 
-  // Nouvelle méthode pour mettre à jour la classe avec le nouvel étudiant
   private updateClassWithNewStudent(studentId: number, className: string): void {
-    // Trouver la classe par son nom
     const classe = this.classOptions.find(c => c.nom === className);
     if (!classe) {
       this.toastr.error('Classe non trouvée');
@@ -166,16 +159,14 @@ export class AdminAdduserComponent implements OnInit {
       return;
     }
 
-    // Récupérer les détails complets de la classe
     this.classeService.getClasseById(classe.id).subscribe({
       next: (classeDetails) => {
         const updatedEtudiantIds = [...(classeDetails.etudiantIds || []), studentId];
         
-        // Créer le payload complet avec toutes les propriétés requises
         const updatePayload: ClasseCreate = {
           nom: classeDetails.nom,
           anneeUniversitaire: classeDetails.anneeUniversitaire,
-          level: this.convertLevelForCreate(classeDetails.level), // Conversion du niveau
+          level: this.convertLevelForCreate(classeDetails.level), 
           optionFormation: classeDetails.optionFormation,
           sujetIds: classeDetails.sujetIds || [],
           etudiantIds: updatedEtudiantIds,
@@ -208,7 +199,6 @@ export class AdminAdduserComponent implements OnInit {
     });
   }
 
-  // Méthode utilitaire pour convertir le niveau entre ClasseResponse et ClasseCreate
   private convertLevelForCreate(level: 'L1' | 'L2' | 'L3A' | 'L3B' | 'L4' | 'L5' | 'M1' | 'M2'): 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'M1' | 'M2' {
     const levelMap: { [key: string]: 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'M1' | 'M2' } = {
       'L1': 'L1',
@@ -237,7 +227,6 @@ export class AdminAdduserComponent implements OnInit {
       gitAccessToken: user.gitAccessToken,
     });
     
-    // Désactiver la validation du mot de passe en mode édition
     this.userForm.get('password')?.clearValidators();
     this.userForm.get('password')?.updateValueAndValidity();
     
@@ -261,7 +250,6 @@ export class AdminAdduserComponent implements OnInit {
       gitAccessToken: this.userForm.get('gitAccessToken')?.value || null,
     };
 
-    // Inclure le mot de passe seulement s'il est modifié
     const password = this.userForm.get('password')?.value;
     if (password && password.length >= 6) {
       payload.password = password;
@@ -272,7 +260,7 @@ export class AdminAdduserComponent implements OnInit {
     this.userService.updateUser(this.selectedUser.identifiant, payload).subscribe({
       next: () => {
         this.toastr.success('Utilisateur mis à jour !');
-        this.resetFormAndClose(); // Fermer le formulaire après succès
+        this.resetFormAndClose(); 
         this.loadUsers();
         this.isSubmitting = false;
       },
@@ -349,7 +337,7 @@ export class AdminAdduserComponent implements OnInit {
         this.toastr.success(`${report.successCount} utilisateurs ajoutés, ${report.errors.length} erreurs`);
         this.loadUsers();
         this.toggleCsv();
-        this.showForm = false; // Retour à la liste après import
+        this.showForm = false; 
       },
       error: (err) => {
         this.isSubmitting = false;
@@ -364,7 +352,6 @@ export class AdminAdduserComponent implements OnInit {
     this.userRoles = [Role.STUDENT];
     this.userForm.get('roles')?.setValue(this.userRoles);
     
-    // Réactiver la validation du mot de passe
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.userForm.get('password')?.updateValueAndValidity();
     
@@ -375,8 +362,8 @@ export class AdminAdduserComponent implements OnInit {
   private resetFormAndClose(): void {
     this.resetForm();
     this.selectedUser = null;
-    this.showForm = false; // Fermer le formulaire
-    this.buttonText = 'Add User'; // Remettre le texte du bouton
+    this.showForm = false; 
+    this.buttonText = 'Add User'; 
   }
 
   loadClasses() {
@@ -399,23 +386,19 @@ export class AdminAdduserComponent implements OnInit {
   getRoleCount(role: string): number {
     return this.users.filter(user => user.roles.includes(role as Role)).length;
   }
-  // Méthode pour vérifier si le formulaire est valide (utilisée dans le template)
   isFormValid(): boolean {
     if (this.selectedUser) {
-      // En mode édition, le mot de passe est optionnel
       const baseValid = !!this.userForm.get('firstName')?.valid &&
                        !!this.userForm.get('lastName')?.valid &&
                        !!this.userForm.get('email')?.valid &&
                        !!this.userForm.get('roles')?.valid &&
                        !!this.userForm.get('identifiant')?.valid;
       
-      // Vérifier la classe seulement si STUDENT
       if (this.userRoles.includes(Role.STUDENT)) {
         return baseValid && !!this.userForm.get('classe')?.valid;
       }
       return baseValid;
     } else {
-      // En mode création, tout est requis
       return this.userForm.valid;
     }
   }

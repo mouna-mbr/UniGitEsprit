@@ -16,6 +16,6 @@ export interface TacheDTO {
   status: Status;
   deadline: string;
   assigneeId: number;
-  assigneeName?: string; // Optional field for full name
-  progress?: number; // Added for progress bar
+  assigneeName?: string; 
+  progress?: number; 
 }

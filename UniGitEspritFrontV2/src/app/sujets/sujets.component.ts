@@ -6,7 +6,7 @@ import { UserService } from '../services/user.service';
 import { UserResponse, Role } from '../models/user.model';
 import { Subject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { ToastrService } from 'ngx-toastr'; // Import Toastr
+import { ToastrService } from 'ngx-toastr'; 
 
 @Component({
   selector: 'app-sujets',
@@ -37,7 +37,7 @@ export class SujetsComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private userService: UserService,
-    private toastr: ToastrService // Inject Toastr
+    private toastr: ToastrService 
   ) {}
 
   ngOnInit(): void {

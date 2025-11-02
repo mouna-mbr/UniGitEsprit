@@ -19,7 +19,6 @@
       <form [formGroup]="classeForm" (ngSubmit)="onSubmit()" class="add-class-form">
         <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-        <!-- Section Informations de la Classe -->
         <div class="form-section">
           <div class="section-header">
             <div class="section-icon">
@@ -117,7 +116,6 @@
           </div>
         </div>
 
-        <!-- Section Étudiants -->
         <div class="form-section">
           <div class="section-header">
             <div class="section-icon">
@@ -168,7 +166,6 @@
           </div>
         </div>
 
-        <!-- Section Enseignants -->
         <div class="form-section">
           <div class="section-header">
             <div class="section-icon">
@@ -219,7 +216,6 @@
           </div>
         </div>
 
-        <!-- Actions du Formulaire -->
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>

@@ -18,11 +18,10 @@ import {
   providedIn: 'root'
 })
 export class GitService {
-  private apiUrl = 'http://localhost:8080/api/git'; // Replace with your backend URL
+  private apiUrl = 'http://localhost:8080/api/git'; 
 
   constructor(private http: HttpClient) {}
 
-  // Helper to create Authorization header
   private createAuthHeader(username: string, accessToken: string): HttpHeaders {
     const auth = btoa(`${username}:${accessToken}`);
     return new HttpHeaders({
@@ -31,7 +30,6 @@ export class GitService {
     });
   }
 
-  // Get repository info
   getRepositoryInfo(repoUrl: string, username: string, accessToken: string): Observable<GitRepositoryDTO> {
     const headers = this.createAuthHeader(username, accessToken);
     return this.http.get<GitRepositoryDTO>(`${this.apiUrl}/repository`, {
@@ -45,7 +43,6 @@ export class GitService {
     );
   }
 
-  // Get branches
   getBranches(repoUrl: string, username: string, accessToken: string): Observable<GitBranchDTO[]> {
     const headers = this.createAuthHeader(username, accessToken);
     return this.http.get<GitBranchDTO[]>(`${this.apiUrl}/branches`, {
@@ -59,7 +56,6 @@ export class GitService {
     );
   }
 
-  // Get commits
   getCommits(request: GitCommitRequest, username: string, accessToken: string): Observable<GitCommitDTO[]> {
     const headers = this.createAuthHeader(username, accessToken);
     return this.http.post<GitCommitDTO[]>(`${this.apiUrl}/commits`, request, { headers }).pipe(
@@ -70,7 +66,6 @@ export class GitService {
     );
   }
 
-  // Get files
   getFiles(repoUrl: string, branch: string | undefined, path: string | undefined, username: string, accessToken: string): Observable<GitFileDTO[]> {
     const headers = this.createAuthHeader(username, accessToken);
     let params: any = { repoUrl };
@@ -84,7 +79,6 @@ export class GitService {
     );
   }
 
-  // Get file content
   getFileContent(request: GitFileContentRequest, username: string, accessToken: string): Observable<GitFileContentDTO> {
     const headers = this.createAuthHeader(username, accessToken);
     return this.http.post<GitFileContentDTO>(`${this.apiUrl}/file-content`, request, { headers }).pipe(

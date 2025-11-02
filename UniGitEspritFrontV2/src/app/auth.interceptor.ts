@@ -1,4 +1,3 @@
-// auth.interceptor.ts
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler } from '@angular/common/http';
 import { AuthService } from './services/auth.service';
@@ -8,7 +7,6 @@ export class AuthInterceptor implements HttpInterceptor {
 
   constructor(private authService: AuthService) {}
 
- // auth.interceptor.ts
 intercept(req: HttpRequest<any>, next: HttpHandler) {
   const token = localStorage.getItem('token');
   if (token && token.includes('.')) {

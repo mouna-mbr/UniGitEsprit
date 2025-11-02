@@ -11,7 +11,7 @@ import { AuthService } from '../services/auth.service';
 @Component({
   selector: 'app-sujet-details',
   templateUrl: './sujet-details.component.html',
-  styleUrls: ['./sujet-details.component.css'] // Reusing class CSS for consistency
+  styleUrls: ['./sujet-details.component.css'] 
 })
 export class SujetDetailsComponent implements OnInit {
   isAdmin: boolean | undefined = false;

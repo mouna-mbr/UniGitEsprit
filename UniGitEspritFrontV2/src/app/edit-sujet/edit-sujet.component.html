@@ -1,5 +1,4 @@
 <div class="app-container" *ngIf="isLoaded">
-  <!-- Contenu Modification Sujet -->
   <div class="content">
     <div class="content-header">
       <div class="page-info">
@@ -16,12 +15,10 @@
       </div>
     </div>
 
-    <!-- Conteneur du Formulaire -->
     <div class="form-container">
       <form [formGroup]="sujetForm" (ngSubmit)="onSubmit()" class="add-class-form">
         <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-        <!-- Section Informations du Sujet -->
         <div class="form-section">
           <div class="section-header">
             <div class="section-icon">
@@ -68,7 +65,6 @@
           </div>
         </div>
 
-        <!-- Actions du Formulaire -->
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="goBack()">
             <i class="fas fa-arrow-left"></i>

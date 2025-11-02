@@ -127,6 +127,5 @@ export class ClassDetailsComponent implements OnInit {
   }
 
   onSearch(event: Event): void {
-    // Implémentez la logique de recherche si nécessaire
   }
 }

@@ -2,16 +2,13 @@
   {{ alertMessage }}
 </div>
 <div class="signin-container">
-  <!-- Background Elements -->
   <div class="background-shapes">
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
     <div class="shape shape-3"></div>
   </div>
 
-  <!-- Sign In Card -->
   <div class="signin-card animate-in">
-    <!-- Logo Section -->
     <div class="logo-section">
       <div class="logo">
         <img src="../../assets/espritlogo.png" alt="ESPR Logo">
@@ -20,7 +17,6 @@
       <p class="welcome-subtitle">Sign in to your ESPRIT account</p>
     </div>
 
-    <!-- Sign In Form -->
     <form #signinForm="ngForm" (ngSubmit)="onSubmit(signinForm)" class="signin-form">
       <div class="form-group">
         <label for="identifiant" class="form-label">
@@ -83,7 +79,6 @@
     </form>
   </div>
 
-  <!-- Features Section -->
   <div class="features-section animate-in">
     <div class="feature-item" style="margin-top: 100px;">
       <div class="feature-icon">

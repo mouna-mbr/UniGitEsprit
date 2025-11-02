@@ -1,6 +1,5 @@
-// git-repository.model.ts
 export interface GitRepositoryDTO {
-  id: number; // Changed from string to number to match Long
+  id: number; 
   name: string;
   fullName: string;
   description: string;
@@ -11,8 +10,8 @@ export interface GitRepositoryDTO {
   stars: number;
   forks: number;
   size: number;
-  createdAt: Date; // Will be converted from LocalDateTime via serialization
-  updatedAt: Date; // Will be converted from LocalDateTime via serialization
+  createdAt: Date; 
+  updatedAt: Date; 
   owner: GitOwnerDTO;
 }
 
@@ -31,7 +30,7 @@ export interface GitOwnerDTO {
 export interface GitBranchDTO {
   name: string;
   commit: GitBranchCommitDTO;
-  protectedBranch: boolean; // Changed from protected to protectedBranch
+  protectedBranch: boolean;
 }
 
 export interface GitBranchCommitDTO {
@@ -54,13 +53,13 @@ export interface GitAuthorDTO {
   name: string;
   email: string;
   avatarUrl: string;
-  date: Date; // Will be converted from LocalDateTime
+  date: Date; 
 }
 
 export interface GitCommitterDTO {
   name: string;
   email: string;
-  date: Date; // Will be converted from LocalDateTime
+  date: Date; 
 }
 
 export interface GitCommitStatsDTO {
@@ -71,7 +70,7 @@ export interface GitCommitStatsDTO {
 
 export interface GitFileChangeDTO {
   filename: string;
-  status: string; // Changed from union type to string to match backend
+  status: string; 
   additions: number;
   deletions: number;
   changes: number;
@@ -80,7 +79,7 @@ export interface GitFileChangeDTO {
 export interface GitFileDTO {
   name: string;
   path: string;
-  type: string; // Changed from union type to string
+  type: string; 
   size: number;
   sha: string;
   downloadUrl: string;
@@ -91,7 +90,7 @@ export interface GitFileDTO {
 export interface GitLastCommitDTO {
   message: string;
   author: string;
-  date: Date; // Will be converted from LocalDateTime
+  date: Date; 
   sha: string;
 }
 

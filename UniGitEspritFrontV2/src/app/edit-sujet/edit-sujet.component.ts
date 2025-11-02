@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SujetService } from '../services/sujet.service';
 import { SujetCreate, SujetResponse } from '../models/sujet.model';
 import { AuthService } from '../services/auth.service';
-import { ToastrService } from 'ngx-toastr'; // Import Toastr
+import { ToastrService } from 'ngx-toastr'; 
 
 @Component({
   selector: 'app-edit-sujet',
@@ -24,7 +24,7 @@ export class EditSujetComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private toastr: ToastrService // Inject Toastr
+    private toastr: ToastrService 
   ) {
     this.sujetId = +this.route.snapshot.paramMap.get('id')!;
     this.sujetForm = this.fb.group({
@@ -75,7 +75,7 @@ export class EditSujetComponent implements OnInit {
           });
           setTimeout(() => {
             this.router.navigate(['/sujets']);
-          }, 1500); // Redirection après 1.5 secondes
+          }, 1500); 
         },
         error: (error) => {
           this.errorMessage = error.message;
@@ -88,14 +88,14 @@ export class EditSujetComponent implements OnInit {
         }
       });
     } else {
-      // Afficher un toast si le formulaire est invalide
+      
       this.toastr.warning('Veuillez corriger les erreurs du formulaire', 'Formulaire invalide', {
         timeOut: 4000,
         positionClass: 'toast-top-right',
         progressBar: true
       });
       
-      // Marquer tous les champs comme touchés pour afficher les erreurs
+    
       this.markFormGroupTouched();
     }
   }
@@ -110,7 +110,7 @@ export class EditSujetComponent implements OnInit {
     }, 500);
   }
 
-  // Méthode utilitaire pour marquer tous les champs comme touchés
+
   private markFormGroupTouched(): void {
     Object.keys(this.sujetForm.controls).forEach(key => {
       const control = this.sujetForm.get(key);

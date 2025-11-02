@@ -9,7 +9,7 @@ import { CsvImportReport } from '../models/csv.model';
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:8081/uniGitEsprit/api/users'; // Vérifiez que le port correspond à votre backend
+  private apiUrl = 'http://localhost:8081/uniGitEsprit/api/users'; 
 
   constructor(private http: HttpClient) {}
 
@@ -37,12 +37,11 @@ export class UserService {
   addUser(user: User): Observable<UserResponse> {
     const token = localStorage.getItem('token');
     
-    // Créer un payload très explicite
     const payload = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      roles: user.roles.map(role => role.toString()), // S'assurer que ce sont des strings
+      roles: user.roles.map(role => role.toString()), 
       identifiant: user.identifiant,
       password: user.password,
       classe: user.classe || null,
@@ -69,7 +68,6 @@ export class UserService {
     );
   }
 
-// src/app/services/user.service.ts
 addUsersFromCsv(file: File): Observable<CsvImportReport> {
   const formData = new FormData();
   formData.append('file', file);
@@ -82,7 +80,7 @@ login(username: string, password: string): Observable<AuthResponse> {
       tap((res: AuthResponse) => {
         localStorage.setItem('token', res.token);
         localStorage.setItem('user', JSON.stringify(res.user));
-        localStorage.setItem('roles', JSON.stringify(res.user.roles)); // ← Stocker les rôles
+        localStorage.setItem('roles', JSON.stringify(res.user.roles)); 
       })
     );
 }

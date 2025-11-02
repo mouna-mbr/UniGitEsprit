@@ -64,11 +64,9 @@
             </div>
           </div>
         
-          <!-- Section Technologies -->
           <div class="form-group">
             <label class="form-label">Technologies</label>
 
-            <!-- ✅ Puces : afficher les technologies sélectionnées -->
             <div class="chips-container">
               <span *ngFor="let tech of selectedTechnologies" class="chip">
                 {{ tech }}
@@ -76,7 +74,6 @@
               </span>
             </div>
 
-            <!-- ✅ Champ de saisie + Liste déroulante pour la recherche de technologies -->
             <div class="autocomplete-container">
               <input
                 type="text"
@@ -86,7 +83,6 @@
                 (keydown.enter)="addTechnology(techControl.value || '')"
               />
 
-              <!-- ✅ Liste déroulante (apparaît uniquement s'il y a des résultats correspondants ET si l'utilisateur a tapé quelque chose) -->
               <ul class="autocomplete-list" *ngIf="(filteredTechnologies | async)?.length && techControl.value">
                 <li
                   *ngFor="let tech of (filteredTechnologies | async)"

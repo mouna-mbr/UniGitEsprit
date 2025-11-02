@@ -21,7 +21,7 @@ export interface GroupCreate {
   users: UserRole[];
   sujetId: number;
   gitRepoName: string;
-  gitRepoUrl: string; // If providing existing URL
+  gitRepoUrl: string; 
   favori: boolean;
   enseignantId: number;
 }

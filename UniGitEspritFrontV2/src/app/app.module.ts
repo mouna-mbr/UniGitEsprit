@@ -58,7 +58,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     SprintDetailsComponent,
     RepositoryViewerComponent    
 
-    // Removed AdminAdduserComponent
+    
   ],
   imports: [
     NgChartsModule,
@@ -67,7 +67,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     FormsModule,
     HttpClientModule,
     ReactiveFormsModule,
-    BrowserAnimationsModule, // Nécessaire pour les animations de toastr
+    BrowserAnimationsModule, 
     ToastrModule.forRoot({
       timeOut: 3000,
       positionClass: 'toast-top-right',

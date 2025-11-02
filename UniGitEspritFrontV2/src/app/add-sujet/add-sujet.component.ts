@@ -19,7 +19,7 @@ export class AddSujetComponent implements OnInit {
   errorMessage: string | null = null;
   userId: number | null = null;
   isLoaded = false;
-  techControl = new FormControl(''); // ✅ Added: used for the autocomplete input
+  techControl = new FormControl(''); 
   filteredTechnologies!: Observable<string[]>;
   
   
@@ -42,19 +42,18 @@ export class AddSujetComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     this.userId = currentUser ? currentUser.id : null;
     if (this.userId) {
-      this.sujetForm.patchValue({ proposeParId: this.userId }); // Pré-remplir avec l'ID de l'utilisateur connecté
+      this.sujetForm.patchValue({ proposeParId: this.userId }); 
     }
     this.technoService.getAllTechnologies().subscribe((techs) => {
       this.allTechno = techs;
 
-      // ✅ Setup live filtering for autocomplete
       this.filteredTechnologies = this.techControl.valueChanges.pipe(
         startWith(''),
         map(value => this._filter(value || ''))
       );
     });
 
-    this.isLoaded = true; // Activer l'affichage une fois que l'ID est défini
+    this.isLoaded = true; 
   }
 private _filter(value: string): string[] {
   const filterValue = value.toLowerCase();
@@ -65,7 +64,7 @@ addTechnology(tech: string): void {
   if (tech && !this.selectedTechnologies.includes(tech)) {
     this.selectedTechnologies.push(tech);
     this.sujetForm.get('technologies')?.setValue(this.selectedTechnologies);
-    this.techControl.setValue(''); // clear input
+    this.techControl.setValue(''); 
   }
 }
 

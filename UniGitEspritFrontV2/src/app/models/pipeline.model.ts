@@ -10,7 +10,7 @@ export interface EtapeDTO {
   export interface PipelineDTO {
     id?: number
     nom: string
-    groupId: number // Ou projectId selon votre logique métier
+    groupId: number 
     etapes: EtapeDTO[]
   }
   
@@ -23,10 +23,8 @@ export interface EtapeDTO {
     type: "etape" | "milestone" | "final"
   }
   
-  // Interface pour les validations (selon le backend)
   export interface ValidationDTO {
     id?: number
     etapeId: number
-    // Ajoutez d'autres propriétés selon vos besoins
   }
   

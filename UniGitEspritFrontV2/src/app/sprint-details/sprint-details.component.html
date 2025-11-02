@@ -1,6 +1,4 @@
-<!-- Sprint Management Content -->
 <main class="sprint-main">
-  <!-- Sprint Header -->
   <div class="sprint-header">
     <div class="sprint-info">
       <h1 class="sprint-title">{{currentEtape?.nom}}</h1>
@@ -27,10 +25,8 @@
 
   
 
-  <!-- Kanban Board -->
   <div class="kanban-container">
     <div class="kanban-board">
-      <!-- To Do Column -->
       <div class="kanban-column todo-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'todo')">
         <div class="column-header">
           <h3 class="column-title">
@@ -68,7 +64,6 @@
         </div>
       </div>
 
-      <!-- In Progress Column -->
       <div class="kanban-column progress-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'inprogress')">
         <div class="column-header">
           <h3 class="column-title">
@@ -112,7 +107,6 @@
         </div>
       </div>
 
-      <!-- Done Column -->
       <div class="kanban-column done-column" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event, 'done')">
         <div class="column-header">
           <h3 class="column-title">
@@ -185,9 +179,7 @@
     </div>
   </div>
 
-  <!-- Sprint Analytics -->
   <div class="sprint-analytics">
-    <!-- Team Performance Table -->
     <div class="card performance-card">
       <div class="card-header">
         <h2 class="card-title">
@@ -217,7 +209,6 @@
         </div>
       </div>
     </div>
-    <!-- Repository Info (New Section) -->
   <div class="repository-info" *ngIf="repository">
     <div class="card-header">
       <h2 class="card-title">
@@ -237,10 +228,6 @@
   </div>
 </main>
 
-<!-- Task Creation Modal -->
-<!-- ... (previous HTML remains unchanged until the Task Creation Modal) ... -->
-
-<!-- Task Creation Modal -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -329,9 +316,7 @@
   </div>
 </div>
 
-<!-- ... (rest of the HTML remains unchanged) ... -->
 
-<!-- Delete Confirmation Modal -->
 <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -357,7 +342,6 @@
   </div>
 </div>
 
-<!-- Add Validation Modal -->
 <div class="modal-overlay" *ngIf="showAddValidationModal" (click)="closeAddValidationModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -410,7 +394,6 @@
     </div>
   </div>
 </div>
-<!-- Add Remark Modal -->
 <div class="modal-overlay" *ngIf="showRemarkPopup" (click)="closeRemarkPopup()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">

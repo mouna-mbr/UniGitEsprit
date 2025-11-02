@@ -12,7 +12,7 @@ import { AuthService } from '../services/auth.service';
 })
 export class MergeRequestsComponentComponent {
   mergeRequests: any[] = [];
-  projectId = '123456'; // Replace with real project ID
+  projectId = '123456'; 
   selectedState = 'opened';
   loading = false;
   currentUser:any;

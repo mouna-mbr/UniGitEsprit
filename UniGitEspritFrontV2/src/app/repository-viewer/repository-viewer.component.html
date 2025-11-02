@@ -1,12 +1,9 @@
-<!-- src/app/repository-viewer.component.html -->
 <div class="git-viewer-container">
-  <!-- Loading State -->
   <div class="loading-container" *ngIf="isLoading && !repository">
     <div class="loading-spinner"></div>
     <p>Chargement du repository...</p>
   </div>
 
-  <!-- Error State -->
   <div class="error-container" *ngIf="error && !repository">
     <div class="error-card">
       <i class="fas fa-exclamation-triangle"></i>
@@ -19,9 +16,7 @@
     </div>
   </div>
 
-  <!-- Repository Content -->
   <div class="repository-content" *ngIf="repository; else errorTemplate">
-    <!-- Repository Header -->
     <div class="repo-header">
       <div class="repo-info">
         <div class="repo-title">
@@ -68,7 +63,6 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
     <div class="repo-nav">
       <div class="nav-tabs">
         <button
@@ -99,7 +93,6 @@
         </button>
       </div>
 
-      <!-- Branch Selector -->
       <div class="branch-selector" *ngIf="activeTab === 'code'">
         <div class="dropdown">
           <button class="dropdown-toggle">
@@ -124,11 +117,8 @@
       </div>
     </div>
 
-    <!-- Code Tab Content -->
     <div class="tab-content" *ngIf="activeTab === 'code'">
-      <!-- File Explorer -->
       <div class="file-explorer" *ngIf="!currentFile">
-        <!-- Breadcrumb Navigation -->
         <div class="breadcrumb-nav" *ngIf="pathBreadcrumbs.length > 0">
           <button class="breadcrumb-item root" (click)="navigateToRoot()">
             <i class="fas fa-home"></i>
@@ -147,7 +137,6 @@
           </ng-container>
         </div>
 
-        <!-- Files List -->
         <div class="files-container">
           <div class="files-header">
             <div class="files-info">
@@ -156,7 +145,6 @@
           </div>
 
           <div class="files-list">
-            <!-- Go back button for subdirectories -->
             <div class="file-item back-button" *ngIf="currentPath" (click)="navigateToPath(getParentPath())">
               <div class="file-icon">
                 <i class="fas fa-arrow-left"></i>
@@ -166,7 +154,6 @@
               </div>
             </div>
 
-            <!-- Files and directories -->
             <div
               class="file-item"
               *ngFor="let file of files; trackBy: trackByFileName"
@@ -190,7 +177,6 @@
           </div>
         </div>
 
-        <!-- README Display -->
         <div class="readme-container" *ngIf="readmeContent && !currentPath">
           <div class="readme-header">
             <h3>
@@ -202,7 +188,6 @@
         </div>
       </div>
 
-      <!-- File Viewer -->
       <div class="file-viewer" *ngIf="currentFile">
         <div class="file-viewer-header">
           <div class="file-path">
@@ -240,7 +225,6 @@
       </div>
     </div>
 
-    <!-- Commits Tab Content -->
     <div class="tab-content" *ngIf="activeTab === 'commits'">
       <div class="commits-container">
         <div class="commits-header">
@@ -277,7 +261,6 @@
       </div>
     </div>
 
-    <!-- Branches Tab Content -->
     <div class="tab-content" *ngIf="activeTab === 'branches'">
       <div class="branches-container">
         <div class="branches-header">

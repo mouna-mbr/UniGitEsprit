@@ -14,30 +14,24 @@ export class AdminDashboardComponent implements OnInit {
   currentUser: any;
   stats: any = {};
   Role=Role
-  // KPIs existants
   totalDemandeBdp: number = 0;
   totalDemandeParrainage: number = 0;
   totalUsers: number = 0;
   
-  // Nouveaux KPIs
   totalRepositories: number = 0;
   
-  // Charts existants
   bdpBySpecialiteChart!: ChartData<'bar'>;
   bdpByStatusChart!: ChartData<'doughnut'>;
   parrainageByStatusChart!: ChartData<'doughnut'>;
   parrainageBySujetChart!: ChartData<'bar'>;
   usersByRoleChart!: ChartData<'doughnut'>;
 
-  // Nouveaux charts
   groupesParSujetChart!: ChartData<'bar'>;
   sujetsParraineParEntrepriseChart!: ChartData<'bar'>;
 
-  // Charts Prof
   commitsParGroupeChartData!: ChartData<'bar'>;
   commitsParUtilisateurData: any = {};
 
-  // Options des graphiques
   barChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     plugins: {
@@ -100,7 +94,6 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   initCharts(data: any) {
-    // BDP par Spécialité
     if (data.bdpBySpecialite) {
       this.bdpBySpecialiteChart = {
         labels: data.bdpBySpecialite.map((x: any) => x[0]),
@@ -112,7 +105,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // BDP par Statut
     if (data.bdpByStatus) {
       this.bdpByStatusChart = {
         labels: data.bdpByStatus.map((x: any) => x[0]),
@@ -124,7 +116,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Parrainage par Statut
     if (data.parrainageByStatus) {
       this.parrainageByStatusChart = {
         labels: data.parrainageByStatus.map((x: any) => x[0]),
@@ -136,7 +127,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Parrainage par Sujet
     if (data.parrainageBySujet) {
       this.parrainageBySujetChart = {
         labels: data.parrainageBySujet.map((x: any) => this.truncateLabel(x[0])),
@@ -148,7 +138,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Utilisateurs par Rôle
     if (data.usersByRole) {
       this.usersByRoleChart = {
         labels: data.usersByRole.map((x: any) => x[0]),
@@ -160,8 +149,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // NOUVEAUX CHARTS ADMIN
-    // Groupes par Sujet
     if (data.groupesParSujet) {
       this.groupesParSujetChart = {
         labels: data.groupesParSujet.map((x: any) => this.truncateLabel(x[0])),
@@ -173,7 +160,6 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Sujets parrainés par Entreprise
     if (data.sujetsParraineParEntreprise) {
       this.sujetsParraineParEntrepriseChart = {
         labels: data.sujetsParraineParEntreprise.map((x: any) => this.truncateLabel(x[0])),
@@ -187,7 +173,6 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   initProfCharts(data: any) {
-    // Commits par Groupe
     if (data.commitsParGroupe) {
       this.commitsParGroupeChartData = {
         labels: data.commitsParGroupe.map((x: any) => x[0]),
@@ -199,11 +184,9 @@ export class AdminDashboardComponent implements OnInit {
       };
     }
 
-    // Données pour le tableau des commits par utilisateur
     this.commitsParUtilisateurData = data.commitsParUtilisateurParGroupe || {};
   }
 
-  // Méthodes utilitaires
   private generateColors(count: number): string[] {
     const colors = [];
     for (let i = 0; i < count; i++) {
@@ -216,7 +199,6 @@ export class AdminDashboardComponent implements OnInit {
     return label.length > maxLength ? label.substring(0, maxLength) + '...' : label;
   }
 
-  // ------------------ PROF CHARTS ------------------ //
   get sujetsByGroupsChart(): ChartData<'bar'> {
     const data = this.stats.sujetsByGroups || [];
     return {
@@ -259,7 +241,6 @@ export class AdminDashboardComponent implements OnInit {
     };
   }
 
-  // Méthode d'export CSV
   exportToCSV(chartData: any, filename: string) {
     if (!chartData || !chartData.labels || !chartData.datasets) {
       console.error('Données du graphique non disponibles');
@@ -280,7 +261,6 @@ export class AdminDashboardComponent implements OnInit {
     this.downloadCSV(csvContent, filename);
   }
 
-  // Méthode pour exporter les données commits par utilisateur
   exportCommitsParUtilisateur(groupeNom: string) {
     const data = this.commitsParUtilisateurData[groupeNom] || [];
     let csvContent = 'Utilisateur,Commits\n';
@@ -306,6 +286,5 @@ export class AdminDashboardComponent implements OnInit {
     document.body.removeChild(link);
   }
 
-  // Méthode utilitaire pour Object.keys dans le template
   Object = Object;
 }

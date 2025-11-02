@@ -36,7 +36,7 @@ export class RepositoryViewerComponent implements OnInit {
   isLoadingCommits = false;
   isLoadingFile = false;
   error: string | null = null;
-  private repoUrl: string = ''; // Store repoUrl for retry
+  private repoUrl: string = ''; 
 
   constructor(
     private gitService: GitRepositoryService,
@@ -297,7 +297,7 @@ export class RepositoryViewerComponent implements OnInit {
       return result;
     } catch (err) {
       console.error('Error rendering Markdown:', err);
-      return content; // Fallback to raw content
+      return content; 
     }
   }
 

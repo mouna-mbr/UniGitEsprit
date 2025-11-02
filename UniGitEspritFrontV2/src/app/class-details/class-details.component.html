@@ -1,6 +1,4 @@
-<!-- Contenu -->
 <div class="content">
-  <!-- Fil d'Ariane -->
   <div class="breadcrumb">
     <a href="/classes" class="breadcrumb-link">
       <i class="fas fa-graduation-cap"></i>
@@ -9,8 +7,6 @@
     <i class="fas fa-chevron-right breadcrumb-separator"></i>
     <span class="breadcrumb-current">{{ classe?.nom || 'Détails de la Classe' }}</span>
   </div>
-
-  <!-- En-tête de la Classe -->
   <div class="class-header" *ngIf="classe">
     <div class="class-info">
       <div class="class-icon">
@@ -50,12 +46,10 @@
       </div>
       <button class="btn btn-outline" (click)="toggleFavorite(classe.id, $event)" [class.active]="classe.favori">
         <i class="fas fa-heart"></i>
-        <!-- {{ classe.favori ? 'Retirer des Favoris' : 'Ajouter aux Favoris' }} -->
       </button>
     </div>
   </div>
 
-  <!-- Grille de Statistiques -->
   <div class="stats-grid" *ngIf="classe">
     <div class="stat-card">
       <div class="stat-icon students">
@@ -79,7 +73,6 @@
     </div>
   </div>
 
-  <!-- Sections Détaillées -->
   <div class="tabs-container">
     <div class="tabs-header">
       <button class="tab-btn" [class.active]="activeTab === 'details'" (click)="setActiveTab('details')">

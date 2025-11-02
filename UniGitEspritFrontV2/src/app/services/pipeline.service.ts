@@ -19,7 +19,6 @@ export class PipelineService {
     return this.http.get<PipelineDTO>(`${this.apiUrl}/get-by-group/${groupId}`);
   }
 
-  // Note: The following methods return strings but might need to return appropriate DTOs based on backend response
   getPipelinesByProjectId(projectId: number): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/projet/${projectId}`);
   }

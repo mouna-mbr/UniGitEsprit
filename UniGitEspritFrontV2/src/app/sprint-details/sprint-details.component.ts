@@ -142,7 +142,6 @@ currentValidationId!: number;
         const commitCounts = commits.reduce((acc, commit) => {
           const author = commit.author?.name || 'Unknown';
           
-          // Convertir la date string en objet Date
           const commitDate = commit.author?.date 
             ? new Date(commit.author.date) 
             : new Date();
@@ -154,7 +153,6 @@ currentValidationId!: number;
           }
           acc[author].commits += 1;
           
-          // Comparer les dates correctement
           if (commitDate > new Date(acc[author].lastCommitDate)) {
             acc[author].lastCommitDate = date;
           }
@@ -210,7 +208,7 @@ currentValidationId!: number;
         next: (repo) => {
           this.repository = repo;
           console.log('Repository loaded:', repo);
-          this.loadTeamPerformance(); // Reload team performance with updated defaultBranch
+          this.loadTeamPerformance(); 
         },
         error: (error) => {
           console.error('Error loading repository:', error);
@@ -550,22 +548,7 @@ currentValidationId!: number;
       }
     });
   }
-  // addRemark(validationId: number) {
-  //   const newRemark = prompt('Enter new remark:');
-  //   if (newRemark) {
-  //     this.validationService.addRemark(validationId, newRemark).subscribe({
-  //       next: (updatedValidation) => {
-  //         const index = this.validations.findIndex(v => v.id === validationId);
-  //         if (index !== -1) this.validations[index] = updatedValidation;
-  //         alert('Remark added successfully!');
-  //       },
-  //       error: (error) => {
-  //         console.error('Error adding remark:', error);
-  //         alert('Failed to add remark.');
-  //       }
-  //     });
-  //   }
-  // }
+
 
   updateRemark(validationId: number, remarkIndex: number) {
     const updatedRemark = prompt('Enter updated remark:');

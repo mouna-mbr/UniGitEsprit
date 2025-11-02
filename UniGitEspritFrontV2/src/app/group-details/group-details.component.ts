@@ -264,7 +264,6 @@ export class GroupDetailsComponent implements OnInit {
     this.showPipelineModal = true;
   
     if (this.currentPipeline) {
-      // Deep copy to avoid mutation of original object
       this.newPipeline = {
         id: this.currentPipeline.id,
         nom: this.currentPipeline.nom,
@@ -277,7 +276,6 @@ export class GroupDetailsComponent implements OnInit {
         }))
       };
     } else {
-      // Initialize empty form
       this.newPipeline = {
         nom: '',
         groupId: this.groupId,

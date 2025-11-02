@@ -1,5 +1,4 @@
 <div class="admin-container">
-  <!-- Header avec design moderne -->
   <div class="admin-header">
     <div class="header-content">
       <div class="title-section">
@@ -14,7 +13,6 @@
     </div>
   </div>
 
-  <!-- ==================== LISTE DES UTILISATEURS ==================== -->
   <div *ngIf="!showForm" class="users-list-section">
     <div class="stats-cards">
       <div class="stat-card">
@@ -121,10 +119,8 @@
     </div>
   </div>
 
-  <!-- ==================== FORMULAIRE / CSV ==================== -->
   <div *ngIf="showForm" class="form-section">
     <div class="form-card">
-      <!-- Navigation entre modes -->
       <div class="form-mode-nav">
         <button class="mode-btn" 
                 [class.active]="!isCsvMode" 
@@ -140,7 +136,6 @@
         </button>
       </div>
 
-      <!-- ------------------- FORMULAIRE UNIQUE ------------------- -->
       <div *ngIf="!isCsvMode" class="individual-form">
         <div class="form-header">
           <h2>
@@ -153,7 +148,6 @@
         </div>
 
         <form [formGroup]="userForm" (ngSubmit)="selectedUser ? saveEdit() : onSubmit()" class="modern-form">
-          <!-- Section Informations personnelles -->
           <div class="form-section-card">
             <h3 class="section-title">
               <i class="fas fa-id-card"></i>
@@ -192,7 +186,6 @@
             </div>
           </div>
 
-          <!-- Section Contact -->
           <div class="form-section-card">
             <h3 class="section-title">
               <i class="fas fa-envelope"></i>
@@ -232,7 +225,6 @@
             </div>
           </div>
 
-          <!-- Section Rôles et permissions -->
           <div class="form-section-card">
             <h3 class="section-title">
               <i class="fas fa-user-shield"></i>
@@ -274,7 +266,6 @@
               </div>
             </div>
 
-            <!-- Classe pour étudiants -->
             <div *ngIf="userRoles.includes(Role.STUDENT)" class="form-group">
               <label class="form-label">
                 <i class="fas fa-graduation-cap"></i>
@@ -294,7 +285,6 @@
             </div>
           </div>
 
-          <!-- Section Sécurité -->
           <div class="form-section-card">
             <h3 class="section-title">
               <i class="fas fa-lock"></i>
@@ -331,7 +321,6 @@
             </div>
           </div>
 
-          <!-- Section Git (optionnelle) -->
           <div class="form-section-card">
             <h3 class="section-title">
               <i class="fab fa-github"></i>
@@ -361,7 +350,6 @@
             </div>
           </div>
 
-          <!-- Actions du formulaire -->
           <div class="form-actions">
             <button type="button" 
                     class="btn btn-cancel" 
@@ -379,7 +367,6 @@
         </form>
       </div>
 
-      <!-- ------------------- IMPORT CSV ------------------- -->
       <div *ngIf="isCsvMode" class="csv-import-section">
         <div class="csv-header">
           <h2>
@@ -410,7 +397,6 @@
           </div>
         </div>
 
-        <!-- Instructions -->
         <div class="instructions-card">
           <h4>
             <i class="fas fa-info-circle"></i>
@@ -428,7 +414,6 @@
           </div>
         </div>
 
-        <!-- Aperçu des données -->
         <div *ngIf="csvData.length" class="preview-section">
           <h4>
             <i class="fas fa-eye"></i>

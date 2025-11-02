@@ -101,7 +101,6 @@ export class GitauthComponent {
         return;
       }
 
-      // Verify GitHub credentials
       const isValid = true;
       if (!isValid) {
         this.isLoading = false;
@@ -127,11 +126,10 @@ export class GitauthComponent {
           this.alertMessage = "Git credentials updated successfully! Redirecting to profile...";
           this.startAlertBlink();
 
-          // Update stored user data with full response
           if (this.saveCredentials) {
             this.saveGitCredentials();
           }
-          this.authService.setCurrentUser(response); // Update session with full UserResponse
+          this.authService.setCurrentUser(response); 
 
           setTimeout(() => {
             this.stopAlertBlink();

@@ -1,4 +1,3 @@
-// app-routing.module.ts
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { SigninComponent } from './signin/signin.component';
@@ -25,23 +24,22 @@ import { RepositoryViewerComponent } from './repository-viewer/repository-viewer
 import { DemandesComponent } from './demandes/demandes.component';
 import { DemandesSujetComponent } from './demandes-sujet/demandes-sujet.component';
 import { MergeRequestsComponentComponent } from './merge-requests-component/merge-requests-component.component';
-import { AuthGuard } from './auth.guard'; // Import ajouté
+import { AuthGuard } from './auth.guard'; 
 
 const routes: Routes = [
-  { path: 'signin', component: SigninComponent }, // Standalone signin route without layout
-  { path: 'gitauth', component: GitauthComponent }, // Standalone gitauth route without layout
-  { path: '', component: SigninComponent, pathMatch: 'full' }, // Default route
+  { path: 'signin', component: SigninComponent }, 
+  { path: 'gitauth', component: GitauthComponent }, 
+  { path: '', component: SigninComponent, pathMatch: 'full' }, 
 
   {
-    path: '', // Parent route for all other pages
+    path: '', 
     component: LayoutComponent,
-    canActivate: [AuthGuard], // ✅ GARDE AJOUTÉE ICI
+    canActivate: [AuthGuard], 
     children: [
       { path: 'adduser', component: AdminAdduserComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'dashbord', component: AdminDashboardComponent },
       
-      //class
       { path: 'demandesGroup', component: DemandesComponent },
       { path: 'demandesSujet', component: DemandesSujetComponent },
       { path: 'MergeRequest', component: MergeRequestsComponentComponent },
@@ -52,13 +50,11 @@ const routes: Routes = [
       { path: 'favoritesClasses', component: FavoriteClassesComponent },
       { path: 'classesDetails/:id', component: ClassDetailsComponent },
       
-      //sujet
       { path: 'sujets', component: SujetsComponent },
       { path: 'add-sujet', component: AddSujetComponent },
       { path: 'edit-sujet/:id', component: EditSujetComponent },
       { path: 'sujetDetails/:id', component: SujetDetailsComponent },
       
-      //group
       { path: 'groupes', component: GroupsComponent },
       { path: 'addgroupe', component: AddGroupComponent },
       { path: 'groupdetails/:id', component: GroupDetailsComponent },
@@ -68,7 +64,7 @@ const routes: Routes = [
       { path: 'repository-viewer', component: RepositoryViewerComponent }
     ]
   },
-  { path: '**', redirectTo: '/signin' } // Wildcard route to redirect invalid paths to signin
+  { path: '**', redirectTo: '/signin' } 
 ];
 
 @NgModule({

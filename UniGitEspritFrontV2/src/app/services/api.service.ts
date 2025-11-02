@@ -27,7 +27,6 @@ export class ApiService {
     private classeService: ClasseService
   ) {}
 
-  // ================== STATISTIQUES ADMIN ==================
   getAdminStats(): Observable<any> {
     return forkJoin({
       totalUsers: this.getTotalUsers(),
@@ -38,25 +37,23 @@ export class ApiService {
       parrainageByStatus: this.getParrainageByStatus(),
       parrainageBySujet: this.getParrainageBySujet(),
       usersByRole: this.getUsersByRole(),
-      totalRepositories: this.getTotalRepositories(), // Nouveau
-      groupesParSujet: this.getGroupesParSujet(), // Nouveau
-      sujetsParraineParEntreprise: this.getSujetsParraineParEntreprise() // Nouveau
+      totalRepositories: this.getTotalRepositories(),
+      groupesParSujet: this.getGroupesParSujet(), 
+      sujetsParraineParEntreprise: this.getSujetsParraineParEntreprise() 
     });
   }
 
-  // ================== STATISTIQUES PROFESSEUR ==================
   getProfStats(profId: string): Observable<any> {
     return forkJoin({
       sujetsByGroups: this.getSujetsByGroups(profId),
       topGroupsByNote: this.getTopGroupsByNote(profId),
       tachesByStatus: this.getTachesByStatus(profId),
-      commitsParGroupe: this.getCommitsParGroupe(profId), // Nouveau
-      commitsParUtilisateurParGroupe: this.getCommitsParUtilisateurParGroupe(profId), // Nouveau
-      totalRepositories: this.getTotalRepositoriesProf(profId) // Nouveau pour prof
+      commitsParGroupe: this.getCommitsParGroupe(profId), 
+      commitsParUtilisateurParGroupe: this.getCommitsParUtilisateurParGroupe(profId),
+      totalRepositories: this.getTotalRepositoriesProf(profId) 
     });
   }
 
-  // ================== NOUVELLES MÉTHODES ADMIN ==================
   
   private getTotalRepositories(): Observable<number> {
     return this.groupService.getAllGroups().pipe(
@@ -93,7 +90,6 @@ export class ApiService {
           return acc;
         }, {});
 
-        // Convertir en tableau et compter
         return Object.entries(sujetsParEntreprise).map(([entreprise, sujetsSet]) => {
           return [entreprise, (sujetsSet as Set<string>).size];
         });
@@ -101,20 +97,17 @@ export class ApiService {
     );
   }
 
-  // ================== NOUVELLES MÉTHODES PROFESSEUR ==================
 
   private getCommitsParGroupe(profId: string): Observable<any[]> {
     return this.groupService.getAllGroups().pipe(
       map(groups => {
-        // Filtrer les groupes du professeur (si nécessaire)
         const profGroups = groups.filter(group => 
           group.enseignantId?.toString() === profId || !profId
         );
 
-        // Simuler les données de commits (à remplacer par l'appel réel à GitRepositoryService)
         return profGroups.map(group => [
           group.nom,
-          Math.floor(Math.random() * 50) + 10 // Simulation - à remplacer
+          Math.floor(Math.random() * 50) + 10 
         ]);
       })
     );
@@ -132,9 +125,8 @@ export class ApiService {
         profGroups.forEach(group => {
           if (group.users && group.users.length > 0) {
             result[group.nom] = group.users.map((userRole: any) => {
-              // Simulation des commits par utilisateur
               return {
-                utilisateur: `User ${userRole.userId}`, // À remplacer par le vrai nom
+                utilisateur: `User ${userRole.userId}`, 
                 commits: Math.floor(Math.random() * 20) + 1
               };
             });
@@ -157,7 +149,6 @@ export class ApiService {
     );
   }
 
-  // ================== MÉTHODES EXISTANTES (conservées) ==================
   
   private getTotalUsers(): Observable<number> {
     return this.userService.getAllUsers().pipe(

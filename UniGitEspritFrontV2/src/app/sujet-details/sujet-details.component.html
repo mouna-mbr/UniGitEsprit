@@ -1,13 +1,9 @@
-<!-- Sidebar (facultatif, peut être ajouté si nécessaire) -->
 
 
-<!-- Main Content -->
 <div class="main-content">
 
-  <!-- Content -->
   <div class="content">
     <div class="app-container" *ngIf="sujet">
-      <!-- Sujet Details Content -->
       <div class="content-header">
         <div class="page-info">
           <div class="breadcrumb">
@@ -23,7 +19,6 @@
         </div>
       </div>
 
-      <!-- Sujet Details Card -->
       <div class="class-card" [ngClass]="{'favorite': sujet.favori}" [attr.data-sujet-id]="sujet.id">
         <div class="card-header">
           <div class="card-gradient"></div>
@@ -96,7 +91,6 @@
       </div>
     </div>
 
-    <!-- Notification Container -->
     <div id="notification-container"></div>
   </div>
 </div>

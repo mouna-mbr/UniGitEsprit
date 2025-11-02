@@ -33,7 +33,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Failed to fetch GitHub profile image', error);
-        this.profileImage = ''; // Fallback to default
+        this.profileImage = ''; 
       }
     });
   }

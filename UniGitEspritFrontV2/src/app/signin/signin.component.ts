@@ -72,14 +72,12 @@ export class SigninComponent implements AfterViewInit {
           this.alertMessage = 'Sign in successful!';
           this.startAlertBlink();
   
-          // Save token & user in localStorage
           this.authService.setCurrentUser(response.user);
           localStorage.setItem('auth-token', response.token);
   
           const user = response.user;
           console.log('User roles:', user.roles);
   
-          // ✅ Redirection based on user roles and Git fields
           if (user.roles && user.roles.includes(Role.ADMIN)) {
             console.log('Navigating to /adduser');
             this.router.navigate(['/adduser']).then(success => {
@@ -97,7 +95,6 @@ export class SigninComponent implements AfterViewInit {
             });
           }
   
-          // Hide alert after 3s
           setTimeout(() => {
             this.stopAlertBlink();
             this.showAlert = false;
@@ -117,7 +114,6 @@ export class SigninComponent implements AfterViewInit {
         }
       });
     } else {
-      // 🔴 Invalid form
       console.log('Form invalid or errors:', { identifiant: this.identifiant, password: this.password });
       if (!this.identifiant) this.identifiantError = 'Identifiant is required';
       if (!this.password) this.passwordError = 'Password is required';

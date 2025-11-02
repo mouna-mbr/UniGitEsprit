@@ -1,7 +1,6 @@
 <div class="p-4">
   <h2 class="text-xl font-bold mb-4">Merge Requests Assigned to Me</h2>
 
-  <!-- Filter by state -->
   <div class="flex gap-2 mb-4">
     <button (click)="onStateChange('opened')" 
             [class.bg-blue-600]="selectedState === 'opened'"
@@ -41,7 +40,6 @@
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="flex gap-2">
         <a [href]="mr.web_url" target="_blank"
            class="px-3 py-1 rounded-lg border hover:bg-gray-100">

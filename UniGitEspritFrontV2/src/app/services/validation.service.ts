@@ -31,7 +31,6 @@ export class ValidationService {
     return this.http.delete<void>(`${this.apiUrl}/validations/${validationId}`);
   }
 
-  // New methods for remark operations
   addRemark(validationId: number, remark: string): Observable<ValidationDTO> {
     return this.http.post<ValidationDTO>(`${this.apiUrl}/validations/${validationId}/remarks`, remark);
   }

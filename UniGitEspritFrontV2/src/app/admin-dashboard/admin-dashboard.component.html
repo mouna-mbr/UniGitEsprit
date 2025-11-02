@@ -1,11 +1,8 @@
-<!-- Dashboard Content -->
 <div class="dashboard-container">
 
-  <!-- ================== ADMIN DASHBOARD ================== -->
   <div class="dashboard admin-dashboard" *ngIf="currentUser?.roles?.includes('ADMIN')">
     <h2>Tableau de Bord Administrateur</h2>
     
-    <!-- KPI Row -->
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-icon">
@@ -37,7 +34,6 @@
         </div>
       </div>
 
-      <!-- Nouveau KPI Dépôts Git -->
       <div class="kpi-card">
         <div class="kpi-icon">
           <i class="fas fa-code-branch"></i>
@@ -49,7 +45,6 @@
       </div>
     </div>
 
-    <!-- Charts Grid Admin -->
     <div class="charts-grid">
       <div class="chart-card large">
         <div class="chart-header">
@@ -125,7 +120,6 @@
 
     
 
-      <!-- Nouveaux Charts Admin -->
       <div class="chart-card large">
         <div class="chart-header">
           <h3>Groupes par Sujet</h3>
@@ -182,11 +176,9 @@
     </div>
   </div>
 
-  <!-- ================== PROF DASHBOARD ================== -->
   <div class="dashboard prof-dashboard" *ngIf="currentUser?.roles?.includes(Role.PROFESSOR)">
     <h2>Tableau de Bord Professeur</h2>
 
-    <!-- KPI Row Prof -->
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-icon">
@@ -251,7 +243,6 @@
         </div>
       </div>
 
-      <!-- Nouveaux Charts Prof -->
       <div class="chart-card large">
         <div class="chart-header">
           <h3>Commits par Groupe</h3>
@@ -300,7 +291,6 @@
     </div>
   </div>
 
-  <!-- Message si aucun rôle détecté -->
   <div *ngIf="!currentUser?.roles?.includes('ADMIN') && !currentUser?.roles?.includes('PROF')" class="no-access">
     <h3>Accès non autorisé</h3>
     <p>Vous n'avez pas les permissions nécessaires pour accéder à ce tableau de bord.</p>
